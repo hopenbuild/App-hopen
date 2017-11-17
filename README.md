@@ -79,5 +79,5 @@ file being generated.
 
 ## License
 
-[LGPL 3.0](LICENSE)
+[LGPL 3.0](LICENSE), or any later version, at your option.
 
