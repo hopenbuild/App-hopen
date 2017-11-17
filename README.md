@@ -11,6 +11,15 @@ be first).  You will eventually be able to pick a generator, a la CMake.
 The invoker will put the selected generator's path
 first in `LUA_PATH`, but other than that it's all straight Lua.
 
+## Requirements
+
+ - Lua 5.2
+ - luarocks
+   - [penlight](http://stevedonovan.github.io/Penlight/api/index.html)
+   - [luagraphs](https://github.com/chen0040/lua-graph)
+   - [checks](https://luarocks.org/modules/luarocks/checks)
+     ([docs](https://github.com/SierraWireless/luasched/blob/master/c/checks.c))
+
 ## Inspiration
 
 Luke, plus a bit of Ant, and my own frustrations working with CMake
@@ -42,12 +51,15 @@ Luke, plus a bit of Ant, and my own frustrations working with CMake
    - `DAG:connect(<op1>, <op2>)`: creates a dependency edge from `<op1>` to
      `<op2>`, indicating that `<op1>` must be run before `<op2>`.
      Does not transfer any data from `<op1>` to `<op2>`.
- - `dag, op = subroutine([name])`: Makes a new DAG `dag` that can be added to.
-   Whenever `op` is invoked by a higher-level DAG, `dag` will be traversed.
-   The new DAG `dag` is therefore similar to a subroutine, whence the name.
-   Inputs to `op` are provided as `dag.arg`.  The outputs from all the goals
-   of the DAG are aggregated and provided as the outputs of the DAG.
-   *(TODO handle name conflicts between goals)*
+
+  - `Subroutine([name])`: An `Op` subclass representing a DAG.  `sub:run()`
+    traverses that DAG.
+    The new DAG `dag` is therefore similar to a subroutine, whence the name.
+    Inputs to `op` are provided as `dag.arg`.  The outputs from all the goals
+    of the DAG are aggregated and provided as the outputs of the DAG.
+    *(TODO handle name conflicts between goals)*
+    - `sub.dag`: The DAG.  You can use `sub.dag.arg`, `sub.dag:goal()`, ...
+      as for any DAG.
 
 ## Implementation
 
