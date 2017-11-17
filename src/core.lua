@@ -77,8 +77,9 @@ function DAG:_init(...)
 
     self._graph = graph.create(1, true) -- initially, one node (node # 0)
     self._root = Node(false, 0)
-    self._nodes = {0 = self._root}      -- map vertex numbers to nodes.
+    self._nodes = {[0] = self._root}      -- map vertex numbers to nodes.
     self._nodes_by_op = {}              -- map operations to nodes
+
 end
 
 function DAG:goal(name)
@@ -104,14 +105,26 @@ function DAG:connect(from_op, out_edge, in_edge, to_op)
         from = self._nodes_by_op[from]
         to = self._nodes_by_op[to]
         -- Add vertices if necessary
+        if not from then
+            -- TODO add vertex
+            from = Node(from, xx)
+        end
+        --TODO add edge for `to` if necessary
+
         -- Add edge from _to_ to _from_.
+        self._graph:addEdge(-2,-2)  -- TODO get numbers for from, to
     else
         -- four-arg: dependency edge and data transfer
+        self:connect(from_top, to_op)   -- make the edge
+        -- TODO associate the edge with a data transfer
     end
 end
 
-function DAG:traverse()
+function DAG:traverse(goal)
     self.results = {}
+    -- TODO get topo-sort
+    -- TODO DFS from #goal, or the root.
+    -- TODO walk the topo-sort in reverse order, visiting nodes the DFS saw.
 end
 
 --- Subroutine ----------------------------------------------------------
