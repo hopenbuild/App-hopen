@@ -25,7 +25,7 @@ build = {
 
     install = {
         bin = {
-            hopen = 'src/runner.lua'
+            hopen = 'bin/hopen'
         }
     }
 

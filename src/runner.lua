@@ -1,5 +1,5 @@
-#!/usr/bin/env lua
--- hopen src/runner.lua: Main executable for hopen
+-- hopen runner.lua: Main executable for hopen.
+-- When loaded, returns a function to call to start the show.
 
 -- Constants ----------------------------------------------------------------
 
@@ -20,22 +20,27 @@ local print_r = require 'print_r'   -- DEBUG
 local core = require 'core'
 local lapp = require 'pl.lapp'
 
--- Collect arguments --------------------------------------------------------
+--- The main function.
+--- @param args The command-line arguments (default _G.arg)
+return function(args)
+    -- Collect arguments ----------------------------------------------------
 
-local args = lapp(helptext)
--- Copy remaining args to goals, since in lapp, things after `--` will not be
--- included in goals.
-for i=1,#args do
-    table.insert(args.goals, args[i])
-    args[i] = nil
-end
+    local arg = args or _G.arg
+    local parsed = lapp(helptext, arg)
+    -- Copy remaining args to goals, since in lapp, things after `--` will not be
+    -- included in goals.
+    for i=1,#parsed do
+        table.insert(parsed.goals, parsed[i])
+        parsed[i] = nil
+    end
 
--- --------------------------------------------------------------------------
-print_r(args)
-if args.version then
-    print("hopen version " .. HOPEN_VER)
-    return
-end
+    -- ----------------------------------------------------------------------
+    print_r(parsed)
+    if parsed.version then
+        print("hopen version " .. HOPEN_VER)
+        return
+    end
 
-print "hopen isn't here yet!"
+    print "hopen isn't here yet!"
+end --main function
 
