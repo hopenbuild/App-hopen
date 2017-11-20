@@ -17,7 +17,7 @@ hopen: Task runner and build system.  By cxw, 2017.
 
 -- Imports ------------------------------------------------------------------
 local print_r = require 'print_r'   -- DEBUG
-local core = require 'core'
+local core = require 'hopen.core'
 local lapp = require 'pl.lapp'
 
 --- The main function.

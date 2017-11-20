@@ -18,7 +18,8 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        hopen = "src/core.lua"
+        ["hopen.core"] = "src/hopen/core.lua",
+        ["hopen.runner"] = "src/hopen/runner.lua",
     },
 
     copy_directories = { 'doc' },
