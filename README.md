@@ -51,20 +51,27 @@ Luke, plus a bit of Ant, and my own frustrations working with CMake
    - `DAG:connect(<op1>, <op2>)`: creates a dependency edge from `<op1>` to
      `<op2>`, indicating that `<op1>` must be run before `<op2>`.
      Does not transfer any data from `<op1>` to `<op2>`.
+   - `DAG:inject(<op1>,<op2>[, after/before'])`: Returns an operation that
+     lives on the edge between `op1` and `op2`.  If the third parameter is
+     false, `'before'`, or omitted, the new operation will be the first
+     operation on that edge.  If the third parameter is true or `'after'`,
+     the new operation will be the last operation on that edge.  Any number
+     of operations can be injected on any edge.
 
-  - `Subroutine([name])`: An `Op` subclass representing a DAG.  `sub:run()`
-    traverses that DAG.
-    The new DAG `dag` is therefore similar to a subroutine, whence the name.
-    Inputs to `op` are provided as `dag.arg`.  The outputs from all the goals
-    of the DAG are aggregated and provided as the outputs of the DAG.
-    *(TODO handle name conflicts between goals)*
-    - `sub.dag`: The DAG.  You can use `sub.dag.arg`, `sub.dag:goal()`, ...
-      as for any DAG.
+   - `Subroutine([name])`: An `Op` subclass representing a DAG.  `sub:run()`
+     traverses that DAG.
+     The new DAG `dag` is therefore similar to a subroutine, whence the name.
+     Inputs to `op` are provided as `dag.arg`.  The outputs from all the goals
+     of the DAG are aggregated and provided as the outputs of the DAG.
+     *(TODO handle name conflicts between goals)*
+     - `sub.dag`: The DAG.  You can use `sub.dag.arg`, `sub.dag:goal()`, ...
+       as for any DAG.
 
 ## Implementation
 
-Each DAG has a hidden "root" node.  All outputs have edges to the root node.
-The traversal order is topological from the root node, but is not constrained
+Each DAG has a hidden "root" node.  All outputs have edges from the root node.
+The traversal order is reverse topological from the root node,
+but is not constrained
 beyond that.  Generators can ask for the nodes in root-first or root-last
 order.
 
@@ -76,6 +83,8 @@ After the `hopen` file is processed, cycles are detected and reported as
 errors.  *(TODO change this to support LaTeX multi-run files?)*  Then the DAG
 is traversed, and each operation writes the necessary information to the
 file being generated.
+
+TODO: understand [Luarocks versioning](https://github.com/luarocks/luarocks/blob/master/src/luarocks/core/vers.lua#L72).
 
 ## License
 

@@ -117,6 +117,7 @@ function DAG:connect(from_op, out_edge, in_edge, to_op)
         -- four-arg: dependency edge and data transfer
         self:connect(from_top, to_op)   -- make the edge
         -- TODO associate the edge with a data transfer
+        -- TODO each edge has a {} that will hold injected operations.
     end
 end
 
@@ -125,6 +126,9 @@ function DAG:traverse(goal)
     -- TODO get topo-sort
     -- TODO DFS from #goal, or the root.
     -- TODO walk the topo-sort in reverse order, visiting nodes the DFS saw.
+end
+
+function DAG:inject(op1, op2, is_after)
 end
 
 --- Subroutine ----------------------------------------------------------
