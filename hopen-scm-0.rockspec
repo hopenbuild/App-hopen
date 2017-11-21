@@ -12,7 +12,7 @@ description = {
 dependencies = {
     "lua ~> 5.2",
     "penlight >= 1.5.2",
-    "luagraphs >= 1.0-2",
+    "luagraphs >= 1.0-5",
     "checks >= 1.0-1"
 }
 build = {

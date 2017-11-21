@@ -40,13 +40,14 @@ function Goal:_init(name)
 end
 
 --- DAG node ------------------------------------------------------------
+--- These are the vertices stored in the graph.
+
 local Node = class()
 Node._name = 'Node'
 
--- Initialize a node with an operation and a vertex number
-function Node:_init(op, v)
+-- Initialize a node with an operation
+function Node:_init(op)
     self.op = op
-    self.v = v
 end
 
 function Node:run(inputs)
@@ -75,49 +76,90 @@ function DAG:_init(...)
     self.default_goal = false
     self.results = false
 
-    self._graph = graph.create(1, true) -- initially, one node (node # 0)
-    self._root = Node(false, 0)
-    self._nodes = {[0] = self._root}      -- map vertex numbers to nodes.
+    self._graph = graph.create(0, true)     -- true => directed
+
+    -- Create the root node
+    self._root = Node(false)            -- false => no operation
+    self._graph:addVertexIfNotExists(self._root)
     self._nodes_by_op = {}              -- map operations to nodes
 
+end
+
+--- Internal functions ------------------------
+
+--- Add a Node for op and return it
+function DAG:_addNode(op)
+    local node = Node(op)
+    self._graph:addVertexIfNotExists(node)
+    self._nodes_by_op[op] = node
+    return node
+end
+
+--- Find an edge from v to w
+function DAG:_findEdge(v,w)
+    local adj_v = self._graph:adj(v)
+    for i = 0, adj_v:size()-1 do
+        local edge = adj_v.get(i)
+        if edge:other(v) == w then
+            return edge
+        end
+    end
+    return false
 end
 
 function DAG:goal(name)
     checks('string')
     local g = Goal(name)
-    local node = Node(g, -1)    -- TODO add vertex to graph
-    self._graph:addEdge(0, -1)  -- TODO add vnum.  Edge FROM self._root (0).
-    self._nodes[-1] = node      -- TODO add vnum
-    self._nodes_by_op[g] = node
+
+    local node = self:_addNode(g)
+    self._graph:addEdge(self._root, node)  -- Edge FROM self._root to node.
     return g
 end
 
 function DAG:set_default(goal)
-    self.default_goal = goal or false
+    if not goal then
+        self.default_goal = false
+    else
+        local node = self._nodes_by_op[goal]
+        assert(node, 'Call goal() before set_default(goal)')
+        assert(self._graph.vertexList:contains(node), 'Unknown node for goal')
+        self.default_goal = goal
+    end
 end
 
 function DAG:connect(from_op, out_edge, in_edge, to_op)
     if in_edge == nil and to_op == nil then
         -- two-arg: dependency edge, but no data transfer
         local from = from_op
-        local to = out_edge
-        -- go from an operation to its node, if any
-        from = self._nodes_by_op[from]
-        to = self._nodes_by_op[to]
-        -- Add vertices if necessary
-        if not from then
-            -- TODO add vertex
-            from = Node(from, xx)
-        end
-        --TODO add edge for `to` if necessary
+        local to_op = out_edge
 
-        -- Add edge from _to_ to _from_.
-        self._graph:addEdge(-2,-2)  -- TODO get numbers for from, to
+        -- go from an operation to its node, if any
+        local from_node = self._nodes_by_op[from]
+        local to_node = self._nodes_by_op[to]
+
+        -- Add vertices if necessary
+        if not from_node then
+            from_node = self:_addNode(from_op)
+        end
+        if not to_node then
+            to_node = self:_addNode(to_op)
+        end
+
+        -- Add edge from #to to #from (edges run away from the sink)
+        self._graph:addEdge(to_op, from_op)
     else
         -- four-arg: dependency edge and data transfer
-        self:connect(from_top, to_op)   -- make the edge
-        -- TODO associate the edge with a data transfer
-        -- TODO each edge has a {} that will hold injected operations.
+        self:connect(from_op, to_op)   -- make the edge
+
+        -- Associate the edge with a data transfer
+
+        local from_node = self._nodes_by_op[from_op]
+        local to_node = self._nodes_by_op[to_op]
+        local edge = self:_findEdge(from_node, to_node)
+        assert(edge, 'Could not find edge')
+
+        -- TODO add or populate a table associated with #edge that will
+        -- hold injected operations, then fill that table with data transfers.
     end
 end
 

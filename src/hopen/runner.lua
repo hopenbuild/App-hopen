@@ -23,6 +23,8 @@ local lapp = require 'pl.lapp'
 --- The main function.
 --- @param args The command-line arguments (default _G.arg)
 return function(args)
+    print('hopen running from: ' ..
+            package.searchpath('hopen.core',package.path))
     -- Collect arguments ----------------------------------------------------
 
     local arg = args or _G.arg
@@ -44,3 +46,4 @@ return function(args)
     print "hopen isn't here yet!"
 end --main function
 
+-- vi: set ts=4 sts=4 sw=4 et ai: --
