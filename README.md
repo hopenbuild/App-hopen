@@ -1,10 +1,13 @@
 # hopen
+
 A build generator with first-class edges and explicit dependencies
 
 ## General
 
-Input is the first-sorting file in `.` matching `*.hopen`, unless you
-specify otherwise.  Sort order is Lua's `<`, which is by byte value.
+Input is the last-sorting file in `.` matching `*.hopen`, unless you
+specify otherwise.  That way you can call your build file `.hopen` if
+you want it hidden, or `z.hopen` if you want it to sort below all your other
+files.  Sort order is Lua's `<`, which is by byte value.
 
 Output is a build file for a build system (Ninja or Make will
 be first).  You will eventually be able to pick a generator, a la CMake.
@@ -22,7 +25,10 @@ first in `LUA_PATH`, but other than that it's all straight Lua.
 
 ## Inspiration
 
-Luke, plus a bit of Ant, and my own frustrations working with CMake
+ - [Luke](https://github.com/gvvaughan/luke)
+ - a bit of [Ant](https://ant.apache.org/)
+ - a tiny bit of [Buck](https://buckbuild.com/concept/what_makes_buck_so_fast.html)
+ - my own frustrations working with CMake.
 
 ## Plumbing
 
@@ -48,6 +54,7 @@ Luke, plus a bit of Ant, and my own frustrations working with CMake
      - `<out-edge>` and `<in-edge>` can be anything usable as a table index,
        provided that table index appears in the corresponding operation's
        descriptor.
+     - returns the name of the edge?  Maybe a fluent interface?
    - `DAG:connect(<op1>, <op2>)`: creates a dependency edge from `<op1>` to
      `<op2>`, indicating that `<op1>` must be run before `<op2>`.
      Does not transfer any data from `<op1>` to `<op2>`.

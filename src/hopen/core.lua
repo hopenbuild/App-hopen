@@ -99,7 +99,7 @@ end
 function DAG:_findEdge(v,w)
     local adj_v = self._graph:adj(v)
     for i = 0, adj_v:size()-1 do
-        local edge = adj_v.get(i)
+        local edge = adj_v:get(i)
         if edge:other(v) == w then
             return edge
         end
