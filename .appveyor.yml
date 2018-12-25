@@ -38,7 +38,7 @@ for:
       only:
         - image: Visual Studio 2013
     skip_commits:
-      message: /\[ci-linux\]/
+      message: /(\[ci-linux\])|(\[minor\])/
     cache:
       - C:\strawberry
         # This tree also includes the installed CPAN modules.
@@ -57,7 +57,7 @@ for:
         - image: Ubuntu1604
     # Don't run Ubuntu if the commit message includes [ci-win]
     skip_commits:
-      message: /\[ci-win\]/
+      message: /(\[ci-win\])|(\[minor\])/
     cache:
       - /home/appveyor/perl5
 

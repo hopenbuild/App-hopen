@@ -101,7 +101,7 @@ testhere:   # Run the tests from lib rather than blib
 
 README.md: @{[$VERSION_FROM]} Makefile.PL
 \t-pod2markdown \$< | \\
-\t$secure_perl_path -ne 'print if /LICENSE/; next if /INTERNALS/../LICENSE/; print' \\
+\t$secure_perl_path -ne 'print if /LICENSE/; next if /INTERNALS/../LICENSE/; print "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)\\n\\n" if /SYNOPSIS/; print' \\
 > \$@
 
 all :: README.md

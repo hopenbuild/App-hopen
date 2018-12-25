@@ -2,6 +2,8 @@
 
 Build::Hopen - A build generator with first-class edges and explicit dependencies
 
+[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)
+
 # SYNOPSIS
 
 Input is the last-sorting file in `.` matching `*.hopen`, unless you
