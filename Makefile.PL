@@ -149,7 +149,10 @@ my %opts = (
         'Test::More' => '0',
     },
     PREREQ_PM => {
-        #TODO
+        'Class::Tiny' => '1.000',   # New API, but <1.001 has no BUILDARGS
+        #'Class::Tiny::Antlers' => '0',
+        #'Class::Method::Modifiers' => '1.05',  # version #s from Antlers
+        #'Role::Tiny' => '1.000000',
     },
 
     META_MERGE => {

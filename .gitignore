@@ -39,8 +39,8 @@
 # Module::Starter ignores
 Makefile
 Makefile.old
-Build
-Build.bat
+/Build
+/Build.bat
 META.*
 MYMETA.*
 .build/
@@ -55,3 +55,4 @@ pod2htm*.tmp
 pm_to_blib
 Build-Hopen-*
 Build-Hopen-*.tar.gz
+*.bak
