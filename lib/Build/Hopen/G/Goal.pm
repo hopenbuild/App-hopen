@@ -1,18 +1,18 @@
-# Build::Hopen::Goal - A named build goal
-package Build::Hopen::Goal;
+# Build::Hopen::G::Goal - A named build goal
+package Build::Hopen::G::Goal;
 use Build::Hopen;
 use Build::Hopen::Base;
 
 our $VERSION = '0.000001';
 
-use parent 'Build::Hopen::Node';
+use parent 'Build::Hopen::G::Node';
 use Class::Tiny;
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Goal - a named goal in a hopen build
+Build::Hopen::G::Goal - a named goal in a hopen build
 
 =head1 SYNOPSIS
 

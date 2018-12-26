@@ -1,23 +1,23 @@
-# Build::Hopen::Op - An individual operation
-package Build::Hopen::Op;
+# Build::Hopen::G::Op - An individual operation
+package Build::Hopen::G::Op;
 use Build::Hopen;
 use Build::Hopen::Base;
 
 our $VERSION = '0.000001';
 
-use parent 'Build::Hopen::Node';
+use parent 'Build::Hopen::G::Node';
 use Class::Tiny;
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Op - a hopen operation
+Build::Hopen::G::Op - a hopen operation
 
 =head1 SYNOPSIS
 
 An C<Op> represents one step in the build process.  C<Op>s exist to provide
-a place for edges (L<Build::Hopen::Edge>) to connect to.
+a place for edges (L<Build::Hopen::G::Edge>) to connect to.
 
 =cut
 

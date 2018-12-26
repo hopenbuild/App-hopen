@@ -159,6 +159,8 @@ my %opts = (
         #'Class::Method::Modifiers' => '1.05',  # version #s from Antlers
         #'Role::Tiny' => '1.000000',
 
+        'Class::XPath' => '1.4',
+
         'constant' => '0',
         'Data::Dumper' => '0',
         'Exporter' => '0',

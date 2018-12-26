@@ -1,0 +1,10 @@
+=head1 NAME
+
+Build::Hopen::G - Namespace for graph-related items in hopen
+
+=head1 SYNOPSIS
+
+Everything graph-related in hopen lives under C<Build::Hopen::G>.  This
+includes nodes, edges, and subclasses.
+
+=cut

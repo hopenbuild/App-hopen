@@ -1,5 +1,5 @@
-# Build::Hopen::Entity - base class for hopen's data model
-package Build::Hopen::Entity;
+# Build::Hopen::G::Entity - base class for hopen's data model
+package Build::Hopen::G::Entity;
 use Build::Hopen;
 use Build::Hopen::Base;
 
@@ -9,7 +9,7 @@ use Class::Tiny qw(name);
 
 =head1 NAME
 
-Build::Hopen::Entity - The base class for all hopen nodes and edges
+Build::Hopen::G::Entity - The base class for all hopen nodes and edges
 
 =head1 SYNOPSIS
 
