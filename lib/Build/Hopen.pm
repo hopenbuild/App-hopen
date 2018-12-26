@@ -1,8 +1,5 @@
 package Build::Hopen;
-
-use 5.014;
-use strict;
-use warnings;
+use Build::Hopen::Base;
 
 our $VERSION = '0.000001';
 

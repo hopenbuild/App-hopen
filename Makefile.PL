@@ -149,10 +149,26 @@ my %opts = (
         'Test::More' => '0',
     },
     PREREQ_PM => {
+        #'Algorithm::Dependency' => '1.106',
+            # Probably don't need this; we can use Graph::topological_sort().
+
+        'Carp' => '0',
+
         'Class::Tiny' => '1.000',   # New API, but <1.001 has no BUILDARGS
         #'Class::Tiny::Antlers' => '0',
         #'Class::Method::Modifiers' => '1.05',  # version #s from Antlers
         #'Role::Tiny' => '1.000000',
+
+        'constant' => '0',
+        'Data::Dumper' => '0',
+        'Exporter' => '0',
+        'feature' => '0',
+        'Import::Into' => '0',
+        'Getopt::Long' => '2.5',
+        'Graph' => '0.9704',        # For latest multiedged support
+        'Pod::Usage' => '0',
+        'strict' => '0',
+        'warnings' => '0',
     },
 
     META_MERGE => {
@@ -170,7 +186,6 @@ my %opts = (
             develop => {
                 requires => {
                     'App::RewriteVersion' => '0',   # for perl-bump-version
-                    'Data::Dumper' => '0',
                     'Module::Metadata' => '1.000016',
                 },
             },
