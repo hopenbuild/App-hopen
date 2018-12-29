@@ -27,12 +27,15 @@ a place for edges (L<Build::Hopen::G::Edge>) to connect to.
 
 =head2 run
 
-Run the operation, whatever that means.  Abstract function.
+Run the operation, whatever that means.  Usage:
+
+    my $hrOutputs = $op->run([$hrInputs])
 
 =cut
 
-sub run {
+sub run ($;$) {
     my $self = shift or croak 'Need an instance';
+    my $hrInputs = shift // {};
     ...
 } #run()
 
@@ -45,7 +48,7 @@ It returns C<false> for the outputs, signifying that this op has no outputs.
 
 =cut
 
-sub describe {
+sub describe ($) {
     my $self = shift or croak 'Need an instance';
     return { in => true, out => false };
         # By default, any inputs; no outputs.
