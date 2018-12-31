@@ -5,6 +5,42 @@ Build::Hopen::G - Namespace for graph-related items in hopen
 =head1 SYNOPSIS
 
 Everything graph-related in hopen lives under C<Build::Hopen::G>.  This
-includes nodes, edges, and subclasses.
+includes nodes, edges, and graphs (specifically, directed acyclic graphs,
+DAGs).
+
+Classes are (all under C<Build::Hopen::G>):
+
+    DAG - the graph
+    Entity - something in the graph
+        Edge
+        Node
+            Goal
+            Op - abstract operation
+                PassthroughOp - no-op concrete operation
+
+=head1 ELEMENTS
+
+=head2 C<Build::Hopen::G::Op>
+
+An operation.  Operations should, generally speaking, invoke a generator
+routine (L<Build::Hopen::Gen>) based on their inputs.  Operations should
+output values representing the generator action they took.
+
+B<TODO> Should operations pass through all inputs they don't use or transform?
+I am inclined to think they should, but this needs testing.
+
+=head2 C<Build::Hopen::G::Edge>
+
+An edge between operations.  Edges should, generally speaking, B<not> invoke
+generator routines.  Instead, they should transform their inputs to outputs,
+possibly with reference to the environment or (if necessary) the
+B<identity> (but not details) of the generator in use.
+
+=head2 C<Build::Hopen::G::DAG>
+
+A graph of operations and edges.  Every relationship between operations and
+edges is expressed in a DAG.  A DAG has zero or more goals
+(L<Build::Hopen::G::Goal>) that represent named activities expressed
+in the DAG.
 
 =cut

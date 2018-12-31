@@ -8,6 +8,10 @@ use Build::Hopen::G::PassthroughOp;
 
 use Graph;
 
+use constant {
+    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Edge
+};
+
 our $VERSION = '0.000001';
 
 use parent 'Build::Hopen::G::Op';
@@ -110,6 +114,52 @@ sub goal ($$) {
     return $goal;
 } #goal()
 
+=head2 connect
+
+   - C<DAG:connect(<op1>, <out-edge>, <in-edge>, <op2>)>:
+     connects output C<< out-edge >> of operation C<< op1 >> as input C<< in-edge >> of
+     operation C<< op2 >>.  No processing is done between output and input.
+     - C<< out-edge >> and C<< in-edge >> can be anything usable as a table index,
+       provided that table index appears in the corresponding operation's
+       descriptor.
+   - C<DAG:connect(<op1>, <op2>)>: creates a dependency edge from C<< op1 >> to
+     C<< op2 >>, indicating that C<< op1 >> must be run before C<< op2 >>.
+     Does not transfer any data from C<< op1 >> to C<< op2 >>.
+
+
+Returns the name of the edge?  The edge instance itself?  Maybe a
+fluent interface to the DAG for chaining C<connect> calls?
+
+=cut
+
+sub connect {
+    my $self = shift or croak 'Need an instance';
+    my ($op1, $out_edge, $in_edge, $op2) = @_;
+
+    if(!defined($in_edge)) {    # dependency edge
+        $op2 = $out_edge;
+        $out_edge = false;      # No outputs
+        $in_edge = false;       # No inputs
+    }
+
+    # Create the edge
+    my $edge = Build::Hopen::G::Edge->new(
+        name => '',             # TODO name it
+        in => [$out_edge],      # Output of op1
+        out => [$in_edge],      # Input to op2
+    );
+
+    # Add it to the graph (idempotent)
+    $self->_graph->add_edge($op1, $op2);
+
+    # Save the BHG::Edge as an edge attribute (not idempotent!)
+    my $attrs = $self->_graph->get_edge_attribute($op1, $op2, ATTR) || [];
+    push @$attrs, $edge;
+    $self->_graph->set_edge_attribute($op1, $op2, $attrs);
+
+    return $edge;
+} #connect()
+
 =head2 BUILD
 
 Initialize the instance.
@@ -142,7 +192,7 @@ constrained beyond that.  Generators can ask for the nodes in root-first or
 root-last order.
 
 The DAG is built backwards from the outputs toward the inputs, although calls
-to C<output> and C<connect> can appear in any order in the C<hopen> file as
+to L</output> and L</connect> can appear in any order in the C<hopen> file as
 long as everything is hooked in by the end of the file.
 
  - C<DAG>: A class representing a DAG.  An instance called C<main> represents
@@ -151,16 +201,6 @@ long as everything is hooked in by the end of the file.
    - C<DAG.arg> holds any parameters passed from outside the DAG.
    - C<DAG:set_default(<goal>)>: make C<< goal >> the default goal of this DAG
      (default target).
-   - C<DAG:connect(<op1>, <out-edge>, <in-edge>, <op2>)>:
-     connects output C<< out-edge >> of operation C<< op1 >> as input C<< in-edge >> of
-     operation C<< op2 >>.  No processing is done between output and input.
-     - C<< out-edge >> and C<< in-edge >> can be anything usable as a table index,
-       provided that table index appears in the corresponding operation's
-       descriptor.
-     - returns the name of the edge?  Maybe a fluent interface?
-   - C<DAG:connect(<op1>, <op2>)>: creates a dependency edge from C<< op1 >> to
-     C<< op2 >>, indicating that C<< op1 >> must be run before C<< op2 >>.
-     Does not transfer any data from C<< op1 >> to C<< op2 >>.
    - C<DAG:inject(<op1>,<op2>[, after/before'])>: Returns an operation that
      lives on the edge between C<op1> and C<op2>.  If the third parameter is
      false, C<'before'>, or omitted, the new operation will be the first

@@ -7,7 +7,9 @@ our $VERSION = '0.000001';
 
 use parent 'Build::Hopen::G::Entity';
 use Class::Tiny {
-    ops => sub { [] }
+    ops => sub { [] },
+    in => sub { [] },
+    out => sub { [] },
 };
 
 =head1 NAME
@@ -20,6 +22,14 @@ Build::Hopen::G::Edge - The base class for all hopen edges
 
 An arrayref of the operations to be performed while data traverses that
 edge.  Operations are performed in order of increasing array index.
+
+=head2 in
+
+An arrayref of inputs to this edge.  (??)
+
+=head2 out
+
+An arrayref of outputs from this edge.  (??)
 
 =cut
 

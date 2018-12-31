@@ -3,6 +3,8 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000001';
 
+our $VERBOSE = false;
+
 1; # End of Build::Hopen
 __END__
 
@@ -40,6 +42,12 @@ Manually: clone or untar into a working directory.  Then, in that directory,
 
 If some of the tests fail, please check the issues and file a new one if
 no one else has reported the problem yet.
+
+=head1 VARIABLES
+
+=head2 C<$Build::Hopen::VERBOSE>
+
+Set to truthy to get debug output on stderr from hopen's internals.
 
 =head1 AUTHOR
 
