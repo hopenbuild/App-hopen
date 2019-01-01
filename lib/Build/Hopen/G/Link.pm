@@ -33,6 +33,6 @@ An arrayref of outputs from this edge.  (??)
 
 =cut
 
-#1;
+1;
 __END__
 # vi: set fdm=marker: #

@@ -11,8 +11,8 @@ use Import::Into;
 our $VERSION = '0.000001';
 
 # Pragmas
-use 5.018;
-use feature ":5.18";
+use 5.014;
+use feature ":5.14";
 use strict;
 use warnings;
 
@@ -33,10 +33,11 @@ our @EXPORT = qw(true false);
 #    all => [@EXPORT, @EXPORT_OK]
 #);
 
-#BEGIN {
-#    $SIG{'__DIE__'} = sub { Carp::confess(@_) } unless $SIG{'__DIE__'};
-#    #$Exporter::Verbose=1;
-#}
+#DEBUG
+BEGIN {
+    $SIG{'__DIE__'} = sub { Carp::confess(@_) } unless $SIG{'__DIE__'};
+    #$Exporter::Verbose=1;
+}
 
 sub import {
     my $target = caller;

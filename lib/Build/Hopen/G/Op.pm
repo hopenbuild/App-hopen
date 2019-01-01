@@ -6,7 +6,10 @@ use Build::Hopen::Base;
 our $VERSION = '0.000001';
 
 use parent 'Build::Hopen::G::Node';
-use Class::Tiny;
+use Class::Tiny {
+    want => sub { [] },     # Desired inputs
+    need => sub { [] },     # Required inputs
+};
 
 # Docs {{{1
 
@@ -31,11 +34,14 @@ Run the operation, whatever that means.  Usage:
 
     my $hrOutputs = $op->run([$hrInputs])
 
+C<$hrOutputs> is guaranteed
+to be a new hash, not the same hash as C<$hrInputs>.
+
 =cut
 
 sub run {
     my $self = shift or croak 'Need an instance';
-    my $hrInputs = shift // {};
+    my $hrInputs = shift || {};
     ...
 } #run()
 

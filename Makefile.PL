@@ -1,3 +1,5 @@
+#!perl
+# Makefile.PL for Build::Hopen
 use 5.014;
 use strict;
 use warnings;
@@ -145,7 +147,12 @@ my %opts = (
         'ExtUtils::MakeMaker' => '0',
         'File::Spec' => '0',
     },
-    BUILD_REQUIRES => {
+    TEST_REQUIRES => {
+        'Carp' => '0',
+        'Exporter' => '0',
+        'Import::Into' => '0',
+        'rlib' => '0',
+        'Scalar::Util' => '0',
         'Test::More' => '0',
     },
     PREREQ_PM => {
@@ -154,7 +161,7 @@ my %opts = (
 
         'Carp' => '0',
 
-        'Class::Tiny' => '1.000',   # New API, but <1.001 has no BUILDARGS
+        'Class::Tiny' => '1.000',   # New API.  NOTE: <1.001 has no BUILDARGS
         #'Class::Tiny::Antlers' => '0',
         #'Class::Method::Modifiers' => '1.05',  # version #s from Antlers
         #'Role::Tiny' => '1.000000',
@@ -169,6 +176,7 @@ my %opts = (
         'Getopt::Long' => '2.5',
         'Graph' => '0.9704',        # For latest multiedged support
         'Pod::Usage' => '0',
+        'Storable' => '0',
         'strict' => '0',
         'warnings' => '0',
     },

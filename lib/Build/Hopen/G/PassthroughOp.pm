@@ -7,6 +7,7 @@ our $VERSION = '0.000001';
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny;
+use Storable ();
 
 # Docs {{{1
 
@@ -38,8 +39,9 @@ The output is C<{}> if no inputs are provided.
 
 sub run {
     my $self = shift or croak 'Need an instance';
-    my $hrInputs = shift // {};
-    return {};
+    my $hrRetval = {};
+    $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
+    return $hrRetval;
 } #run()
 
 =head2 describe

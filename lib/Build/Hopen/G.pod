@@ -10,13 +10,13 @@ DAGs).
 
 Classes are (all under C<Build::Hopen::G>):
 
-    DAG - the graph
     Entity - something in the graph
         Link - connection between Nodes
         Node - abstract graph node
-            Goal - a node that just gives a name to a set of operations
             Op - abstract operation
+                Goal - a node that just gives a name to a set of operations
                 PassthroughOp - no-op concrete operation
+                DAG - the graph
 
 =head1 ELEMENTS
 

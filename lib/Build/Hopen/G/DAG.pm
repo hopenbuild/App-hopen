@@ -3,19 +3,9 @@ package Build::Hopen::G::DAG;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-use Build::Hopen::G::Node;
-use Build::Hopen::G::PassthroughOp;
-
-use Graph;
-
-use constant {
-    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Link
-};
-
 our $VERSION = '0.000001';
 
 use parent 'Build::Hopen::G::Op';
-
 use Class::Tiny {
     goals   => sub { [] },
     default_goal => undef,
@@ -26,7 +16,15 @@ use Class::Tiny {
     _final   => undef,  # The graph root - all goals have edges to this
 };
 
+use Build::Hopen::G::Node;
+use Build::Hopen::G::Goal;
+use Graph;
+
 # Class data {{{1
+
+use constant {
+    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Link
+};
 
 # A counter used for making unique DAG root-node names
 my $_dag_final_id = 0;
@@ -50,6 +48,10 @@ other DAGs.
 
 Arrayref of the goals for this DAG.
 
+=head2 default_goal
+
+The default goal for this DAG.
+
 =head2 arg
 
 Hashref of the arguments into this DAG.
@@ -59,6 +61,10 @@ Hashref of the arguments into this DAG.
 The actual graph.  Provided so you can use it if you want.  However, if you
 find that you do have to use it, please open an issue so we can see about
 providing a documented API for your use case!
+
+=head2 _final
+
+The node to which all goals are connected.
 
 =head1 FUNCTIONS
 
@@ -103,14 +109,17 @@ that operation are provided as outputs of the DAG under the corresponding name.
      A C<hopen> file with no C<main:goal()> calls will result in nothing
      happening when C<hopen> is run.
 
+The first call to C<goal()> also sets L</default_goal>.
+
 =cut
 
 sub goal {
     my $self = shift or croak 'Need an instance';
     my $name = shift or croak 'Need a goal name';
-    my $goal = Build::Hopen::G::PassthroughOp->new(name => $name);
+    my $goal = Build::Hopen::G::Goal->new(name => $name);
     $self->_graph->add_vertex($goal);
     $self->_graph->add_edge($goal, $self->_final);
+    $self->default_goal($goal) unless $self->default_goal;
     return $goal;
 } #goal()
 
@@ -167,17 +176,20 @@ Initialize the instance.
 =cut
 
 sub BUILD {
+    #use Data::Dumper;
+    #say Dumper(\@_);
     my $self = shift or croak 'Need an instance';
+    # my $hrArgs = shift;
 
     my $graph = Graph->new( directed => true,
                             refvertexed => true,
                             multiedged => true);
-    my $final = Build::Hopen::G::Node->new('_DAG_ROOT' . $_dag_final_id++);
+    my $final = Build::Hopen::G::Node->new(
+                                    name => '_DAG_ROOT' . $_dag_final_id++);
     $graph->add_vertex($final);
 
     $self->_graph($graph);
     $self->_final($final);
-
 } #BUILD()
 
 1;
