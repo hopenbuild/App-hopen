@@ -9,7 +9,7 @@ use Build::Hopen::G::PassthroughOp;
 use Graph;
 
 use constant {
-    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Edge
+    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Link
 };
 
 our $VERSION = '0.000001';
@@ -23,13 +23,13 @@ use Class::Tiny {
 
     # Private attributes - initialized by BUILD()
     _graph  => undef,
-    _root   => undef
+    _final   => undef,  # The graph root - all goals have edges to this
 };
 
 # Class data {{{1
 
 # A counter used for making unique DAG root-node names
-my $_dag_root_id = 0;
+my $_dag_final_id = 0;
 
 # }}}1
 # Docs {{{1
@@ -78,7 +78,7 @@ as the values under that name.  Usage:
 
 =cut
 
-sub run ($;$) {
+sub run {
     my $self = shift or croak 'Need an instance';
     my $hrInputs = shift // {};
 
@@ -105,12 +105,12 @@ that operation are provided as outputs of the DAG under the corresponding name.
 
 =cut
 
-sub goal ($$) {
+sub goal {
     my $self = shift or croak 'Need an instance';
     my $name = shift or croak 'Need a goal name';
     my $goal = Build::Hopen::G::PassthroughOp->new(name => $name);
     $self->_graph->add_vertex($goal);
-    $self->_graph->add_edge($self->_root, $goal);
+    $self->_graph->add_edge($goal, $self->_final);
     return $goal;
 } #goal()
 
@@ -143,7 +143,7 @@ sub connect {
     }
 
     # Create the edge
-    my $edge = Build::Hopen::G::Edge->new(
+    my $edge = Build::Hopen::G::Link->new(
         name => '',             # TODO name it
         in => [$out_edge],      # Output of op1
         out => [$in_edge],      # Input to op2
@@ -152,7 +152,7 @@ sub connect {
     # Add it to the graph (idempotent)
     $self->_graph->add_edge($op1, $op2);
 
-    # Save the BHG::Edge as an edge attribute (not idempotent!)
+    # Save the BHG::Link as an edge attribute (not idempotent!)
     my $attrs = $self->_graph->get_edge_attribute($op1, $op2, ATTR) || [];
     push @$attrs, $edge;
     $self->_graph->set_edge_attribute($op1, $op2, $attrs);
@@ -172,11 +172,11 @@ sub BUILD {
     my $graph = Graph->new( directed => true,
                             refvertexed => true,
                             multiedged => true);
-    my $root = Build::Hopen::G::Node->new('_DAG_ROOT' . $_dag_root_id++);
-    $graph->add_vertex($root);
+    my $final = Build::Hopen::G::Node->new('_DAG_ROOT' . $_dag_final_id++);
+    $graph->add_vertex($final);
 
     $self->_graph($graph);
-    $self->_root($root);
+    $self->_final($final);
 
 } #BUILD()
 

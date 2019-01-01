@@ -36,7 +36,7 @@ The output is C<{}> if no inputs are provided.
 
 =cut
 
-sub run ($;$) {
+sub run {
     my $self = shift or croak 'Need an instance';
     my $hrInputs = shift // {};
     return {};
@@ -51,7 +51,7 @@ op may output anything.
 
 =cut
 
-sub describe ($) {
+sub describe {
     my $self = shift or croak 'Need an instance';
     return { in => true, out => true };
         # By default, any inputs; any outputs.

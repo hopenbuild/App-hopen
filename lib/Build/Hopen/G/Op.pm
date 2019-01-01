@@ -33,7 +33,7 @@ Run the operation, whatever that means.  Usage:
 
 =cut
 
-sub run ($;$) {
+sub run {
     my $self = shift or croak 'Need an instance';
     my $hrInputs = shift // {};
     ...
@@ -48,7 +48,7 @@ It returns C<false> for the outputs, signifying that this op has no outputs.
 
 =cut
 
-sub describe ($) {
+sub describe {
     my $self = shift or croak 'Need an instance';
     return { in => true, out => false };
         # By default, any inputs; no outputs.

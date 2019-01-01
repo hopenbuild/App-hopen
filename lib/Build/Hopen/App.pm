@@ -1,5 +1,5 @@
 # Build::Hopen::App: hopen(1) program
-package Build::Hopen::App
+package Build::Hopen::App;
 use Build::Hopen;
 use Build::Hopen::Base;
 
@@ -35,16 +35,16 @@ my %CMDLINE_OPTS = (
 
     #DUMP_VARS => ['d', '|dump-variables', false],
     #DEBUG => ['D','|debug', false],
-    EVAL => ['e','|source=s@', $dr_save_source],
+    #EVAL => ['e','|source=s@', $dr_save_source],
     #RESTRICTED_EVAL => ['E','|exec=s@'],
-    SCRIPT => ['f','|file=s@', $dr_save_source],
+    #SCRIPT => ['f','|file=s@', $dr_save_source],
     # -F field separator?
     # -h and --help reserved
     # INPUT_FILENAME assigned by parse_command_line_into()
     #INCLUDE => ['i','|include=s@'],
     #KEEP_GOING => ['k','|keep-going',false], #not in gawk
     #LIB => ['l','|load=s@'],
-    LANGUAGE => ['L','|language:s'],
+    #LANGUAGE => ['L','|language:s'],
     # --man reserved
     # OUTPUT_FILENAME => ['o','|output=s', ""], # conflict with gawk
     # OPTIMIZE => ['O','|optimize'],
@@ -52,16 +52,16 @@ my %CMDLINE_OPTS = (
     #SOURCES reserved
     # --usage reserved
     PRINT_VERSION => ['version','', false],
-    DEFS => ['v','|var:s%'],
+    #DEFS => ['v','|var:s%'],
     # -? reserved
     #
     # gawk(1) long options: --dump-variables, --exec, --gen-po, --lint,
     # --profile
 
     # Long-only options that are specific to axk.
-    NO_INPUT => ['no-input'],   # When set, don't read any files.  This is so
+    #NO_INPUT => ['no-input'],   # When set, don't read any files.  This is so
                                 # testing with empty inputs is easier.
-    SHOW => ['show',':s@'],     # which debugging output to print.
+                                #SHOW => ['show',':s@'],     # which debugging output to print.
                                 # TODO make it a hash instead?
 );
 
@@ -70,7 +70,7 @@ sub parse_command_line {
     # values from the command line, keyed by the keys in %CMDLINE_OPTS.
 
     my %params = @_;
-    local @_Sources;
+    #local @_Sources;
 
     my $hrOptsOut = $params{into};
 
@@ -113,7 +113,7 @@ sub parse_command_line {
     # Process other arguments.  TODO? support multiple input filenames?
     #$hrOptsOut->{INPUT_FILENAME} = $ARGV[0] // "";
 
-    $hrOptsOut->{SOURCES} = \@_Sources;     # our local copy
+    #$hrOptsOut->{SOURCES} = \@_Sources;     # our local copy
 
 } #parse_command_line()
 

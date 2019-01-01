@@ -12,9 +12,9 @@ Classes are (all under C<Build::Hopen::G>):
 
     DAG - the graph
     Entity - something in the graph
-        Edge
-        Node
-            Goal
+        Link - connection between Nodes
+        Node - abstract graph node
+            Goal - a node that just gives a name to a set of operations
             Op - abstract operation
                 PassthroughOp - no-op concrete operation
 
@@ -29,11 +29,11 @@ output values representing the generator action they took.
 B<TODO> Should operations pass through all inputs they don't use or transform?
 I am inclined to think they should, but this needs testing.
 
-=head2 C<Build::Hopen::G::Edge>
+=head2 C<Build::Hopen::G::Link>
 
-An edge between operations.  Edges should, generally speaking, B<not> invoke
-generator routines.  Instead, they should transform their inputs to outputs,
-possibly with reference to the environment or (if necessary) the
+A connection between operations.  Edges should, generally speaking, B<not>
+invoke generator routines.  Instead, they should transform their inputs to
+outputs, possibly with reference to the environment or (if necessary) the
 B<identity> (but not details) of the generator in use.
 
 =head2 C<Build::Hopen::G::DAG>

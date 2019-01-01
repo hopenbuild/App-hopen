@@ -35,6 +35,8 @@
 ~*
 *~
 *.swp
+core
+*.stackdump
 
 # Module::Starter ignores
 Makefile

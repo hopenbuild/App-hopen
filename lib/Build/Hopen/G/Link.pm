@@ -1,5 +1,5 @@
-# Build::Hopen::G::Edge - base class for hopen edges
-package Build::Hopen::G::Edge;
+# Build::Hopen::G::Link - base class for hopen edges
+package Build::Hopen::G::Link;
 use Build::Hopen;
 use Build::Hopen::Base;
 
@@ -14,7 +14,7 @@ use Class::Tiny {
 
 =head1 NAME
 
-Build::Hopen::G::Edge - The base class for all hopen edges
+Build::Hopen::G::Link - The base class for all hopen links between ops.
 
 =head1 VARIABLES
 

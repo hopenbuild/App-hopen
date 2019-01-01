@@ -3,10 +3,7 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000001';
 
-our $VERBOSE = false;
-
-1; # End of Build::Hopen
-__END__
+# Docs {{{1
 
 =head1 NAME
 
@@ -48,6 +45,46 @@ no one else has reported the problem yet.
 =head2 C<$Build::Hopen::VERBOSE>
 
 Set to truthy to get debug output on stderr from hopen's internals.
+
+=cut
+
+# }}}1
+
+our $VERBOSE = false;
+
+=head1 FUNCTIONS
+
+=head2 boolify
+
+Convert a scalar to a Boolean as Perl, except:
+
+=over
+
+=item * Falsy
+
+C</^(false|off|no)$/i>
+
+=item * Truthy
+
+C<"0">
+
+=back
+
+So C<false>, C<off>, C<no>, empty string, C<undef>, and numeric C<0> are falsy,
+and all other values (including string C<'0'>) are truthy.
+
+=cut
+
+sub boolify {
+    return false if $_[0] =~ /^(false|off|no)$/i;
+    return true if $_[0] =~ /^0$/;
+    return !!$_[0];
+} #boolify()
+
+1; # End of Build::Hopen
+__END__
+
+# Rest of docs {{{1
 
 =head1 AUTHOR
 
@@ -138,3 +175,6 @@ Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 =cut
+
+# }}}1
+# vi: set fdm=marker:
