@@ -38,9 +38,9 @@ for:
       only:
         - image: Visual Studio 2013
     skip_commits:
-      message: /(\[ci-linux\])|(\[minor\])/
+      message: /\[ci-linux\]/
     cache:
-      - C:\strawberry
+      - C:\strawberry -> .appveyor.yml
         # This tree also includes the installed CPAN modules.
 
     install:
@@ -57,9 +57,9 @@ for:
         - image: Ubuntu1604
     # Don't run Ubuntu if the commit message includes [ci-win]
     skip_commits:
-      message: /(\[ci-win\])|(\[minor\])/
+      message: /\[ci-win\]/
     cache:
-      - /home/appveyor/perl5
+      - /home/appveyor/perl5 -> .appveyor.yml
 
     install:
       # First, manually do what local::lib does: set up Perl to
