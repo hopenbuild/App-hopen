@@ -1,4 +1,7 @@
-#!/usr/bin/env lua
-(require 'hopen.runner')()
-
--- vi: set ft=lua ts=4 sts=4 sw=4 et ai: --
+#!/usr/bin/perl
+# Copyright (c) 2018 cxw42.  All rights reserved.  See LICENSE file.
+# To run this manually from the source tree, do
+#     perl -Ilib bin/hopen
+use Build::Hopen::App;
+exit(Build::Hopen::App::Main(\@ARGV));
+# vi: set ts=4 sts=4 sw=4 et ai ft=perl: #

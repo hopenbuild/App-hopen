@@ -3,7 +3,7 @@ package Build::Hopen::G::PassthroughOp;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny;
@@ -39,6 +39,7 @@ The output is C<{}> if no inputs are provided.
 
 sub run {
     my $self = shift or croak 'Need an instance';
+    hlog { Running => __PACKAGE__ , $self->name };
     my $hrRetval = {};
     $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
     return $hrRetval;

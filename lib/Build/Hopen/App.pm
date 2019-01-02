@@ -3,7 +3,7 @@ package Build::Hopen::App;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 
@@ -145,27 +145,27 @@ sub Main {
     #        push @{$opts{SOURCES}}, [false, shift @$lrArgs];
     #    }
 
-    my $core = Build::Hopen::Core->new(\%opts);
-        # Note: core doesn't copy the provided options, so make sure
-        # they stick around as long as $core does.
-
-        #    my $cmd_line_idx = 0;   # Number the `-e`s on the command line
-        #    foreach my $lrSource (@{$opts{SOURCES}}) {
-        #        my ($is_file, $text) = @$lrSource;
-        #        if($is_file) {
-        #            $core->load_script_file($text);
-        #        } else {
-        #            $core->load_script_text($text,
-        #                "(cmd line script #@{[++$cmd_line_idx]})",
-        #                true);  # true => add a Ln if there isn't one in the script
-        #        }
-        #    } #foreach source
-
-    # read from stdin if no input files specified.
-    push @$lrArgs, '-' unless @$lrArgs || $opts{NO_INPUT};
-
-    $core->run(@$lrArgs);
-
+    ##    my $core = Build::Hopen::Core->new(\%opts);
+    ##        # Note: core doesn't copy the provided options, so make sure
+    ##        # they stick around as long as $core does.
+    ##
+    ##        #    my $cmd_line_idx = 0;   # Number the `-e`s on the command line
+    ##        #    foreach my $lrSource (@{$opts{SOURCES}}) {
+    ##        #        my ($is_file, $text) = @$lrSource;
+    ##        #        if($is_file) {
+    ##        #            $core->load_script_file($text);
+    ##        #        } else {
+    ##        #            $core->load_script_text($text,
+    ##        #                "(cmd line script #@{[++$cmd_line_idx]})",
+    ##        #                true);  # true => add a Ln if there isn't one in the script
+    ##        #        }
+    ##        #    } #foreach source
+    ##
+    ##    # read from stdin if no input files specified.
+    ##    push @$lrArgs, '-' unless @$lrArgs || $opts{NO_INPUT};
+    ##
+    ##    $core->run(@$lrArgs);
+    ##
     return 0;
 } #Main()
 

@@ -3,7 +3,7 @@ package Build::Hopen::G::Op;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use parent 'Build::Hopen::G::Node';
 use Class::Tiny {

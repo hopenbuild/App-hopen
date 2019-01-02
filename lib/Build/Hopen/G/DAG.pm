@@ -3,7 +3,7 @@ package Build::Hopen::G::DAG;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {
@@ -16,6 +16,7 @@ use Class::Tiny {
     _final   => undef,  # The graph root - all goals have edges to this
 };
 
+use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
 use Build::Hopen::G::Goal;
 use Graph;
@@ -87,12 +88,26 @@ as the values under that name.  Usage:
 sub run {
     my $self = shift or croak 'Need an instance';
     my $hrInputs = shift // {};
+    my $retval = {};
 
     my @order = eval { $self->_graph->toposort };
     die "Graph contains a cycle!" if $@;
 
-    say "Traversing DAG $self->name";
-    say foreach @order;
+    # Remove _final from the order for now - I don't yet know what it means
+    # to traverse _final.
+    die "Last item in order isn't _final!"
+        unless $order[$#order] == $self->_final;
+    pop @order;
+
+    hlog { 'Traversing DAG ' . $self->name };
+    foreach (@order) {
+        # TODO process Links
+        # TODO give each op only the inputs on its in-edges
+        my $step_output = $_->run($hrInputs);
+
+        $retval->{$_->name} = $step_output if $_->DOES('Build::Hopen::G::Goal');
+    }
+    return $retval;
 } #run()
 
 =head2 goal
@@ -151,8 +166,8 @@ sub connect {
         $in_edge = false;       # No inputs
     }
 
-    # Create the edge
-    my $edge = Build::Hopen::G::Link->new(
+    # Create the link
+    my $link = Build::Hopen::G::Link->new(
         name => '',             # TODO name it
         in => [$out_edge],      # Output of op1
         out => [$in_edge],      # Input to op2
@@ -163,10 +178,10 @@ sub connect {
 
     # Save the BHG::Link as an edge attribute (not idempotent!)
     my $attrs = $self->_graph->get_edge_attribute($op1, $op2, ATTR) || [];
-    push @$attrs, $edge;
-    $self->_graph->set_edge_attribute($op1, $op2, $attrs);
+    push @$attrs, $link;
+    $self->_graph->set_edge_attribute($op1, $op2, ATTR, $attrs);
 
-    return $edge;
+    return $link;
 } #connect()
 
 =head2 BUILD
@@ -182,8 +197,7 @@ sub BUILD {
     # my $hrArgs = shift;
 
     my $graph = Graph->new( directed => true,
-                            refvertexed => true,
-                            multiedged => true);
+                            refvertexed => true);
     my $final = Build::Hopen::G::Node->new(
                                     name => '_DAG_ROOT' . $_dag_final_id++);
     $graph->add_vertex($final);

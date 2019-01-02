@@ -103,11 +103,16 @@ testhere:   # Run the tests from lib rather than blib
 
 README.md: @{[$VERSION_FROM]} Makefile.PL
 \t-pod2markdown \$< | \\
-\t$secure_perl_path -ne 'print if /LICENSE/; next if /INTERNALS/../LICENSE/; print "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)\\n\\n" if /SYNOPSIS/; print' \\
-> \$@
+\t$secure_perl_path -ne 'print if /SUPPORT/; next if /VARIABLES/../SUPPORT/; print "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)\\n\\n" if /SYNOPSIS/; print' \\
+\t> \$@
 
-all :: README.md
-dist :: README.md
+README: @{[$VERSION_FROM]} Makefile.PL
+\t-pod2text \$< | \\
+\t$secure_perl_path -ne 'print if /SUPPORT/; next if /VARIABLES/../SUPPORT/; print' \\
+\t> \$@
+
+all :: README.md README
+dist :: README.md README
 
 # Uninstallation: mimic what the normal "uninstall" target does, but actually
 # carry out the actions.
@@ -137,8 +142,8 @@ EOT
 my %opts = (
     NAME             => 'Build::Hopen',
     AUTHOR           => q{Christopher White <cxwembedded@gmail.com>},
-    VERSION_FROM     => 'lib/Build/Hopen.pm',
-    ABSTRACT_FROM    => 'lib/Build/Hopen.pm',
+    VERSION_FROM     => $VERSION_FROM,
+    ABSTRACT_FROM    => $VERSION_FROM,
     LICENSE          => 'lgpl_2_1',
     PL_FILES         => {},
     MIN_PERL_VERSION => '5.014',
@@ -146,6 +151,10 @@ my %opts = (
         'Config' => '0',
         'ExtUtils::MakeMaker' => '0',
         'File::Spec' => '0',
+    },
+    BUILD_REQUIRES => {
+        'Pod::Markdown' => '0',     # pod2markdown
+        'Pod::Text' => '0',         # pod2text
     },
     TEST_REQUIRES => {
         'Carp' => '0',

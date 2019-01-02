@@ -3,14 +3,11 @@ package Build::Hopen::G::Goal;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {
-    _passthrough => sub {
-        require Build::Hopen::G::PassthroughOp;
-        return Build::Hopen::G::PassthroughOp->new($_[0]->name . '_inner');
-    },
+    _passthrough => sub { hnew PassthroughOp => ($_[0]->name . '_inner') },
 };
 
 # Docs {{{1
@@ -47,11 +44,10 @@ Wraps a L<Build::Hopen::G::PassthroughOp>'s describe function.
 
 =cut
 
-sub run {
+sub describe {
     my $self = shift or croak 'Need an instance';
     return $self->_passthrough->describe(@_);
 }
-
 
 1;
 __END__

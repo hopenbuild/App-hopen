@@ -35,15 +35,12 @@ Manually: clone or untar into a working directory.  Then, in that directory,
 If some of the tests fail, please check the issues and file a new one if
 no one else has reported the problem yet.
 
-# AUTHOR
-
-Christopher White, `<cxwembedded at gmail.com>`
-
 # SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc Build::Hopen
+    perldoc hopen
 
 You can also look for information at:
 
@@ -72,7 +69,7 @@ You can also look for information at:
 
 # LICENSE AND COPYRIGHT
 
-Copyright (C) 2018 Christopher White
+Copyright (C) 2018 Christopher White, `<cxwembedded at gmail.com>`
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

@@ -3,7 +3,7 @@ package Build::Hopen::G::Link;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000001';
+our $VERSION = '0.000002'; # TRIAL
 
 use parent 'Build::Hopen::G::Entity';
 use Class::Tiny {
