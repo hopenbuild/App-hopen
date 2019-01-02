@@ -4,7 +4,7 @@ use Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000002'; # TRIAL
+our $VERSION = '0.000003'; # TRIAL
 
 use parent 'TODO';
 use Class::Tiny qw(TODO);

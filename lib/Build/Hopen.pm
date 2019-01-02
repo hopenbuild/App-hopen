@@ -6,7 +6,7 @@ package Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000002'; # TRIAL
+our $VERSION = '0.000003'; # TRIAL
 
 our @EXPORT = qw(boolify hnew hlog);
 # Docs {{{1

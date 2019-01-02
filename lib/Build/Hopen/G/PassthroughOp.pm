@@ -3,7 +3,7 @@ package Build::Hopen::G::PassthroughOp;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000002'; # TRIAL
+our $VERSION = '0.000003'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny;
