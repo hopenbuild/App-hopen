@@ -1,5 +1,5 @@
-# Build::Hopen::Phase::Gen - generation-phase operations
-package Build::Hopen::Phase::Gen;
+# Build::Hopen::Phase::Probe - probe-phase operations
+package Build::Hopen::Phase::Probe;
 use Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
@@ -12,34 +12,16 @@ use Class::Tiny qw(TODO);
 
 =head1 NAME
 
-Build::Hopen::Phase::Gen - Generate build files
+Build::Hopen::Phase::Probe - Check the build system
 
 =head1 SYNOPSIS
 
-Gen runs second.  Gen reads:
+Probe runs first.  Probe reads a foundations file and outputs a capability
+file and an options file.  The user can then edit the options file to
+customize the build.
 
-=over
-
-=item *
-
-the capability file from Probe
-
-=item *
-
-the options file from Probe, possibly with user edits
-
-=item *
-
-any context files identified by Probe
-
-=item *
-
-a recipes file specifying the build graph
-
-=back
-
-Gen outputs one or more blueprint files for a build system, such as make
-or Ninja.
+Probe also locates context files.  For example, when processing C<~/foo/.hopen>,
+Probe will also find C<~/foo.hopen> if it exists.
 
 =cut
 
@@ -48,6 +30,8 @@ or Ninja.
 =head1 FUNCTIONS
 
 =head2 todo
+
+TODO
 
 =cut
 

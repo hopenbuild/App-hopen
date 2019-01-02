@@ -40,7 +40,7 @@ my %CMDLINE_OPTS = (
     #SCRIPT => ['f','|file=s@', $dr_save_source],
     # -F field separator?
     # -h and --help reserved
-    # INPUT_FILENAME assigned by parse_command_line_into()
+    # INPUT_FILENAME assigned by _parse_command_line()
     #INCLUDE => ['i','|include=s@'],
     #KEEP_GOING => ['k','|keep-going',false], #not in gawk
     #LIB => ['l','|load=s@'],
@@ -65,7 +65,7 @@ my %CMDLINE_OPTS = (
                                 # TODO make it a hash instead?
 );
 
-sub parse_command_line {
+sub _parse_command_line {
     # Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
     # values from the command line, keyed by the keys in %CMDLINE_OPTS.
 
@@ -115,17 +115,17 @@ sub parse_command_line {
 
     #$hrOptsOut->{SOURCES} = \@_Sources;     # our local copy
 
-} #parse_command_line()
+} #_parse_command_line()
 
 # }}}1
 # === Command-line runner =============================================== {{{1
 
-# Command-line runner.  Call as XML::Axk::App::Main(\@ARGV).
-sub Main {
+# Command-line runner.  Call as XML::Axk::App::_Main(\@ARGV).
+sub _Main {
     my $lrArgs = shift or croak "No arguments - TODO";
 
     my %opts;
-    parse_command_line(from => $lrArgs, into => \%opts);
+    _parse_command_line(from => $lrArgs, into => \%opts);
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
         if($Build::Hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {

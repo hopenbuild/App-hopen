@@ -58,3 +58,15 @@ sub import {
 } #import()
 
 1;
+__END__
+
+=head1 NAME
+
+Build::Hopen::Base - basic definitions for hopen
+
+=head1 SYNOPSIS
+
+C<use Build::Hopen::Base;> to pull in C<5.014>, L<strict>, L<warnings>,
+L<Carp>, L<Data::Dumper>, C<true>, and C<false>.
+
+=cut
