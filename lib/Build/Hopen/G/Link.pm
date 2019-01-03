@@ -31,7 +31,25 @@ An arrayref of inputs to this edge.  (??)
 
 An arrayref of outputs from this edge.  (??)
 
+=head1 FUNCTIONS
+
+=head2 run
+
+Do something!  Usage:
+
+    my $hrOutputs = $op->run([$hrInputs])
+
+The output is C<{}> if no inputs are provided.
+
 =cut
+
+sub run {
+    my $self = shift or croak 'Need an instance';
+    hlog { Running => __PACKAGE__ , $self->name };
+    my $hrRetval = {};
+    $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
+    return $hrRetval;
+} #run()
 
 1;
 __END__

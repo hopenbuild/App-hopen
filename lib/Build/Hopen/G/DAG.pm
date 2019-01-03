@@ -20,6 +20,7 @@ use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
 use Build::Hopen::G::Goal;
 use Graph;
+use Storable ();
 
 # Class data {{{1
 
@@ -100,12 +101,30 @@ sub run {
     pop @order;
 
     hlog { 'Traversing DAG ' . $self->name };
-    foreach (@order) {
-        # TODO process Links
-        # TODO give each op only the inputs on its in-edges
-        my $step_output = $_->run($hrInputs);
+    foreach my $node (@order) {
+        # Inputs to this node
+        my $hrNodeInputs = Storable::dclone($hrInputs);
 
-        $retval->{$_->name} = $step_output if $_->DOES('Build::Hopen::G::Goal');
+        # Iterate over each node's edges and process any Links
+        my @predecessors = $self->_graph->predecessors($node);
+        foreach my $pred (@predecessors) {
+            my $links = $self->_graph->get_edge_attribute($pred, $node, ATTR);
+            next unless $links;
+            hlog { ('From', $pred->name, 'to', $node->name) };
+            my $link_inputs = $pred->outputs;
+            foreach my $link (@$links) {
+                hlog { ('From', $pred->name, 'link', $link->name, 'to', $node->name) };
+                my $link_outputs = $link->run($link_inputs);
+                @$hrNodeInputs{keys %$link_outputs} = values %$link_outputs;
+                    # TODO use Hash::Merge if necessary?
+            }
+        }
+
+        my $step_output = $node->run($hrNodeInputs);
+        $node->outputs($step_output);
+
+        $retval->{$node->name} = $step_output
+            if $node->DOES('Build::Hopen::G::Goal');
     }
     return $retval;
 } #run()
@@ -168,7 +187,7 @@ sub connect {
 
     # Create the link
     my $link = Build::Hopen::G::Link->new(
-        name => '',             # TODO name it
+        name => 'link_' . $op1->name . '_' . $op2->name,
         in => [$out_edge],      # Output of op1
         out => [$in_edge],      # Input to op2
     );

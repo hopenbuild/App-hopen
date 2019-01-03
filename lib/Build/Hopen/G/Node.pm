@@ -6,11 +6,19 @@ use Build::Hopen::Base;
 our $VERSION = '0.000003'; # TRIAL
 
 use parent 'Build::Hopen::G::Entity';
-#use Class::Tiny;
+use Class::Tiny {
+    outputs => sub { +{} }
+};
 
 =head1 NAME
 
 Build::Hopen::G::Node - The base class for all hopen nodes
+
+=head1 VARIABLES
+
+=head2 outputs
+
+Hashref of the outputs from the last time this node was run.  Default C<{}>.
 
 =cut
 
