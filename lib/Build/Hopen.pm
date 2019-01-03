@@ -6,9 +6,18 @@ package Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
 
+use Storable ();
+
 our $VERSION = '0.000003'; # TRIAL
 
 our @EXPORT = qw(boolify hnew hlog);
+our @EXPORT_OK = qw(clone);
+
+our %EXPORT_TAGS = (
+    default => [@EXPORT],
+    all => [@EXPORT, @EXPORT_OK]
+);
+
 # Docs {{{1
 
 =head1 NAME
@@ -131,14 +140,30 @@ Log information if L</$VERBOSE> is set.  Usage:
 The items in the list are joined by C<' '> on output, and a C<'\n'> is added.
 Each line is prefixed with C<'# '> for the benefit of test runs.
 
+The list is in C<{}> so that it won't be evaluated if logging is turned off.
+It is a full block, so you can run arbitrary code to decide what to log.
+If the block returns an empty list, hlog will not produce any output.
+
 =cut
 
 sub hlog (&) {
     return unless $VERBOSE;
-    my $crLog = shift or croak 'Nothing to log!';
+    my $crLog = shift;
     my @log = &$crLog();
-    say STDERR (join(' ', @log)) =~ s/^/# /gmr;
+    say STDERR (join(' ', @log)) =~ s/^/# /gmr if @log;
 } #hlog()
+
+=head2 clone
+
+Clones a scalar or a reference.  Thin wrapper around L<Storable/dclone>.
+
+=cut
+
+sub clone {
+    my $val = shift;
+    return $val unless ref($val);
+    return Storable::dclone($val);
+} #clone()
 
 1; # End of Build::Hopen
 __END__

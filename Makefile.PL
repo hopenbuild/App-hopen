@@ -185,7 +185,11 @@ my %opts = (
         'Getopt::Long' => '2.5',
         'Graph' => '0.9704',        # For latest multiedged support
         'Pod::Usage' => '0',
-        'Storable' => '0',
+
+        'Storable' => '3.06',
+            # So it can handle REGEXP -
+            # https://rt.perl.org/Public/Bug/Display.html?id=50608
+
         'strict' => '0',
         'warnings' => '0',
     },
