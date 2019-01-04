@@ -89,14 +89,22 @@ For convenience, C<< 'foo' ~~ $nameset >> invokes
 C<< $nameset->contains('foo') >>.  This is inspired by the Raku behaviour,
 in which C<< $x ~~ $y >> calls C<< $y.ACCEPTS($x) >>
 
+NOTE: C<< $nameset ~~ 'foo' >> (object first) is officially not supported by
+this module.  This form is possible in stable perls at least through 5.26.
+However, the changes (since reverted) in 5.27.7 would not have supported this
+form.  See
+L<http://blogs.perl.org/users/leon_timmermans/2017/12/smartmatch-in-5277.html>.
+However, as far as I can tell, even 5.27.7 would have supported the
+C<< 'foo' ~~ $nameset >> form.
+
 =cut
 
 use overload
     fallback => 1,
     '~~' => sub {
-        my ($self, $other, $swap) = @_;
-        hlog { 'Smartmatch' . ($swap ? ' (swapped)' : '') };
-        return $self->contains($other);
+        #my ($self, $other, $swap) = @_;
+        #hlog { 'Smartmatch' . ($swap ? ' (swapped)' : '') };
+        $_[0]->contains($_[1])
     };
 
 =head2 _build
@@ -117,9 +125,9 @@ sub _build {
         # Each regexp stringifies with surrounding parens, so we
         # don't need to add any.
 
-    return $str ? qr/$str/ : qr/(*FAIL)/;
-        # If $str is empty, the nameset is empty (`(*FAIL)`).  Otherwise,
-        # qr// would match anything.
+    return $str ? qr/\A(?:$str)\z/ : qr/(*FAIL)/;
+        # If $str is empty, the nameset is empty (`(*FAIL)`).  Without the ?: ,
+        # qr// would match anything, when we want to match nothing.
 } #_build()
 
 1;
