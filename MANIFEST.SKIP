@@ -7,6 +7,7 @@
 t/.*\.out$
 lua$
 TEMPLATE
+Build-Hopen-*
 
 #modified included
 # Avoid version control files.

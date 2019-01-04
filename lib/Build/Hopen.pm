@@ -6,6 +6,7 @@ package Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
 
+use Build::Hopen::Util::NameSet;
 use Storable ();
 
 our $VERSION = '0.000003'; # TRIAL
@@ -165,35 +166,27 @@ sub clone {
     return Storable::dclone($val);
 } #clone()
 
+=head1 CONSTANTS
+
 =head2 UNSPECIFIED
 
-Actually a constant - C<qr/./>.  Matches anything.  Always returns the same
-reference, so that it can be tested with C<==>.
+A L<Build::Hopen::Util::NameSet> that matches any non-empty string.
+Always returns the same reference, so that it can be tested with C<==>.
 
 =cut
 
-my $_UNSPECIFIED = qr/./;
-
-sub UNSPECIFIED () {
-    return $_UNSPECIFIED;
-}
+my $_UNSPECIFIED = Build::Hopen::Util::NameSet->new(qr/.(*ACCEPT)/);
+sub UNSPECIFIED () { $_UNSPECIFIED };
 
 =head2 NOTHING
 
-Actually a constant, representing nothing.  Always returns the same
-reference, so that it can be tested with C<==>.
+A L<Build::Hopen::Util::NameSet> that never matches.  Always returns the
+same reference, so that it can be tested with C<==>.
 
 =cut
 
-my $_NOTHING = {};
-
-sub NOTHING () {
-    return $_NOTHING;
-}
-
-## TODO change these to use B::H::Util::NameSet instead.
-## Then UNSPECIFIED and NOTHING can be
-## associated with that class, and membership can be tested easily.
+my $_NOTHING = Build::Hopen::Util::NameSet->new();
+sub NOTHING () { $_NOTHING };
 
 1; # End of Build::Hopen
 __END__

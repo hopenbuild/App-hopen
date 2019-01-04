@@ -147,6 +147,11 @@ my %opts = (
     LICENSE          => 'lgpl_2_1',
     PL_FILES         => {},
     MIN_PERL_VERSION => '5.014',
+        # For:
+        #   - full Unicode support (this was the big one) (5.014)
+        #   - backtracking control verbs (5.010)
+        #   - working smartmatch (5.010001)
+        #   - stringifying regexes with modifiers (5.014)
     CONFIGURE_REQUIRES => {
         'Config' => '0',
         'ExtUtils::MakeMaker' => '0',

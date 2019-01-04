@@ -1,8 +1,6 @@
 # Build::Hopen::Util::NameSet - set of strings and regexps
 package Build::Hopen::Util::NameSet;
-use Build::Hopen;
 use Build::Hopen::Base;
-#use parent 'Exporter';
 
 our $VERSION = '0.000003'; # TRIAL
 
@@ -79,7 +77,7 @@ C<< $set->contains('foo') >>.
 sub contains {
     my $self = shift or croak 'Need an instance';
     $self->{_RE} = $self->_build unless $self->{_RE};   # Clean
-    hlog { $self->{_RE} };
+    #say STDERR $self->{_RE};
     return shift =~ $self->{_RE};
 } #contains()
 
@@ -103,7 +101,6 @@ use overload
     fallback => 1,
     '~~' => sub {
         #my ($self, $other, $swap) = @_;
-        #hlog { 'Smartmatch' . ($swap ? ' (swapped)' : '') };
         $_[0]->contains($_[1])
     };
 
@@ -121,7 +118,10 @@ sub _build {
     my $self = shift or croak 'Need an instance';
 
     my $strs = join '|', map { quotemeta } @{$self->{_strings}};
-    my $str = join '|', @{$self->{_regexps}}, $strs;
+        # TODO should I be using qr/\Q$_\E/ instead, since quotemeta
+        # isn't quite right on 5.14?  Or should I be using 5.16+?
+        # See how the cpantesters results for t/008 turn out on 5.14.
+    my $str = join '|', @{$self->{_regexps}}, ($strs || ());
         # Each regexp stringifies with surrounding parens, so we
         # don't need to add any.
 

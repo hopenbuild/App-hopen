@@ -19,21 +19,21 @@ for(my $iter=0; $iter<2; ++$iter) {
     if($iter == 0) {
         $s = Build::Hopen::Util::NameSet->new();
         isa_ok($s, 'Build::Hopen::Util::NameSet');
-        ok(!$s->contains('x'), "Empty nameset doesn't contain 'x'");
-        ok(!('x' ~~ $s), "Empty nameset doesn't accept 'x'");
+        ok(!$s->contains('x'), "Empty nameset rejects 'x'");
+        ok(!('x' ~~ $s), "Empty nameset rejects 'x'");
         $s->add('foo', 'bar', qr/bat/, [qr/qu+x/i, 'array', ['inner array']],
-                {key=>'value'});
+                {key=>'value'}, 'русский', 'язык');
 
     } elsif($iter == 1) {
         $s = Build::Hopen::Util::NameSet->new(
             'foo', 'bar', qr/bat/, [qr/qu+x/i, 'array', ['inner array']],
-            {key=>'value'});
+            {key=>'value'}, 'русский', 'язык');
         isa_ok($s, 'Build::Hopen::Util::NameSet');
     }
 
     # Test
-    ok(!$s->contains('x'), "Nameset doesn't contain 'x'");
-    ok(!('x' ~~ $s), "Nameset doesn't accept 'x'");
+    ok(!$s->contains('x'), "Nameset rejects 'x'");
+    ok(!('x' ~~ $s), "Nameset rejects 'x'");
     ok($s->contains($_), "Nameset accepts literal $_")
         foreach (qw(foo bar array key), 'inner array');
     ok($_ ~~ $s, "Nameset accepts literal $_ ~~")
@@ -41,10 +41,17 @@ for(my $iter=0; $iter<2; ++$iter) {
     ok($s->contains($_), "Nameset accepts $_") foreach qw(bat qux QUX QuUuUx);
     ok($_ ~~ $s, "Nameset accepts $_ ~~") foreach qw(bat qux QUX QuUuUx);
 
+    # UTF-8 words
+    ok $_ ~~ $s, "Nameset accepts UTF8 $_" foreach qw(русский язык);
+
+    # Some kanji and hiragana
+    ok !($_ ~~ $s), "Nameset rejects UTF8 $_" foreach qw(日本語 ひらがな);
+
     # Partial words shouldn't succeed
-    ok(!($_ ~~ $s), "Nameset does not accept $_")
+    ok(!($_ ~~ $s), "Nameset rejects $_")
         foreach qw(foobar fooqux fooQUX other_inner_array foofoo batqux batarray);
 
 }
 
 done_testing();
+# vi: set fenc=utf8:
