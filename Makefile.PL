@@ -57,11 +57,11 @@ my $secure_perl_path = get_perl_filename();
 {   package MY;
 
     # dist_core: make `dist` a :: target rather than a : target,
-    # and add -TRIAL if necessary.
+    # and add distcheck before dist.  Also, add -TRIAL to the tgz if necessary.
     sub dist_core {
         my $self = shift;
         my $text = $self->SUPER::dist_core(@_);
-        $text =~ s/^dist\s*:[^:]/dist:: /m;
+        $text =~ s/^dist\s*:[^:]/dist:: distcheck /m;
 
         # Add -TRIAL if it's a trial release
         if($IS_TRIAL) {
@@ -184,6 +184,7 @@ my %opts = (
         'Import::Into' => '0',
         'Getopt::Long' => '2.5',
         'Graph' => '0.9704',        # For latest multiedged support
+        'overload' => '0',
         'Pod::Usage' => '0',
 
         'Storable' => '3.06',

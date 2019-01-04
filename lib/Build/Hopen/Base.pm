@@ -55,6 +55,9 @@ sub import {
     Data::Dumper->import::into($target);
     Carp->import::into($target, qw(carp croak confess));
 
+    # Permit smartmatch
+    warnings->unimport::out_of($target, 'experimental::smartmatch');
+
 } #import()
 
 1;

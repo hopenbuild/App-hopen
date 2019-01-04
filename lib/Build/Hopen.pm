@@ -10,7 +10,7 @@ use Storable ();
 
 our $VERSION = '0.000003'; # TRIAL
 
-our @EXPORT = qw(boolify hnew hlog);
+our @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING);
 our @EXPORT_OK = qw(clone);
 
 our %EXPORT_TAGS = (
@@ -164,6 +164,36 @@ sub clone {
     return $val unless ref($val);
     return Storable::dclone($val);
 } #clone()
+
+=head2 UNSPECIFIED
+
+Actually a constant - C<qr/./>.  Matches anything.  Always returns the same
+reference, so that it can be tested with C<==>.
+
+=cut
+
+my $_UNSPECIFIED = qr/./;
+
+sub UNSPECIFIED () {
+    return $_UNSPECIFIED;
+}
+
+=head2 NOTHING
+
+Actually a constant, representing nothing.  Always returns the same
+reference, so that it can be tested with C<==>.
+
+=cut
+
+my $_NOTHING = {};
+
+sub NOTHING () {
+    return $_NOTHING;
+}
+
+## TODO change these to use B::H::Util::NameSet instead.
+## Then UNSPECIFIED and NOTHING can be
+## associated with that class, and membership can be tested easily.
 
 1; # End of Build::Hopen
 __END__

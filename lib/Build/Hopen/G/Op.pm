@@ -59,14 +59,15 @@ sub run {
 
 Return a hashref of C<< {in => (the inputs), out => (the outputs) >>.
 Should be implemented in subclasses.  The implementation here returns
-C<true> for the inputs, signifying that this op will accept anything.
-It returns C<false> for the outputs, signifying that this op has no outputs.
+L<Build::Hopen/UNSPECIFIED> for the inputs, signifying that this op will accept
+anything.  It returns L<Build::Hopen/NOTHING> for the outputs, signifying that
+this op has no outputs.
 
 =cut
 
 sub describe {
     my $self = shift or croak 'Need an instance';
-    return { in => true, out => false };
+    return { in => UNSPECIFIED, out => NOTHING };
         # By default, any inputs; no outputs.
 } #describe()
 

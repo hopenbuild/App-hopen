@@ -56,7 +56,7 @@ op may output anything.
 
 sub describe {
     my $self = shift or croak 'Need an instance';
-    return { in => true, out => true };
+    return { in => UNSPECIFIED, out => NOTHING };
         # By default, any inputs; any outputs.
 } #describe()
 

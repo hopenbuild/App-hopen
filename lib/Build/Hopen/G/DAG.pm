@@ -110,6 +110,7 @@ sub run {
         foreach my $pred (@predecessors) {
             my $links = $self->_graph->get_edge_attribute($pred, $node, ATTR);
             next unless $links;
+
             hlog { ('From', $pred->name, 'to', $node->name) };
             my $link_inputs = $pred->outputs;
             foreach my $link (@$links) {
