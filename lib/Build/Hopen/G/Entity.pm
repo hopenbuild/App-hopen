@@ -24,6 +24,8 @@ The name of this entity.  The name is for human consumption and is not used by
 hopen to make any decisions.  However, node names starting with an underscore
 are reserved for hopen's internal use.
 
+The name C<'0'> (a single digit zero) is forbidden (since it's falsy).
+
 =cut
 
 1;

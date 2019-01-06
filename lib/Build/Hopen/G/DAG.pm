@@ -1,7 +1,7 @@
 # Build::Hopen::G::DAG - hopen build graph
 package Build::Hopen::G::DAG;
-use Build::Hopen;
 use Build::Hopen::Base;
+use Build::Hopen;
 
 our $VERSION = '0.000003'; # TRIAL
 
@@ -115,13 +115,13 @@ sub run {
             my $link_inputs = $pred->outputs;
             foreach my $link (@$links) {
                 hlog { ('From', $pred->name, 'link', $link->name, 'to', $node->name) };
-                my $link_outputs = $link->run($link_inputs);
+                my $link_outputs = $E->execute($link, $link_inputs);
                 @$hrNodeInputs{keys %$link_outputs} = values %$link_outputs;
                     # TODO use Hash::Merge if necessary?
             }
         }
 
-        my $step_output = $node->run($hrNodeInputs);
+        my $step_output = $E->execute($node, $hrNodeInputs);
         $node->outputs($step_output);
 
         $retval->{$node->name} = $step_output

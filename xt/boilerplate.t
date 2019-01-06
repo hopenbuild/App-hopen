@@ -1,10 +1,9 @@
-#!perl -T
+#!perl
 use 5.014;
 use strict;
 use warnings;
 use Test::More;
-
-plan tests => 3;
+use File::Globstar 'globstar';
 
 sub not_in_file_ok {
     my ($filename, %regex) = @_;
@@ -38,19 +37,17 @@ sub module_boilerplate_ok {
     );
 }
 
-TODO: {
 
-  not_in_file_ok(README =>
-    "The README is used..."       => qr/The README is used/,
-    "'version information here'"  => qr/to provide version information/,
-  );
+not_in_file_ok(README =>
+"The README is used..."       => qr/The README is used/,
+"'version information here'"  => qr/to provide version information/,
+);
 
-  not_in_file_ok(Changes =>
-    "placeholder date/time"       => qr(Date/time)
-  );
+not_in_file_ok(Changes =>
+"placeholder date/time"       => qr(Date/time)
+);
 
-  module_boilerplate_ok('lib/Build/Hopen.pm');
+module_boilerplate_ok $_ foreach
+    grep { $_ !~ m/TEMPLATE/ } globstar('lib/**/*.pm');
 
-
-}
-
+done_testing();

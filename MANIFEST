@@ -3,6 +3,7 @@ Changes
 lib/Build/Hopen.pm
 lib/Build/Hopen/App.pm
 lib/Build/Hopen/Base.pm
+lib/Build/Hopen/Environment.pm
 lib/Build/Hopen/G.pod
 lib/Build/Hopen/G/DAG.pm
 lib/Build/Hopen/G/Entity.pm
@@ -11,6 +12,7 @@ lib/Build/Hopen/G/Link.pm
 lib/Build/Hopen/G/Node.pm
 lib/Build/Hopen/G/Op.pm
 lib/Build/Hopen/G/PassthroughOp.pm
+lib/Build/Hopen/G/Runnable.pm
 lib/Build/Hopen/Gen.pod
 lib/Build/Hopen/Phase.pod
 lib/Build/Hopen/Phase/Gen.pm
@@ -32,6 +34,7 @@ t/006-passthrough-op.t
 t/007-hnew.t
 t/008-nameset.t
 t/009-hopen-constants.t
+t/010-environment.t
 t/020-dag.t
 t/021-dag-single-goal.t
 t/lib/HopenTest.pm

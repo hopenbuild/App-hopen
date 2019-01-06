@@ -6,10 +6,6 @@ use Build::Hopen::Base;
 our $VERSION = '0.000003'; # TRIAL
 
 use parent 'Build::Hopen::G::Node';
-use Class::Tiny {
-    want => sub { [] },     # Desired inputs
-    need => sub { [] },     # Required inputs
-};
 
 # Docs {{{1
 
@@ -38,22 +34,6 @@ An arrayref of inputs that L</run> would like to have, but does not require.
 
 =head1 FUNCTIONS
 
-=head2 run
-
-Run the operation, whatever that means.  Usage:
-
-    my $hrOutputs = $op->run([$hrInputs])
-
-C<$hrOutputs> is guaranteed
-to be a new hash, not the same hash as C<$hrInputs>.
-
-=cut
-
-sub run {
-    my $self = shift or croak 'Need an instance';
-    my $hrInputs = shift || {};
-    ...
-} #run()
 
 =head2 describe
 

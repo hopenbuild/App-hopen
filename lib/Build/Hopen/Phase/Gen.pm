@@ -2,7 +2,7 @@
 package Build::Hopen::Phase::Gen;
 use Build::Hopen;
 use Build::Hopen::Base;
-use parent 'Exporter';
+#use parent 'Exporter';
 
 our $VERSION = '0.000003'; # TRIAL
 

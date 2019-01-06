@@ -5,7 +5,7 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000003'; # TRIAL
 
-use parent 'Build::Hopen::G::Entity';
+use parent 'Build::Hopen::G::Runnable';
 use Class::Tiny {
     outputs => sub { +{} }
 };

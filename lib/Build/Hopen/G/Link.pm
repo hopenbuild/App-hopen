@@ -5,12 +5,16 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000003'; # TRIAL
 
-use parent 'Build::Hopen::G::Entity';
-use Class::Tiny {
-    ops => sub { [] },
-    in => sub { [] },
-    out => sub { [] },
-};
+use parent 'Build::Hopen::G::Runnable';
+#use Class::Tiny {
+#    # TODO remove these?
+#    ops => sub { [] },
+#        # Do everything in subclasses instead?
+#    in => sub { [] },
+#        # Permit links to take unspecified inputs/outputs?
+#    out => sub { [] },
+#        # Permit links to take unspecified inputs/outputs?
+#};
 
 =head1 NAME
 
@@ -35,7 +39,7 @@ An arrayref of outputs from this edge.  (??)
 
 =head2 run
 
-Do something!  Usage:
+Copy the inputs to the outputs.
 
     my $hrOutputs = $op->run([$hrInputs])
 

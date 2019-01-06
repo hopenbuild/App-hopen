@@ -11,12 +11,14 @@ DAGs).
 Classes are (all under C<Build::Hopen::G>):
 
     Entity - something in the graph
-        Link - connection between Nodes
-        Node - abstract graph node
-            Op - abstract operation
-                Goal - a node that just gives a name to a set of operations
-                PassthroughOp - no-op concrete operation
-                DAG - the graph
+        Runnable - something that has a run() method and need/want namesets
+                    (TODO should this be a Role::Tiny role?)
+            Link - connection between Nodes
+            Node - abstract graph node
+                Op - abstract operation
+                    Goal - a node that just gives a name to a set of operations
+                    PassthroughOp - no-op concrete operation
+                    DAG - the graph
 
 =head1 ELEMENTS
 

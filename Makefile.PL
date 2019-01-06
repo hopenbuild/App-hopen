@@ -196,6 +196,8 @@ my %opts = (
             # So it can handle REGEXP -
             # https://rt.perl.org/Public/Bug/Display.html?id=50608
 
+        'Sub::ScopeFinalizer' => '0.02',        # For correct META.yml
+
         'strict' => '0',
         'warnings' => '0',
     },
