@@ -60,6 +60,17 @@ sub describe {
         # By default, any inputs; any outputs.
 } #describe()
 
+=head2 BUILD
+
+Constructor
+
+=cut
+
+sub BUILD {
+    my $self = shift;
+    $self->want(UNSPECIFIED);   # we'll take anything
+}
+
 1;
 __END__
 # vi: set fdm=marker: #

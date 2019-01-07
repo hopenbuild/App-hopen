@@ -104,6 +104,30 @@ use overload
         $_[0]->contains($_[1])
     };
 
+=head2 strings
+
+Accessor for the strings in the set.  Returns an arrayref.
+
+=cut
+
+sub strings { (shift)->{_strings} }
+
+=head2 regexps
+
+Accessor for the regexps in the set.  Returns an arrayref.
+
+=cut
+
+sub regexps { (shift)->{_regexps} }
+
+=head2 complex
+
+Returns truthy if the nameset has any regular expressions.
+
+=cut
+
+sub complex { @{(shift)->{_regexps}} > 0 }
+
 =head2 _build
 
 (Internal) Build a regex from all the strings and regexps in the set.

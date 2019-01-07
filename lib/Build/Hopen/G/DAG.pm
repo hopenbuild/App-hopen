@@ -102,7 +102,9 @@ sub run {
 
     hlog { 'Traversing DAG ' . $self->name };
     foreach my $node (@order) {
-        # Inputs to this node
+        # Inputs to this node.  TODO should the provided inputs be given
+        # to each node?  Any node with no predecessors?  Currently each
+        # node has the option.
         my $hrNodeInputs = Storable::dclone($hrInputs);
 
         # Iterate over each node's edges and process any Links
@@ -117,6 +119,7 @@ sub run {
                 hlog { ('From', $pred->name, 'link', $link->name, 'to', $node->name) };
                 my $link_outputs = $E->execute($link, $link_inputs);
                 @$hrNodeInputs{keys %$link_outputs} = values %$link_outputs;
+                    # Link outputs overwrite args given to the DAG as a whole
                     # TODO use Hash::Merge if necessary?
             }
         }
@@ -169,7 +172,8 @@ sub goal {
    - C<DAG:connect(<op1>, <op2>)>: creates a dependency edge from C<< op1 >> to
      C<< op2 >>, indicating that C<< op1 >> must be run before C<< op2 >>.
      Does not transfer any data from C<< op1 >> to C<< op2 >>.
-
+   - C<DAG:connect(<op1>, <Link>, <op2>)>: Connects C<< op1 >> to
+     C<< op2 >> via L<Build::Hopen::G::Link> C<< Link >>.
 
 Returns the name of the edge?  The edge instance itself?  Maybe a
 fluent interface to the DAG for chaining C<connect> calls?
@@ -180,19 +184,29 @@ sub connect {
     my $self = shift or croak 'Need an instance';
     my ($op1, $out_edge, $in_edge, $op2) = @_;
 
+    my $link;
     if(!defined($in_edge)) {    # dependency edge
         $op2 = $out_edge;
         $out_edge = false;      # No outputs
         $in_edge = false;       # No inputs
+    } elsif(!defined($op2)) {
+        $op2 = $in_edge;
+        $link = $out_edge;
+        $out_edge = false;      # No outputs TODO
+        $in_edge = false;       # No inputs TODO
     }
 
     # Create the link
-    my $link = Build::Hopen::G::Link->new(
-        name => 'link_' . $op1->name . '_' . $op2->name,
-        in => [$out_edge],      # Output of op1
-        out => [$in_edge],      # Input to op2
-    );
+    unless($link) {
+        $link = Build::Hopen::G::Link->new(
+            name => 'link_' . $op1->name . '_' . $op2->name,
+            in => [$out_edge],      # Output of op1
+            out => [$in_edge],      # Input to op2
+        );
+    }
 
+    hlog { 'DAG::connect(): Edge from', $op1->name, 'via', $link->name,
+            'to', $op2->name };
     # Add it to the graph (idempotent)
     $self->_graph->add_edge($op1, $op2);
 

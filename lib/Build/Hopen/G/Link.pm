@@ -6,15 +6,9 @@ use Build::Hopen::Base;
 our $VERSION = '0.000003'; # TRIAL
 
 use parent 'Build::Hopen::G::Runnable';
-#use Class::Tiny {
-#    # TODO remove these?
-#    ops => sub { [] },
-#        # Do everything in subclasses instead?
-#    in => sub { [] },
-#        # Permit links to take unspecified inputs/outputs?
-#    out => sub { [] },
-#        # Permit links to take unspecified inputs/outputs?
-#};
+use Class::Tiny {
+    greedy => 0
+};
 
 =head1 NAME
 
@@ -22,18 +16,9 @@ Build::Hopen::G::Link - The base class for all hopen links between ops.
 
 =head1 VARIABLES
 
-=head2 ops
+=head2 greedy
 
-An arrayref of the operations to be performed while data traverses that
-edge.  Operations are performed in order of increasing array index.
-
-=head2 in
-
-An arrayref of inputs to this edge.  (??)
-
-=head2 out
-
-An arrayref of outputs from this edge.  (??)
+If set truthy in the C<new()> call, the edge will ask for all inputs.
 
 =head1 FUNCTIONS
 
@@ -54,6 +39,20 @@ sub run {
     $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
     return $hrRetval;
 } #run()
+
+
+=head2 BUILD
+
+Constructor.  Interprets L</greedy>.
+
+=cut
+
+sub BUILD {
+    my ($self, $args) = @_;
+    $self->want(UNSPECIFIED) if $args->{greedy};
+    use Data::Dumper;
+    #hlog { 'Link::BUILD', Dumper($self) };
+} #BUILD()
 
 1;
 __END__

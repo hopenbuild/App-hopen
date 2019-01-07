@@ -5,6 +5,8 @@ use Build::Hopen::Base;
 our $VERSION = '0.000003'; # TRIAL
 
 use Build::Hopen::G::Runnable;
+#use Build::Hopen::Util::NameSet;
+use Set::Scalar;
 
 # Docs {{{1
 
@@ -35,17 +37,26 @@ sub new {
 
 =head2 find
 
-Find a named data item in the environment and return it.  Returns undef on failure.
+Find a named data item in the environment and return it.  Returns undef on
+failure.  Usage:
+
+    $instance->find($name[, optional hashref that takes priority])
+
+Tries the hashref if provided, then its own stored hash elements, then the
+system environment (C<%ENV>).  Uses the first one it finds.
+
+Dies if given a falsy name, notably, C<'0'>.
 
 =cut
 
 sub find {
     my $self = shift or croak 'Need an instance';
-    my $name = shift or croak 'Need a name';        # Therefore, '0' is not a valid name
+    my $name = shift or croak 'Need a name';
+        # Therefore, '0' is not a valid name
 
+    return $_[0]->{$name} if @_ && exists $_[0]->{$name};
     return $self->{$name} if exists $self->{$name};
-
-    return $ENV{$name} if exists $ENV{$name};   # fall back to the shell environment
+    return $ENV{$name} if exists $ENV{$name};
 
     return undef;   # report failure
 } #find()
@@ -62,40 +73,43 @@ from the environment if possible.  Usage:
 sub execute {
     my $self = shift;
     my $runnable = shift;
-    my $hrInputs = shift // {};
+    my $provided_inputs = shift // {};
     croak "$runnable is not a runnable"
         unless $runnable and $runnable->DOES('Build::Hopen::G::Runnable');
 
-    my %ins;   # actual node inputs we will use
+    croak "I don't know how to handle regexps in $runnable\->need"
+        if $runnable->need->complex;
 
-    # Make sure we have the required inputs
-    my $needs = 1;      # We are working on the needs
+    my %runnable_inputs;    # actual node inputs we will use
 
-    # Copy needs and wants into %ins.  The `undef` is a marker between
-    # the needs and the wants.
-    foreach my $name (@{$runnable->need}, undef, @{$runnable->want}) {
-        if(!defined $name) {
-            $needs = 0;     # moving on to the wants
-            next;
+    # Requirements, which are a straight list of strings
+    foreach my $need (@{$runnable->need->strings}) {
+        $runnable_inputs{$need} = $self->find($need, $provided_inputs);
+        die "Missing required input $need to @{[$runnable->name]}"
+            unless defined $runnable_inputs{$need};
+    }
+
+    # Desires can be more complex.
+    my $done = Set::Scalar->new;    # Names we've already checked
+
+    # First, grab any we know we want.
+    foreach my $want (@{$runnable->want->strings}) {
+        $runnable_inputs{$want} = $self->find($want, $provided_inputs);
+        $done->insert($want);
+    }
+
+    # Next, the wants can grab any available data
+    if($runnable->want->complex) {
+        foreach my $name (keys %$provided_inputs, keys %$self, keys %ENV) {
+            next if $done->has($name);
+            if($name ~~ $runnable->want) {
+                $runnable_inputs{$name} = $self->find($name, $provided_inputs);
+                $done->insert($name);
+            }
         }
+    } #endif want->complex
 
-        # Check express inputs first...
-        if(exists $hrInputs->{$name}) {
-            $ins{$name} = $hrInputs->{$name};
-            next;
-        }
-
-        # ...then this environment.
-        my $x = $self->find($name);
-        if(defined $x) {
-            $ins{$name} = $x;
-            next;
-        }
-
-        die "Missing required input $name to @{[$runnable->name]}" if $needs;
-    } #foreach name
-
-    return $runnable->run(\%ins);
+    return $runnable->run(\%runnable_inputs);
 } #execute()
 
 1;

@@ -1,11 +1,10 @@
 # Build::Hopen::G::Runnable - parent class for anything runnable in a hopen graph
 package Build::Hopen::G::Runnable;
-use Build::Hopen;
 use Build::Hopen::Base;
 
 our $VERSION = '0.000003'; # TRIAL
 
-#use Build::Hopen::Util::NameSet;
+use Build::Hopen::Util::NameSet;
 
 # Docs {{{1
 
@@ -37,10 +36,8 @@ Inputs this Runnable requires.
 
 use parent 'Build::Hopen::G::Entity';
 use Class::Tiny {
-    want => sub { [] },
-    need => sub { [] },
-    #want => sub { Build::Hopen::Util::NameSet->new },
-    #need => sub { Build::Hopen::Util::NameSet->new },
+    want => sub { Build::Hopen::Util::NameSet->new },
+    need => sub { Build::Hopen::Util::NameSet->new },
 };
 
 =head1 FUNCTIONS

@@ -7,12 +7,13 @@ BEGIN {
     use_ok 'Build::Hopen::Util::NameSet';
 }
 
-# NOTE: Even though `$s ~~ 'x'` is supported for now, we don't use it.
-# This is to retain compatibility with the 5.27.7-style smartmatch
+# NOTE: Even though `$s ~~ 'x'` (object first) is supported for now, we don't
+# use it.  This is to retain compatibility with the 5.27.7-style smartmatch
 # if that ever comes back (http://blogs.perl.org/users/leon_timmermans/2017/12/smartmatch-in-5277.html).
 
 my $s;
 
+# Run the tests twice: once without add() and once with add().
 for(my $iter=0; $iter<2; ++$iter) {
 
     # Set up this iter's test object
@@ -31,7 +32,11 @@ for(my $iter=0; $iter<2; ++$iter) {
         isa_ok($s, 'Build::Hopen::Util::NameSet');
     }
 
-    # Test
+    # Accessors
+    is(ref($s->strings), 'ARRAY', 'strings is an arrayref');
+    is(ref($s->regexps), 'ARRAY', 'regexps is an arrayref');
+
+    # Contains tests
     ok(!$s->contains('x'), "Nameset rejects 'x'");
     ok(!('x' ~~ $s), "Nameset rejects 'x'");
     ok($s->contains($_), "Nameset accepts literal $_")
@@ -51,7 +56,21 @@ for(my $iter=0; $iter<2; ++$iter) {
     ok(!($_ ~~ $s), "Nameset rejects $_")
         foreach qw(foobar fooqux fooQUX other_inner_array foofoo batqux batarray);
 
-}
+} #foreach test
+
+# Complex
+$s = Build::Hopen::Util::NameSet->new(qw(foo bar), qr/./);
+ok($s->complex, 'set with regexps is complex');
+$s = Build::Hopen::Util::NameSet->new(qw(foo bar));
+ok(!$s->complex, 'set without regexps is not complex');
+
+# Complex
+$s = Build::Hopen::Util::NameSet->new;
+$s->add(qw(foo bar), qr/./);
+ok($s->complex, 'set with regexps is complex');
+$s = Build::Hopen::Util::NameSet->new;
+$s->add(qw(foo bar));
+ok(!$s->complex, 'set without regexps is not complex');
 
 done_testing();
 # vi: set fenc=utf8:

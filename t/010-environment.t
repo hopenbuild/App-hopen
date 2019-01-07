@@ -18,5 +18,8 @@ foreach my $varname (qw(SHELL COMSPEC PATH)) {
         if exists $ENV{$varname};
 }
 
+# TODO test setE, including various ways of leaving the scope (normal, die,
+# div by zero, ...).
+
 done_testing();
 # vi: set fenc=utf8:

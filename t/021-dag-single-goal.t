@@ -2,11 +2,11 @@
 # t/021-dag-single-goal.t: basic tests of Build::Hopen::G::DAG with one goal
 use rlib 'lib';
 use HopenTest;
-use Build::Hopen qw(:default setE);
+use Test::Deep;
 
+use Build::Hopen qw(:default setE);
 use Build::Hopen::Environment;
-#use Build::Hopen::G::DAG;
-#use Build::Hopen::G::PassthroughOp;
+use Build::Hopen::G::Link;
 
 $Build::Hopen::VERBOSE = true;
 
@@ -22,15 +22,18 @@ sub run {
     ok($dag->_graph->has_edge($goal, $dag->_final), 'DAG::goal() adds goal->final edge');
 
     # Add an op
+    my $link = hnew Link => 'link1', greedy => 1;
     my $op = hnew PassthroughOp => 'op1';
     isa_ok($op,'Build::Hopen::G::PassthroughOp');
-    $dag->connect($op, $goal);
-    ok($dag->_graph->has_edge($op, $goal), 'DAG::connect(.,.) adds edge');
+    $dag->connect($op, $link, $goal);
+    ok($dag->_graph->has_edge($op, $goal), 'DAG::connect() adds edge');
 
     # Run it
     my $dag_out = $dag->run({foo=>42});
 
-    is_deeply($dag_out, {all => { foo=>42 } }, "DAG passes everything through, tagged with the goal's name");
+    cmp_deeply($dag_out, {all => superhashof({ foo=>42 }) }, "DAG passes everything through, tagged with the goal's name");
+        # superhashof() because $dag_out->{all} also probably has a full
+        # copy of the user's shell environment in it!
 }
 
 run();

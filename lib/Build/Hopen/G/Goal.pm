@@ -6,9 +6,7 @@ use Build::Hopen::Base;
 our $VERSION = '0.000003'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
-use Class::Tiny {
-    _passthrough => sub { hnew PassthroughOp => ($_[0]->name . '_inner') },
-};
+use Class::Tiny qw(_passthrough);
 
 # Docs {{{1
 
@@ -48,6 +46,21 @@ sub describe {
     my $self = shift or croak 'Need an instance';
     return $self->_passthrough->describe(@_);
 }
+
+=head2 BUILD
+
+=cut
+
+sub BUILD {
+    my ($self, $args) = @_;
+    # TODO refactor out the common code between Goal and PassthroughOp
+    # rather than wrapping.
+    my $p = hnew(PassthroughOp => ($args->{name} . '_inner'));
+    $self->_passthrough($p);
+    $self->want($p->want);
+    $self->need($p->need);
+} #BUILD()
+
 
 1;
 __END__

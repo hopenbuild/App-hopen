@@ -167,6 +167,7 @@ my %opts = (
         'Import::Into' => '0',
         'rlib' => '0',
         'Scalar::Util' => '0',
+        'Test::Deep' => '0.084',    # for superhashof
         'Test::More' => '0',
     },
     PREREQ_PM => {
@@ -192,6 +193,7 @@ my %opts = (
         'overload' => '0',
         'Pod::Usage' => '0',
 
+        'Set::Scalar' => '1.27',    # For correct metadata
         'Storable' => '3.06',
             # So it can handle REGEXP -
             # https://rt.perl.org/Public/Bug/Display.html?id=50608
