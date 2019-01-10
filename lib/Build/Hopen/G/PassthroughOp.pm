@@ -1,12 +1,12 @@
 # Build::Hopen::G::PassthroughOp - A no-op operation
 package Build::Hopen::G::PassthroughOp;
-use Build::Hopen;
+use Build::Hopen qw(:default clone);
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
-use Class::Tiny;
+#use Class::Tiny;
 use Storable ();
 
 # Docs {{{1
@@ -31,7 +31,7 @@ L<Build::Hopen::G::DAG> to represent goals.
 
 Do nothing!  Usage:
 
-    my $hrOutputs = $op->run([$hrInputs])
+    my $hrOutputs = $op->run($scope)
 
 The output is C<{}> if no inputs are provided.
 
@@ -39,9 +39,10 @@ The output is C<{}> if no inputs are provided.
 
 sub run {
     my $self = shift or croak 'Need an instance';
+    my $scope = shift or croak 'Need a scope';
     hlog { Running => __PACKAGE__ , $self->name };
     my $hrRetval = {};
-    $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
+    $hrRetval->{$_} = clone $scope->find($_) foreach $scope->names;
     return $hrRetval;
 } #run()
 

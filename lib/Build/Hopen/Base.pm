@@ -8,13 +8,14 @@ package Build::Hopen::Base;
 use parent 'Exporter';
 use Import::Into;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 # Pragmas
 use 5.014;
 use feature ":5.14";
 use strict;
 use warnings;
+require experimental;
 
 # Packages
 use Data::Dumper;
@@ -55,8 +56,10 @@ sub import {
     Data::Dumper->import::into($target);
     Carp->import::into($target, qw(carp croak confess));
 
-    # Permit smartmatch
-    warnings->unimport::out_of($target, 'experimental::smartmatch');
+    # Permit smartmatch.
+    # http://blogs.perl.org/users/mike_b/2013/06/a-little-nicer-way-to-use-smartmatch-on-perl-518.html
+    # (Also, https://www.perlmonks.org/?node_id=1163370 is another approach.)
+    experimental->import::into($target, 'smartmatch');
 
 } #import()
 

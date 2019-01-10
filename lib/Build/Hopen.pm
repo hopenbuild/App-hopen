@@ -20,7 +20,7 @@ use Build::Hopen::Util::NameSet;
 use Storable ();
 use Sub::ScopeFinalizer qw(scope_finalizer);
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 # Docs {{{1
 

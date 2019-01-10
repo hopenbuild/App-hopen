@@ -3,7 +3,7 @@ package Build::Hopen::G::Entity;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 use Class::Tiny qw(name);
 

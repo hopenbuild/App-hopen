@@ -2,7 +2,7 @@
 package Build::Hopen::Util::NameSet;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 # Docs {{{1
 

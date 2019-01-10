@@ -1,9 +1,9 @@
 # Build::Hopen::G::Link - base class for hopen edges
 package Build::Hopen::G::Link;
-use Build::Hopen;
+use Build::Hopen qw(:default clone);
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 use parent 'Build::Hopen::G::Runnable';
 use Class::Tiny {
@@ -26,7 +26,7 @@ If set truthy in the C<new()> call, the edge will ask for all inputs.
 
 Copy the inputs to the outputs.
 
-    my $hrOutputs = $op->run([$hrInputs])
+    my $hrOutputs = $op->run($scope)
 
 The output is C<{}> if no inputs are provided.
 
@@ -34,9 +34,10 @@ The output is C<{}> if no inputs are provided.
 
 sub run {
     my $self = shift or croak 'Need an instance';
+    my $scope = shift or croak 'Need a scope';
     hlog { Running => __PACKAGE__ , $self->name };
     my $hrRetval = {};
-    $hrRetval = Storable::dclone($_[0]) if @_ && ref $_[0];
+    $hrRetval->{$_} = clone $scope->find($_) foreach $scope->names;
     return $hrRetval;
 } #run()
 

@@ -5,15 +5,18 @@ use HopenTest;
 use Test::Deep;
 
 use Build::Hopen qw(:default setE);
-use Build::Hopen::Environment;
+use Build::Hopen::Scope;
+use Build::Hopen::ScopeENV;
 use Build::Hopen::G::Link;
 
 $Build::Hopen::VERBOSE = true;
 
 sub run {
-    # Create a new environment that will last for the duration of run().
-    # See Build::Hopen::setE() for why we can't use `local`.
-    my $saver = setE(Build::Hopen::Environment->new);
+#    # Create a new environment that will last for the duration of run().
+#    # See Build::Hopen::setE() for why we can't use `local`.
+#    my $saver = setE(Build::Hopen::Environment->new);
+    my $outermost_scope = Build::Hopen::Scope->new()->add(foo => 42);
+
     my $dag = hnew DAG => 'dag';
 
     # Add a goal
@@ -29,11 +32,11 @@ sub run {
     ok($dag->_graph->has_edge($op, $goal), 'DAG::connect() adds edge');
 
     # Run it
-    my $dag_out = $dag->run({foo=>42});
+    print Dumper($outermost_scope);
+    my $dag_out = $dag->run($outermost_scope);
+    print Dumper($dag_out);
 
-    cmp_deeply($dag_out, {all => superhashof({ foo=>42 }) }, "DAG passes everything through, tagged with the goal's name");
-        # superhashof() because $dag_out->{all} also probably has a full
-        # copy of the user's shell environment in it!
+    cmp_deeply($dag_out, {all => { foo=>42 } }, "DAG passes everything through, tagged with the goal's name");
 }
 
 run();

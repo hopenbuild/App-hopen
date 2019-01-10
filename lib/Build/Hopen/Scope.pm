@@ -1,50 +1,56 @@
-# Build::Hopen::Environment - a hopen environment
-package Build::Hopen::Environment;
+# Build::Hopen::Scope - a hopen environment
+package Build::Hopen::Scope;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 use Build::Hopen::G::Runnable;
-#use Build::Hopen::Util::NameSet;
 use Set::Scalar;
+
+use Class::Tiny {
+    outer => undef,
+    _content => sub { +{} },
+    name => 'anonymous scope',
+};
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Environment - a hopen environment
+Build::Hopen::Scope - a hierarchical name table
 
 =head1 SYNOPSIS
 
-An Environment represents a set of data available to operations.
+A Scope represents a set of data available to operations.  It is a
+key-value store that falls back to an outer C<Scope> if a requested key
+isn't found.
+
+This particular Scope is a concrete implementation using a hash under the
+hood.  However, the public API is limited to L</outer>, L</add>, and L</find>
+(plus C<new> from L<Class::Tiny>).  Subclasses may use different
+representations.
+
+=head1 ATTRIBUTES
+
+=head2 outer
+
+The fallback C<Scope> for looking up names not found in this C<Scope>.
+If non is provided, it is C<undef>, and no fallback will happen.
+
+=head2 name
+
+Not used, but provided so you can use L<Build::Hopen/hnew> to make Scopes.
+
+=head1 METHODS
 
 =cut
 
 # }}}1
 
-=head1 FUNCTIONS
-
-=head2 new
-
-Usage: C<< Build::Hopen::Environment->new() >>.  Returns a blessed hashref.
-
-=cut
-
-sub new {
-    my $class = shift or croak 'Need a class';
-    return bless {}, $class;
-} #new()
-
 =head2 find
 
 Find a named data item in the environment and return it.  Returns undef on
-failure.  Usage:
-
-    $instance->find($name[, optional hashref that takes priority])
-
-Tries the hashref if provided, then its own stored hash elements, then the
-system environment (C<%ENV>).  Uses the first one it finds.
-
+failure.  Usage: C<$instance->find($name)>.
 Dies if given a falsy name, notably, C<'0'>.
 
 =cut
@@ -54,12 +60,52 @@ sub find {
     my $name = shift or croak 'Need a name';
         # Therefore, '0' is not a valid name
 
-    return $_[0]->{$name} if @_ && exists $_[0]->{$name};
-    return $self->{$name} if exists $self->{$name};
-    return $ENV{$name} if exists $ENV{$name};
+    return $self->_content->{$name} if exists $self->_content->{$name};
+    return $self->outer->find($name) if $self->outer;
 
     return undef;   # report failure
 } #find()
+
+=head2 add
+
+Add key-value pairs to this instance.  Returns the instance so you can
+chain.  Example usage:
+
+    my $scope = Build::Hopen::Scope->new()->add(foo => 1);
+
+C<add> is responsible for handling any conflicts that may occur.  In this
+particular implementation, the last-added value for a particular key wins.
+
+=cut
+
+sub add {
+    my $self = shift;
+    my $hrContent = $self->_content;
+    while(@_) {
+        my $k = shift;
+        $hrContent->{$k} = shift;
+    }
+    croak "Got an odd number of parameters" if @_;
+    return $self;
+} #add()
+
+=head2 names
+
+Returns a list of the items available through this Scope, including all its
+parent Scopes (if any).
+
+=cut
+
+sub names {
+    my $self = shift;
+    my $retval = Set::Scalar->new;
+    $retval->insert($_) foreach keys %{$self->_content};
+    if($self->outer) {
+        $retval->insert($_) foreach $self->outer->names;
+    }
+
+    return @$retval;
+} #names()
 
 =head2 execute
 
@@ -70,6 +116,7 @@ from the environment if possible.  Usage:
 
 =cut
 
+# TODO Move out of this module
 sub execute {
     my $self = shift;
     my $runnable = shift;

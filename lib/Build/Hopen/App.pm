@@ -3,7 +3,7 @@ package Build::Hopen::App;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000003'; # TRIAL
+our $VERSION = '0.000005'; # TRIAL
 
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 

@@ -1,22 +1,17 @@
 #!perl
-# t/007-nameset.t: test Build::Hopen::Util::NameSet
+# t/010-scope.t: test Build::Hopen::Scope
 use rlib 'lib';
 use HopenTest;
 
 BEGIN {
-    use_ok 'Build::Hopen::Environment';
+    use_ok 'Build::Hopen::Scope';
 }
 
-my $s = Build::Hopen::Environment->new();
-isa_ok($s, 'Build::Hopen::Environment');
+my $s = Build::Hopen::Scope->new();
+isa_ok($s, 'Build::Hopen::Scope');
 
-$s->{foo} = 42;
+$s->add(foo => 42);
 cmp_ok($s->find('foo'), '==', 42, 'Retrieving from hash works');
-
-foreach my $varname (qw(SHELL COMSPEC PATH)) {
-    is($s->find($varname), $ENV{$varname}, "Finds env var $varname")
-        if exists $ENV{$varname};
-}
 
 # TODO test setE, including various ways of leaving the scope (normal, die,
 # div by zero, ...).

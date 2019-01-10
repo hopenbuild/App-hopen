@@ -185,8 +185,10 @@ my %opts = (
 
         'constant' => '0',
         'Data::Dumper' => '0',
+        'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',
         'feature' => '0',
+        # 'Hash::Ordered' => '0.011',   # For latest bugfix
         'Import::Into' => '0',
         'Getopt::Long' => '2.5',
         'Graph' => '0.9704',        # For latest multiedged support
