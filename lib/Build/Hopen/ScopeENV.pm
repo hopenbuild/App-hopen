@@ -61,22 +61,12 @@ sub add {
     return $self;
 } #add()
 
-=head2 names
+### Protected functions ###
 
-Returns a list of the items available through this Scope, including all its
-parent Scopes (if any).
-
-=cut
-
-sub names {
-    my $self = shift;
-    my $retval = Set::Scalar->new;
-    $retval->insert($_) foreach keys %ENV;
-    if($self->outer) {
-        $retval->insert($_) foreach $self->outer->names;
-    }
-
-    return @$retval;
+# Implementation of names()
+sub _names_here {
+    my ($self, $retval) = @_;
+    $retval->insert(keys %ENV);
 } #names()
 1;
 __END__

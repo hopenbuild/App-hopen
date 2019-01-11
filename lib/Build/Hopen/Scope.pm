@@ -1,10 +1,10 @@
 # Build::Hopen::Scope - a hopen environment
 package Build::Hopen::Scope;
+use Build::Hopen qw(clone);
 use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
-use Build::Hopen::G::Runnable;
 use Set::Scalar;
 
 use Class::Tiny {
@@ -91,33 +91,104 @@ sub add {
 
 =head2 names
 
-Returns a list of the items available through this Scope, including all its
-parent Scopes (if any).
+Returns a L<Set::Scalar> of the names of the items available through this
+Scope, optionally including all its parent Scopes (if any).  Usage
+and example:
+
+    my $set = $scope->names([$levels]);
+    say "Name $_ is available" foreach @$set;   # Set::Scalar supports @$set
+
+If C<$levels> is provided and nonzero, go up that many more levels
+(i.e., C<$levels==0> means only return this scope's local names).
+If C<$levels> is not provided, go all the way to the outermost Scope.
 
 =cut
 
 sub names {
-    my $self = shift;
+    my ($self, $levels) = @_;
     my $retval = Set::Scalar->new;
-    $retval->insert($_) foreach keys %{$self->_content};
-    if($self->outer) {
-        $retval->insert($_) foreach $self->outer->names;
+
+    # Insert this scope's names.  We can do this first since we're
+    # just collecting names --- it doesn't matter which order we
+    # collect them in.
+    $self->_names_here($retval);
+
+    if($self->outer &&
+        (!defined($levels) || ($levels>0))
+    ) {
+        my $newlevels = defined($levels) ? ($levels-1) : undef;
+        $retval->insert(@{$self->outer->names($newlevels)});
+            # Not $retval->union because that would create yet another
+            # temporary Set::Scalar!
+            # TODO refactor out implementation a la as_hashref().
     }
 
-    return @$retval;
+    return $retval;
 } #names()
 
-=head2 execute
+# Protected helper to be overriden by subclasses, so that the behaviour
+# of names() is consistent
+sub _names_here {
+    my ($self, $retval) = @_;
+    $retval->insert(keys %{$self->_content});
+} #_names_outer
+
+=head2 as_hashref
+
+Returns a hash of the items available through this Scope, optionally
+including all its parent Scopes (if any).  Usage:
+
+    my $hashref = $scope->as_hashref([levels => $levels][, deep => $deep])
+
+If C<$levels> is provided and nonzero, go up that many more levels
+(i.e., C<$levels==0> means only return this scope's local names).
+If C<$levels> is not provided, go all the way to the outermost Scope.
+
+If C<$deep> is provided and truthy, make a deep copy of each value (using
+L<Build::Hopen/clone>.  Otherwise, just copy.
+
+=cut
+
+sub as_hashref {
+    my $self = shift;
+    my %opts = @_;
+    my $hrRetval = {};
+    $self->_fill_hashref($hrRetval, $opts{deep}, $opts{levels});
+    return $hrRetval;
+} #as_hashref()
+
+# Implementation of as_hashref.  Mutates the provided $hrRetval.
+sub _fill_hashref {
+    my ($self, $hrRetval, $deep, $levels) = @_;
+
+    # Innermost wins, so copy ours first.
+    foreach my $k (keys %{$self->_content}) {
+        unless(exists($hrRetval->{$k})) {   # An inner scope might have set it
+            $hrRetval->{$k} =
+                ($deep ? clone($self->_content->{$k}) : $self->_content->{$k});
+        }
+    }
+
+    # Then move out in scope
+    if($self->outer &&
+        (!defined($levels) || ($levels>0))
+    ) {
+        my $newlevels = defined($levels) ? ($levels-1) : undef;
+        $self->outer->_fill_hashref($hrRetval, $deep, $newlevels);
+    }
+} #_fill_hashref()
+
+=head2 TODO_execute
 
 Run a L<Build::Hopen::G::Runnable> given a set of inputs.  Fills in the inputs
 from the environment if possible.  Usage:
 
-    $env->execute($runnable[, {inputs...})
+    $env->TODO_execute($runnable[, {inputs...})
 
 =cut
 
 # TODO Move out of this module
-sub execute {
+sub TODO_execute {
     my $self = shift;
     my $runnable = shift;
     my $provided_inputs = shift // {};

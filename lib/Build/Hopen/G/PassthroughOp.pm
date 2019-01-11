@@ -42,7 +42,7 @@ sub run {
     my $scope = shift or croak 'Need a scope';
     hlog { Running => __PACKAGE__ , $self->name };
     my $hrRetval = {};
-    $hrRetval->{$_} = clone $scope->find($_) foreach $scope->names;
+    $hrRetval->{$_} = clone $scope->find($_) foreach @{$scope->names};
     return $hrRetval;
 } #run()
 

@@ -32,9 +32,10 @@ sub run {
     ok($dag->_graph->has_edge($op, $goal), 'DAG::connect() adds edge');
 
     # Run it
-    print Dumper($outermost_scope);
+    #print Dumper($outermost_scope);
     my $dag_out = $dag->run($outermost_scope);
-    print Dumper($dag_out);
+    #print Dumper($dag_out);
+    #print Dumper($op->outputs);
 
     cmp_deeply($dag_out, {all => { foo=>42 } }, "DAG passes everything through, tagged with the goal's name");
 }

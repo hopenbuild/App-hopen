@@ -172,13 +172,13 @@ my %opts = (
     },
     PREREQ_PM => {
         #'Algorithm::Dependency' => '1.106',
-            # Probably don't need this; we can use Graph::topological_sort().
+            # - Probably don't need this; we can use Graph::topological_sort().
 
         'Carp' => '0',
 
         'Class::Tiny' => '1.000',   # New API.  NOTE: <1.001 has no BUILDARGS
         #'Class::Tiny::Antlers' => '0',
-        #'Class::Method::Modifiers' => '1.05',  # version #s from Antlers
+        #'Class::Method::Modifiers' => '1.05',  # version nums from Antlers
         #'Role::Tiny' => '1.000000',
 
         'Class::XPath' => '1.4',
@@ -188,10 +188,12 @@ my %opts = (
         'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',
         'feature' => '0',
+        # 'File::Find::Rule' => '0',    # - might be nice for finding files
         # 'Hash::Ordered' => '0.011',   # For latest bugfix
         'Import::Into' => '0',
         'Getopt::Long' => '2.5',
         'Graph' => '0.9704',        # For latest multiedged support
+        # 'Number::Compare' => '0', # - looks cool
         'overload' => '0',
         'Pod::Usage' => '0',
 
