@@ -4,7 +4,7 @@ use rlib 'lib';
 use HopenTest;
 use Test::Deep;
 
-use Build::Hopen qw(:default setE);
+use Build::Hopen;
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
 use Build::Hopen::G::Link;
@@ -12,9 +12,6 @@ use Build::Hopen::G::Link;
 $Build::Hopen::VERBOSE = true;
 
 sub run {
-#    # Create a new environment that will last for the duration of run().
-#    # See Build::Hopen::setE() for why we can't use `local`.
-#    my $saver = setE(Build::Hopen::Environment->new);
     my $outermost_scope = Build::Hopen::Scope->new()->add(foo => 42);
 
     my $dag = hnew DAG => 'dag';

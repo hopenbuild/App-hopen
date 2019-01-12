@@ -25,24 +25,18 @@ L<Build::Hopen::Scope>.
 
 # }}}1
 
-=head2 find
+### Protected functions ###
+
+=head2 _find_here
 
 Find a named data item in C<%ENV> and return it.  Returns undef on
-failure.  Does not do any fallback.
+failure.
 
 =cut
 
-sub find {
-    my $self = shift;   # No failure since we actually don't care :)
-    my $name = shift or croak 'Need a name';
-        # Therefore, '0' is not a valid name
-
-    # Ignore `content`
-    return $ENV{$name} if exists $ENV{$name};
-    # Ignore `outer` - no fallback
-
-    return undef;   # report failure
-} #find()
+sub _find_here {
+    $ENV{$_[1]}
+} #_find_here()
 
 =head2 add
 
@@ -61,13 +55,16 @@ sub add {
     return $self;
 } #add()
 
-### Protected functions ###
+=head2 _names_here
 
-# Implementation of names()
+Add the names in C<%ENV> to the given L<Set::Scalar>.
+
+=cut
+
 sub _names_here {
-    my ($self, $retval) = @_;
-    $retval->insert(keys %ENV);
-} #names()
+    $_[1]->insert(keys %ENV);
+} #_names_here()
+
 1;
 __END__
 # vi: set fdm=marker: #

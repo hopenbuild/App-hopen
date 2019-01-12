@@ -1,4 +1,4 @@
-# Build::Hopen::Scope - a hopen environment
+# Build::Hopen::Scope - a nested key-value store
 package Build::Hopen::Scope;
 use Build::Hopen qw(clone);
 use Build::Hopen::Base;
@@ -43,14 +43,17 @@ Not used, but provided so you can use L<Build::Hopen/hnew> to make Scopes.
 
 =head1 METHODS
 
+See also L</add>, below, which is part of the public API.
+
 =cut
 
 # }}}1
 
 =head2 find
 
-Find a named data item in the environment and return it.  Returns undef on
-failure.  Usage: C<$instance->find($name)>.
+Find a named data item in the scope and return it.  Looks up the scope chain
+to the outermost scope if necessary.  Returns undef on
+failure.  Usage: C<< $scope->find($name) >>.
 Dies if given a falsy name, notably, C<'0'>.
 
 =cut
@@ -60,34 +63,13 @@ sub find {
     my $name = shift or croak 'Need a name';
         # Therefore, '0' is not a valid name
 
-    return $self->_content->{$name} if exists $self->_content->{$name};
+    my $here = $self->_find_here($name);
+    return $here if defined $here;
+
     return $self->outer->find($name) if $self->outer;
 
     return undef;   # report failure
 } #find()
-
-=head2 add
-
-Add key-value pairs to this instance.  Returns the instance so you can
-chain.  Example usage:
-
-    my $scope = Build::Hopen::Scope->new()->add(foo => 1);
-
-C<add> is responsible for handling any conflicts that may occur.  In this
-particular implementation, the last-added value for a particular key wins.
-
-=cut
-
-sub add {
-    my $self = shift;
-    my $hrContent = $self->_content;
-    while(@_) {
-        my $k = shift;
-        $hrContent->{$k} = shift;
-    }
-    croak "Got an odd number of parameters" if @_;
-    return $self;
-} #add()
 
 =head2 names
 
@@ -107,31 +89,23 @@ If C<$levels> is not provided, go all the way to the outermost Scope.
 sub names {
     my ($self, $levels) = @_;
     my $retval = Set::Scalar->new;
-
-    # Insert this scope's names.  We can do this first since we're
-    # just collecting names --- it doesn't matter which order we
-    # collect them in.
-    $self->_names_here($retval);
-
-    if($self->outer &&
-        (!defined($levels) || ($levels>0))
-    ) {
-        my $newlevels = defined($levels) ? ($levels-1) : undef;
-        $retval->insert(@{$self->outer->names($newlevels)});
-            # Not $retval->union because that would create yet another
-            # temporary Set::Scalar!
-            # TODO refactor out implementation a la as_hashref().
-    }
-
+    $self->_fill_names($retval, $levels);
     return $retval;
 } #names()
 
-# Protected helper to be overriden by subclasses, so that the behaviour
-# of names() is consistent
-sub _names_here {
-    my ($self, $retval) = @_;
-    $retval->insert(keys %{$self->_content});
-} #_names_outer
+# Implementation of names()
+sub _fill_names {
+    my ($self, $retval, $levels) = @_;
+
+    $self->_names_here($retval);    # Insert this scope's names
+
+    if($self->outer &&              # Insert the outer scopes' names
+        (!defined($levels) || ($levels>0))
+    ) {
+        my $newlevels = defined($levels) ? ($levels-1) : undef;
+        $self->outer->_fill_names($retval, $newlevels);
+    }
+} #_fill_names()
 
 =head2 as_hashref
 
@@ -181,9 +155,9 @@ sub _fill_hashref {
 =head2 TODO_execute
 
 Run a L<Build::Hopen::G::Runnable> given a set of inputs.  Fills in the inputs
-from the environment if possible.  Usage:
+from the scope if possible.  Usage:
 
-    $env->TODO_execute($runnable[, {inputs...})
+    $scope->TODO_execute($runnable[, {inputs...})
 
 =cut
 
@@ -229,6 +203,65 @@ sub TODO_execute {
 
     return $runnable->run(\%runnable_inputs);
 } #execute()
+
+=head1 FUNCTIONS TO BE OVERRIDDEN IN SUBCLASSES
+
+To implement a Scope with a different data-storage model than the hash
+this class uses, subclass Scope and override these functions.  Only L</add>
+is part of the public API.
+
+=head2 add
+
+Add key-value pairs to this scope.  Returns the scope so you can
+chain.  Example usage:
+
+    my $scope = Build::Hopen::Scope->new()->add(foo => 1);
+
+C<add> is responsible for handling any conflicts that may occur.  In this
+particular implementation, the last-added value for a particular key wins.
+
+=cut
+
+sub add {
+    my $self = shift;
+    my $hrContent = $self->_content;
+    while(@_) {
+        my $k = shift;
+        $hrContent->{$k} = shift;
+    }
+    croak "Got an odd number of parameters" if @_;
+    return $self;
+} #add()
+
+=head2 _names_here
+
+Populates a L<Set::Scalar> with the names of the items stored in this Scope,
+but B<not> any outer Scope.  Called as:
+
+    $scope->_names_here($set_scalar_instance);
+
+No return value.
+
+=cut
+
+sub _names_here {
+    my ($self, $retval) = @_;
+    $retval->insert(keys %{$self->_content});
+} #_names_here()
+
+=head2 _find_here
+
+Looks for a given item in this scope, but B<not> any outer scope.  Called as:
+
+    $scope->_find_here($name)
+
+Returns the value, or C<undef> if not found.
+
+=cut
+
+sub _find_here {
+    $_[0]->_content->{$_[1]};
+} #_find_here()
 
 1;
 __END__

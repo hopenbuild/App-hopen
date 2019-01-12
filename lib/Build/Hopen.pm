@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw($E boolify hnew hlog UNSPECIFIED NOTHING);
-    @EXPORT_OK = qw(clone setE $VERBOSE);
+    @EXPORT_OK = qw(clone $VERBOSE);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -72,16 +72,6 @@ Set to truthy to get debug output on stderr from hopen's internals.
 # }}}1
 
 our $VERBOSE = false;
-
-=head2 $E
-
-C<$E> holds the current L<Build::Hopen::Environment>, if any.
-Exported by default.
-
-=cut
-
-our $E = '$Build::Hopen::E NOT YET LOADED - see Build::Hopen::setE()';
-    # An obvious error message ;)
 
 =head1 FUNCTIONS
 
@@ -183,41 +173,6 @@ sub clone {
     return $val unless ref($val);
     return Storable::dclone($val);
 } #clone()
-
-=head2 setE
-
-Set the current L</$E>.  Usage:
-
-    my $saver = setE(<a reference to a Build::Hopen::Environment>)
-
-The return value is from L<Sub::ScopeFinalizer>.  You must assign it to a
-lexical (C<$saver> in the example above) to revert changes to L</$E> when that
-lexical goes out of scope.
-
-See L<https://stackoverflow.com/a/31864302/2877364>
-by ikegami for why you can't just use C<local $E=...>.
-
-=cut
-
-sub setE {
-    # Arg check.  We don't create a default environment because
-    # I don't want to create a circular dependency between Build::Hopen
-    # and Build::Hopen::Environment.
-    # TODO decide whether to move this and $E to
-    # Build::Hopen::Environment instead.
-    my $new_env = shift or croak 'Need a new environment';
-    croak 'Need an environment' unless
-        ref $new_env && $new_env->DOES('Build::Hopen::Environment');
-
-    # Protect the author from himself
-    croak 'Sorry, but I must insist that you save my return value'
-        unless defined wantarray;
-
-    my $old_env = $E;
-    my $saver = scope_finalizer { $E = $old_env };
-    $E = $new_env;
-    return $saver;
-} #setE()
 
 =head1 CONSTANTS
 
