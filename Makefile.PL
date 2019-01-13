@@ -149,6 +149,7 @@ my %opts = (
     MIN_PERL_VERSION => '5.014',
         # For:
         #   - full Unicode support (this was the big one) (5.014)
+        #   - nondestructive replace (s///r) (5.014)
         #   - backtracking control verbs (5.010)
         #   - working smartmatch (5.010001)
         #   - stringifying regexes with modifiers (5.014)
@@ -187,6 +188,7 @@ my %opts = (
         #'Role::Tiny' => '1.000000',
 
         'Class::XPath' => '1.4',
+        'Cwd' => '0',
 
         'constant' => '0',
         'Data::Dumper' => '0',
@@ -194,9 +196,11 @@ my %opts = (
         'Exporter' => '0',
         'feature' => '0',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
+        'File::Globstar' => '0.5',      # Latest bugfix; fewer dependencies
+        'File::Spec' => '0',
         # 'Hash::Ordered' => '0.011',   # For latest bugfix
         'Import::Into' => '0',
-        'Getopt::Long' => '2.5',
+        'Getopt::Long' => '2.5',    # for long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
         # 'Number::Compare' => '0', # - looks cool
         'overload' => '0',
