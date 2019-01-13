@@ -18,7 +18,6 @@ BEGIN {
 
 use Build::Hopen::Util::NameSet;
 use Storable ();
-use Sub::ScopeFinalizer qw(scope_finalizer);
 
 our $VERSION = '0.000005'; # TRIAL
 
@@ -204,9 +203,7 @@ __END__
 =head1 INTERNALS
 
  - C<Op>: A class representing an operation
-   - C<Op:run()> takes a table of inputs and returns a table of outputs.
-   - C<Op:describe()> returns a table listing those inputs and outputs.
-
+   - C<Op:run()> takes a Build::Hopen::Scope and returns a hashref of outputs.
 
 =head2 Implementation
 

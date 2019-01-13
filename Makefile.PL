@@ -178,6 +178,11 @@ my %opts = (
 
         'Class::Tiny' => '1.000',   # New API.  NOTE: <1.001 has no BUILDARGS
         #'Class::Tiny::Antlers' => '0',
+
+        #'Class::Tiny::Chained' => '0.002',
+            # - Looks like it might be handy.
+            # 0.002+ because that has only core dependencies.
+
         #'Class::Method::Modifiers' => '1.05',  # version nums from Antlers
         #'Role::Tiny' => '1.000000',
 

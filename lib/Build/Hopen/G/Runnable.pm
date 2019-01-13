@@ -43,8 +43,10 @@ A L<Build::Hopen::Util::NameSet>, which may include regexes.
 
 use parent 'Build::Hopen::G::Entity';
 use Class::Tiny {
+    # NOTE: want and need are not currently used.
     want => sub { Build::Hopen::Util::NameSet->new },
     need => sub { Build::Hopen::Util::NameSet->new },
+
     scope => sub { Build::Hopen::Scope->new },
 };
 

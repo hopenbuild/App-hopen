@@ -36,17 +36,6 @@ sub run {
 
 # TODO?  Override the setter so that name 'all' throws?
 
-=head2 describe
-
-Wraps a L<Build::Hopen::G::PassthroughOp>'s describe function.
-
-=cut
-
-sub describe {
-    my $self = shift or croak 'Need an instance';
-    return $self->_passthrough->describe(@_);
-}
-
 =head2 BUILD
 
 =cut

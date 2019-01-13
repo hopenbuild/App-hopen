@@ -10,8 +10,6 @@ use Class::Tiny {
     greedy => 0
 };
 
-use Sub::ScopeFinalizer qw(scope_finalizer);
-
 =head1 NAME
 
 Build::Hopen::G::Link - The base class for all hopen links between ops.
@@ -39,10 +37,7 @@ sub run {
     my $outer_scope = shift or croak 'Need a scope';
     hlog { Running => __PACKAGE__ , $self->name };
 
-    my $old_outer = $self->scope->outer;
-    my $saver = scope_finalizer { $self->scope->outer($old_outer) };
-    $self->scope->outer($outer_scope);
-
+    my $saver = $self->scope->outerize($outer_scope);
     return $self->scope->as_hashref(deep => true);
 } #run()
 

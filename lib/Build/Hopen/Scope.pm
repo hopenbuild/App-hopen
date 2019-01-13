@@ -6,6 +6,7 @@ use Build::Hopen::Base;
 our $VERSION = '0.000005'; # TRIAL
 
 use Set::Scalar;
+use Sub::ScopeFinalizer qw(scope_finalizer);
 
 use Class::Tiny {
     outer => undef,
@@ -203,6 +204,34 @@ sub TODO_execute {
 
     return $runnable->run(\%runnable_inputs);
 } #execute()
+
+=head2 outerize
+
+Set L</outer>, and return a scalar that will restore L</outer> when it
+goes out of scope.  Usage:
+
+    my $saver = $scope->outerize($new_outer);
+
+C<$new_outer> may be C<undef> or a valid C<Scope>.
+
+=cut
+
+sub outerize {
+    my $self = shift or croak 'Need an instance';
+    my $new_outer = shift or croak 'Need a new Scope';
+    croak 'Need a Scope' unless
+        (!defined($new_outer)) or
+        (ref $new_outer && $new_outer->DOES('Build::Hopen::Scope'));
+
+    # Protect the author of this function from himself
+    croak 'Sorry, but I must insist that you save my return value'
+        unless defined wantarray;
+
+    my $old_outer = $self->outer;
+    my $saver = scope_finalizer { $self->outer($old_outer) };
+    $self->outer($new_outer);
+    return $saver;
+} #outerize()
 
 =head1 FUNCTIONS TO BE OVERRIDDEN IN SUBCLASSES
 

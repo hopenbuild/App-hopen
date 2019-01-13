@@ -39,27 +39,12 @@ The output is C<{}> if no inputs are provided.
 
 sub run {
     my $self = shift or croak 'Need an instance';
-    my $scope = shift or croak 'Need a scope';
+    my $outer_scope = shift or croak 'Need a scope';
     hlog { Running => __PACKAGE__ , $self->name };
-    my $hrRetval = {};
-    $hrRetval->{$_} = clone $scope->find($_) foreach @{$scope->names};
-    return $hrRetval;
+
+    my $saver = $self->scope->outerize($outer_scope);
+    return $self->scope->as_hashref(deep => true);
 } #run()
-
-=head2 describe
-
-Return a hashref of C<< {in => (the inputs), out => (the outputs) >>.  The
-implementation here returns C<true> for the inputs, signifying that this op
-will accept anything.  It returns C<true> for the outputs, signifying that this
-op may output anything.
-
-=cut
-
-sub describe {
-    my $self = shift or croak 'Need an instance';
-    return { in => UNSPECIFIED, out => NOTHING };
-        # By default, any inputs; any outputs.
-} #describe()
 
 =head2 BUILD
 

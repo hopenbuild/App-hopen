@@ -20,12 +20,11 @@ use Build::Hopen::G::Node;
 use Build::Hopen::G::Goal;
 use Graph;
 use Storable ();
-use Sub::ScopeFinalizer qw(scope_finalizer);
 
 # Class data {{{1
 
 use constant {
-    ATTR => 'edge_list',    # Graph edge attribute: list of \BHG::Link
+    LINKS => 'link_list',    # Graph edge attribute: array of \BHG::Link
 };
 
 # A counter used for making unique DAG root-node names
@@ -87,10 +86,10 @@ sub run {
     my $outer_scope = shift;    # From the caller
     my $retval = {};
 
-    # Our own scope wins compared to the outer scope.
-    my $old_outer = $self->scope->outer;
-    my $saver = scope_finalizer { $self->scope->outer($old_outer) };
-    $self->scope->outer($outer_scope);
+    # The scope attached to the DAG takes precedence over the provided Scope.
+    # This is realized by making $outer_scope the outer of our scope for
+    # the duration of this call.
+    my $dag_scope_saver = $self->scope->outerize($outer_scope);
 
     my @order = eval { $self->_graph->toposort };
     die "Graph contains a cycle!" if $@;
@@ -109,14 +108,14 @@ sub run {
         # node has the option.
         my $node_scope = Build::Hopen::Scope->new;
         $node_scope->outer($self->scope);
-            # Data specifically being provided to the current node beats
-            # the scope of the DAG as a whole.
+            # Data specifically being provided to the current node, e.g.,
+            # on input edges, beats the scope of the DAG as a whole.
 
         # Iterate over each node's edges and process any Links
         foreach my $pred ($self->_graph->predecessors($node)) {
             hlog { ('From', $pred->name, 'to', $node->name) };
 
-            my $links = $self->_graph->get_edge_attribute($pred, $node, ATTR);
+            my $links = $self->_graph->get_edge_attribute($pred, $node, LINKS);
 
             unless($links) {    # Simple case: predecessor's outputs become our inputs
                 $node_scope->add(%{$pred->outputs});
@@ -230,9 +229,9 @@ sub connect {
     $self->_graph->add_edge($op1, $op2);
 
     # Save the BHG::Link as an edge attribute (not idempotent!)
-    my $attrs = $self->_graph->get_edge_attribute($op1, $op2, ATTR) || [];
+    my $attrs = $self->_graph->get_edge_attribute($op1, $op2, LINKS) || [];
     push @$attrs, $link;
-    $self->_graph->set_edge_attribute($op1, $op2, ATTR, $attrs);
+    $self->_graph->set_edge_attribute($op1, $op2, LINKS, $attrs);
 
     return $link;
 } #connect()

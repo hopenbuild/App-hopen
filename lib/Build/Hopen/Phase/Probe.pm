@@ -2,11 +2,24 @@
 package Build::Hopen::Phase::Probe;
 use Build::Hopen;
 use Build::Hopen::Base;
-#use parent 'Exporter';
+use parent 'Exporter';
 
 our $VERSION = '0.000005'; # TRIAL
 
+our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+BEGIN {
+    @EXPORT = qw(find_hopen_files);
+    @EXPORT_OK = qw();
+    %EXPORT_TAGS = (
+        default => [@EXPORT],
+        all => [@EXPORT, @EXPORT_OK]
+    );
+}
+
 #use Class::Tiny qw(TODO);
+
+use File::Spec;
+use Cwd qw(getcwd abs_path);
 
 # Docs {{{1
 
@@ -29,23 +42,20 @@ Probe will also find C<~/foo.hopen> if it exists.
 
 =head1 FUNCTIONS
 
-=head2 todo
+=head2 find_hopen_files
 
-TODO
+Finds the hopen files from the given directory, or the current directory
+if none is specified.  Usage:
+
+    my $files_array = find_hopen_files
 
 =cut
 
-sub todo {
-    my $self = shift or croak 'Need an instance';
+sub find_hopen_files {
+    my $dir = shift // abs_path(getcwd);
+    hlog { 'Looking for hopen files in', $dir };
     ...
-} #todo()
-
-#our @EXPORT = qw();
-#our @EXPORT_OK = qw();
-#our %EXPORT_TAGS = (
-#    default => [@EXPORT],
-#    all => [@EXPORT, @EXPORT_OK]
-#);
+} #find_hopen_files()
 
 #sub import {    # {{{1
 #} #import()     # }}}1
