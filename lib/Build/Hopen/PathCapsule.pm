@@ -234,5 +234,24 @@ sub rel_orig {
     return File::Spec->abs2rel($self->abs, $self->{_relative_to});
 } #rel_orig()
 
+=head2 abs_slashed
+
+Returns the relative path to the file, with slashes as the delimiter.
+Intended for use as input to L<File::Globstar>.
+
+=cut
+
+sub abs_slashed {
+    ...
+#    my $self = shift or croak "Need an instance";
+#    return join('/',
+#        map { s{([\/\\])}{\\\1}gr } (
+#            $self->{_vol},
+#            @{$self->{_dirs}},
+#            ($self->{_is_dir} ? '' : $self->{_file})
+#        )
+#    );
+} #abs_slashed()
+
 1;
 # vi: set fdm=marker fo-=ro:

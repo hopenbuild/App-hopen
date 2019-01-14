@@ -204,6 +204,7 @@ my %opts = (
         'Graph' => '0.9704',        # For latest multiedged support
         # 'Number::Compare' => '0', # - looks cool
         'overload' => '0',
+        'Path::Class' => '0.37',    # For latest bugfixes
         'Pod::Usage' => '0',
 
         'Set::Scalar' => '1.27',    # For correct metadata

@@ -92,5 +92,15 @@ is($dut->abs, '/foo/quux', 'Absolute path is correct after file modification');
 # rel / rel_orig {{{1
 # TODO add these tests
 # }}}1
+# abs_slashed {{{1
+# TODO
+#$dut = Build::Hopen::PathCapsule->new('/foo/bar');
+#is($dut->abs_slashed, '/foo/bar', 'abs_slashed simple');
+#$dut = Build::Hopen::PathCapsule->new('/foo/bar', true);
+#is($dut->abs_slashed, '/foo/bar', 'abs_slashed simple dir');
+#$dut = Build::Hopen::PathCapsule->new('/foo\\/bar');
+#is($dut->abs_slashed, '/foo\\\\/bar', 'abs_slashed with backslashes');
+
+# }}}1
 done_testing();
 # vi: set fdm=marker fo-=ro:
