@@ -1,6 +1,7 @@
 # Build::Hopen::ScopeENV - a hopen Scope for %ENV
 package Build::Hopen::ScopeENV;
 use Build::Hopen::Base;
+use Build::Hopen qw(hlog);
 
 our $VERSION = '0.000005'; # TRIAL
 
@@ -62,7 +63,10 @@ Add the names in C<%ENV> to the given L<Set::Scalar>.
 =cut
 
 sub _names_here {
-    $_[1]->insert(keys %ENV);
+    my $set = $_[1];
+    hlog { __PACKAGE__ . '::_names_here' };
+    $set->insert(keys %ENV);
+    hlog { Dumper $set };
 } #_names_here()
 
 1;

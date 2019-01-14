@@ -4,6 +4,9 @@ use rlib 'lib';
 use HopenTest;
 use Build::Hopen::Scope;
 
+$Build::Hopen::VERBOSE=@ARGV;
+    # say `perl -Ilib t/011-scope-env.t -- foo` to turn on verbose output
+
 BEGIN {
     use_ok 'Build::Hopen::ScopeENV';
 }
@@ -25,7 +28,8 @@ foreach my $varname (qw(SHELL COMSPEC PATH)) {
 our ($varname_inner, $varname_outer, $varname_env);
 local *varname_inner = \'+;!@#$%^&*() Some crazy variable name that is not a valid env var name';
 local *varname_outer = \'+;!@#$%^&*() Another crazy variable name that is not a valid env var name';
-local *varname_env = \'__env_var_for_testing_hopen_';
+local *varname_env = \'__ENV_VAR_FOR_TESTING_HOPEN_';
+    # On Win32, ENV variable names are all uppercase.
 
 my $inner = Build::Hopen::Scope->new()->add($varname_inner => 42);
 my $outer = Build::Hopen::Scope->new()->add($varname_outer => 1337);
@@ -37,10 +41,12 @@ cmp_ok($inner->find($varname_outer), '==', 1337, 'find() through intervening Sco
 cmp_ok($s->find($varname_outer), '==', 1337, 'find() from ScopeENV to outer works');
 
 $ENV{$varname_env} = 'C=128';
+#diag "New environment var $varname_env is $ENV{$varname_env} (should be 'C=128')";
+
+ok(!$outer->names->has($varname_env),'$ENV{}-set var is not in scope in outer');
 
 ok($s->names->has($varname_env), '$ENV{}-set var is in scope');
 ok($inner->names->has($varname_env), '$ENV{}-set var is in scope starting from inner');
-ok(!$outer->names->has($varname_env), '$ENV{}-set var is not in scope in outer');
 is($inner->find($varname_env), 'C=128', 'find() from inner up to ScopeENV works');
 
 done_testing();
