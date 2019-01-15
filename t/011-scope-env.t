@@ -8,7 +8,7 @@ $Build::Hopen::VERBOSE=@ARGV;
     # say `perl -Ilib t/011-scope-env.t -- foo` to turn on verbose output
 
 BEGIN {
-    use_ok 'Build::Hopen::ScopeENV';
+    use_ok 'Build::Hopen::ScopeENV' or say "Bail out!";
 }
 
 my $s = Build::Hopen::ScopeENV->new();

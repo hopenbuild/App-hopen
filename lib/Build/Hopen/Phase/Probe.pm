@@ -20,7 +20,8 @@ BEGIN {
 
 #use Build::Hopen::PathCapsule;
 use Cwd qw(getcwd abs_path);
-use File::Globstar qw(globstar);
+use File::Glob ':bsd_glob';
+#use File::Globstar qw(globstar);
 use File::Spec;
 use Path::Class;
 
@@ -58,18 +59,23 @@ If no C<$dir> is given, cwd is used.
 
 sub find_hopen_files {
     my $here = @_ ? dir($_[0]) : dir;
-    local *d = sub { $here->file(shift)->as_foreign('Unix') };
+    local *d = sub { $here->file(shift) };
         # Need slash as the separator for File::Globstar.
 
     hlog { 'Looking for hopen files in', $here->absolute };
 
     # Look for files that are included with the project
-    my @candidates = sort ( globstar(d('*.hopen')), globstar(d('.hopen')) );
+    my @candidates = sort(
+        bsd_glob(d('*.hopen'), GLOB_NOSORT),
+        bsd_glob(d('.hopen'), GLOB_NOSORT),
+    );
     hlog { "Candidates", @candidates };
 
-    # Look in the parent dir for context files
+    # TODO Look in the parent dir for context files
     my $parent_dir = $here->parent;
-    ...
+
+    # TODO decide what order to return the dirs in
+    return @candidates;
 } #find_hopen_files()
 
 #sub import {    # {{{1
