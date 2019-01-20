@@ -1,5 +1,5 @@
-# Build::Hopen::Phase::Probe - probe-phase operations
-package Build::Hopen::Phase::Probe;
+# Build::Hopen::Phase::Check - checking-phase operations
+package Build::Hopen::Phase::Check;
 use Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
@@ -29,16 +29,16 @@ use Path::Class;
 
 =head1 NAME
 
-Build::Hopen::Phase::Probe - Check the build system
+Build::Hopen::Phase::Check - Check the build system
 
 =head1 SYNOPSIS
 
-Probe runs first.  Probe reads a foundations file and outputs a capability
+Check runs first.  Check reads a foundations file and outputs a capability
 file and an options file.  The user can then edit the options file to
 customize the build.
 
-Probe also locates context files.  For example, when processing C<~/foo/.hopen>,
-Probe will also find C<~/foo.hopen> if it exists.
+Check also locates context files.  For example, when processing C<~/foo/.hopen>,
+Check will also find C<~/foo.hopen> if it exists.
 
 =cut
 
