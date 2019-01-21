@@ -4,14 +4,12 @@ use Build::Hopen;
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-$Build::Hopen::VERBOSE=1;   # DEBUG
-
 our $VERSION = '0.000005'; # TRIAL
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    @EXPORT = qw(find_hopen_files);
-    @EXPORT_OK = qw();
+    @EXPORT = qw();
+    @EXPORT_OK = qw(find_hopen_files);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -48,39 +46,63 @@ Check will also find C<~/foo.hopen> if it exists.
 
 =head2 find_hopen_files
 
-Finds the hopen files from the given directory, or the current directory
-if none is specified.  Usage:
+Returns a list of hopen files, if any, to process for the given directory.
+Hopen files match C<*.hopen.pl> or C<.hopen.pl>.  Usage:
 
-    my $files_array = find_hopen_files([$dir])
+    my $files_array = find_hopen_files([$proj_dir[, $dest_dir]])
 
-If no C<$dir> is given, cwd is used.
+If no C<$proj_dir> is given, the current directory is used.
+
+The returned files should be processed in left-to-right order.
+
+The return array will include a context file if any is present.
+For C<$dir eq '/foo/bar'>, for example, C</foo/bar.hopen.pl> is the
+name of the context file.
 
 =cut
 
 sub find_hopen_files {
-    my $here = @_ ? dir($_[0]) : dir;
-    local *d = sub { $here->file(shift) };
+    my $proj_dir = @_ ? dir($_[0]) : dir;
+    my $dest_dir = $_[1] if @_>1;
+
+    local *d = sub { $proj_dir->file(shift) };
         # Need slash as the separator for File::Globstar.
 
-    hlog { 'Looking for hopen files in', $here->absolute };
+    hlog { 'Looking for hopen files in', $proj_dir->absolute };
 
     # Look for files that are included with the project
     my @candidates = sort(
-        bsd_glob(d('*.hopen'), GLOB_NOSORT),
-        bsd_glob(d('.hopen'), GLOB_NOSORT),
+        grep { $_ !~ /MY\.hopen\.pl$/ } (
+            bsd_glob(d('*.hopen.pl'), GLOB_NOSORT),
+            bsd_glob(d('.hopen.pl'), GLOB_NOSORT),
+        )
     );
     hlog { "Candidates", @candidates };
+    @candidates = $candidates[$#candidates] if @candidates;
+        # Only use the last one
 
-    # TODO Look in the parent dir for context files
-    my $parent_dir = $here->parent;
+    # Add a $dest_dir/MY.hopen.pl file first, if there is one.
+    if($dest_dir) {
+        my $MY = $dest_dir->file('MY.hopen.pl');
+        unshift @candidates, $MY if -r $MY;
+    }
 
-    # TODO decide what order to return the dirs in
-    return @candidates;
+    # Look in the parent dir for context files.
+    # The context file comes after the earlier candidate.
+    my $parent = $proj_dir->parent;
+    if($parent ne $proj_dir) {          # E.g., not root dir
+        my $me = $proj_dir->basename;
+        my $context_file = $parent->file("$me.hopen.pl");
+        if(-r $context_file) {
+            push @candidates, $context_file;
+            hlog { 'Context file', $context_file };
+        }
+    }
+
+    hlog { 'Using hopen files', @candidates };
+    return [@candidates];
 } #find_hopen_files()
 
-#sub import {    # {{{1
-#} #import()     # }}}1
-
-#1;
+1;
 __END__
 # vi: set fdm=marker: #

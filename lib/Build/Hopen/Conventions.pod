@@ -1,0 +1,51 @@
+=head1 NAME
+
+Build::Hopen::Conventions - conventions for using hopen(1) as a build system
+
+=head1 SYNOPSIS
+
+L<Build::Hopen> is a flexible dataflow processor and task runner.  However, its main
+use case is as a build system, e.g., a Makefile generator.  To stay as flexible as
+possible, hopen(1) expects its components to follow these conventions.
+
+=head2 Components used by the build system
+
+=over
+
+=item A project directory
+
+Where the main C<.hopen.pl> file of the project is.
+
+=item A destination directory
+
+Where the output will go.  hopen(1) does not support in-source builds.
+The default directory is C<< <project dir>/built >>.
+
+=item A generator
+
+A subclass of L<Build::Hopen::Gen> that creates the build-system files.
+
+=item A toolchain (optional)
+
+A subclass of L<Build::Hopen::Toolchain> that applies any compiler-specific
+options that are independent of the generator.
+
+=item An architecture (optional)
+
+An arbitrary string understood by the toolchain or generator.  Used, e.g.,
+to select x86 vs. x64.
+
+=item Hopen file(s)
+
+One or more files matching C<.hopen.pl> or C<*.hopen.pl>.  Each hopen file is
+the body of a subroutine that returns a hashref.  That hashref is provided
+as input to the build graph.
+
+The filename C<MY.hopen.pl> is reserved.  It is created by hopen in each
+destination directory to record the state of the build in that directory.
+
+Elements of the hashref starting with C<__R> are reserved.  Please don't read
+or write those elements if you want hopen to work! :)
+
+=back
+

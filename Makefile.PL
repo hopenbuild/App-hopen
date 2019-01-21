@@ -149,6 +149,7 @@ my %opts = (
     MIN_PERL_VERSION => '5.014',
         # For:
         #   - full Unicode support (this was the big one) (5.014)
+        #   - string "eval" handles $@ correctly (see perldoc -f eval)
         #   - nondestructive replace (s///r) (5.014)
         #   - backtracking control verbs (5.010)
         #   - working smartmatch (5.010001)
@@ -198,8 +199,10 @@ my %opts = (
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         'File::Glob' => '0',
         #'File::Globstar' => '0.5',      # Latest bugfix; fewer dependencies
+        'File::Slurper' => '0.011',     # For bugfixes
         'File::Spec' => '0',
-        # 'Hash::Ordered' => '0.011',   # For latest bugfix
+        'Hash::Merge' => '0.299',       # For bugfixes
+        'Hash::Ordered' => '0.011',     # For latest bugfix
         'Import::Into' => '0',
         'Getopt::Long' => '2.5',    # for long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support

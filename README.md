@@ -69,7 +69,7 @@ You can also look for information at:
 
 # LICENSE AND COPYRIGHT
 
-Copyright (C) 2018 Christopher White, `<cxwembedded at gmail.com>`
+Copyright (C) 2018--2019 Christopher White, `<cxwembedded at gmail.com>`
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

@@ -5,7 +5,11 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
+use Build::Hopen::Phase::Check;
+use File::Slurper;
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
+use Hash::Merge;
+use Path::Class;
 
 use constant DEBUG          => false;
 
@@ -33,12 +37,18 @@ my %CMDLINE_OPTS = (
     # They are listed in alphabetical order by option name,
     # lowercase before upper, although the code does not require that order.
 
+    ARCHITECTURE => ['a','|A|architecture|platform=s', ''],
+        # -A and --platform are for the comfort of folks migrating from CMake
+
     #DUMP_VARS => ['d', '|dump-variables', false],
-    #DEBUG => ['D','|debug', false],
+    #DEBUG => ['debug','', false],
+    DEFINE => ['D',':s%'],
     #EVAL => ['e','|source=s@', $dr_save_source],
     #RESTRICTED_EVAL => ['E','|exec=s@'],
     #SCRIPT => ['f','|file=s@', $dr_save_source],
+    PROJ_DIR => ['from','=s'],
     # -F field separator?
+    GENERATOR => ['g', '|G|generator=s', 'Make'],     # -G is from CMake
     # -h and --help reserved
     # INPUT_FILENAME assigned by _parse_command_line()
     #INCLUDE => ['i','|include=s@'],
@@ -48,21 +58,16 @@ my %CMDLINE_OPTS = (
     # --man reserved
     # OUTPUT_FILENAME => ['o','|output=s', ""], # conflict with gawk
     # OPTIMIZE => ['O','|optimize'],
+    QUIET => ['q'],
     #SANDBOX => ['S','|sandbox',false],
     #SOURCES reserved
+    TOOLCHAIN => ['t','|T|toolchain=s', 'Gnu'],      # -T is from CMake
+    DEST_DIR => ['to','=s'],
     # --usage reserved
     PRINT_VERSION => ['version','', false],
-    #DEFS => ['v','|var:s%'],
+    VERBOSE => ['v','+', 0],
     # -? reserved
-    #
-    # gawk(1) long options: --dump-variables, --exec, --gen-po, --lint,
-    # --profile
 
-    # Long-only options that are specific to axk.
-    #NO_INPUT => ['no-input'],   # When set, don't read any files.  This is so
-                                # testing with empty inputs is easier.
-                                #SHOW => ['show',':s@'],     # which debugging output to print.
-                                # TODO make it a hash instead?
 );
 
 sub _parse_command_line {
@@ -110,22 +115,23 @@ sub _parse_command_line {
         $hrOptsOut->{ $revmap{$optname} } = $hrOptsOut->{ $optname };
     }
 
-    # Process other arguments.  TODO? support multiple input filenames?
-    #$hrOptsOut->{INPUT_FILENAME} = $ARGV[0] // "";
+    # Process other arguments.  The first two non-option arguments are destination
+    # dir and project dir, if --from and --to were not given.
+    $hrOptsOut->{DEST_DIR} //= $params{from}->[0] if @{$params{from}};
+    $hrOptsOut->{PROJ_DIR} //= $params{from}->[1] if @{$params{from}}>1;
 
-    #$hrOptsOut->{SOURCES} = \@_Sources;     # our local copy
+    # Option overrides: -q beats -v
+    $hrOptsOut->{VERBOSE} = 0 if $hrOptsOut->{QUIET};
 
 } #_parse_command_line()
 
 # }}}1
-# === Command-line runner =============================================== {{{1
+# === Main worker code ================================================== {{{1
 
-# Command-line runner.  Call as XML::Axk::App::_Main(\@ARGV).
-sub _Main {
-    my $lrArgs = shift or croak "No arguments - TODO";
-
-    my %opts;
-    _parse_command_line(from => $lrArgs, into => \%opts);
+# Do a run.  Dies on failure.  _Main() then translates the die() into a print
+# and error return.
+sub _inner {
+    my %opts = @_;
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
         if($Build::Hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
@@ -139,34 +145,93 @@ sub _Main {
         return EXIT_OK;
     }
 
-    #    # Treat the first non-option arg as a script if appropriate
-    #    unless(@{$opts{SOURCES}}) {
-    #        croak "No scripts to run" unless @$lrArgs;
-    #        push @{$opts{SOURCES}}, [false, shift @$lrArgs];
-    #    }
+    # Get the project dir
+    my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default cwd
 
-    ##    my $core = Build::Hopen::Core->new(\%opts);
-    ##        # Note: core doesn't copy the provided options, so make sure
-    ##        # they stick around as long as $core does.
-    ##
-    ##        #    my $cmd_line_idx = 0;   # Number the `-e`s on the command line
-    ##        #    foreach my $lrSource (@{$opts{SOURCES}}) {
-    ##        #        my ($is_file, $text) = @$lrSource;
-    ##        #        if($is_file) {
-    ##        #            $core->load_script_file($text);
-    ##        #        } else {
-    ##        #            $core->load_script_text($text,
-    ##        #                "(cmd line script #@{[++$cmd_line_idx]})",
-    ##        #                true);  # true => add a Ln if there isn't one in the script
-    ##        #        }
-    ##        #    } #foreach source
-    ##
-    ##    # read from stdin if no input files specified.
-    ##    push @$lrArgs, '-' unless @$lrArgs || $opts{NO_INPUT};
-    ##
-    ##    $core->run(@$lrArgs);
-    ##
-    return 0;
+    # See if we have hopen files associated with the project dir
+    my $lrHopenFiles = Build::Hopen::Phase::Check::find_hopen_files($proj_dir);
+    die <<EOT unless @$lrHopenFiles;
+I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
+project directory ``$proj_dir''.
+EOT
+
+    # Get the destination dir
+    my $dest_dir;
+    if($opts{DEST_DIR}) {
+        $dest_dir = dir($opts{DEST_DIR});
+    } else {
+        $dest_dir = $proj_dir->subdir('built');
+    }
+
+    # Prohibit in-source builds
+    die <<EOT if $proj_dir eq $dest_dir;
+I'm sorry, but I don't support in-source builds (dir ``$proj_dir'').  Please
+specify a different project directory (--from) or destination directory (--to).
+EOT
+
+    # = Initialize ==========================================================
+
+    say "Preparing ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
+
+    # Load generator
+    my ($gen, $gen_class);
+    $gen_class = loadfrom($opts{GENERATOR}, 'Build::Hopen::Gen::', '');
+    die "Can't find generator $opts{GENERATOR}" unless $gen_class;
+
+    $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
+        architecture => $opts{ARCHITECTURE}) or die "Can't initialize generator";
+
+    # Load toolchain
+    my ($toolchain, $toolchain_class);
+    $toolchain_class = loadfrom($opts{TOOLCHAIN}, 'Build::Hopen::Toolchain::', '');
+    die "Can't find toolchain $opts{TOOLCHAIN}" unless $toolchain_class;
+
+    $toolchain = "$toolchain_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
+        architecture => $opts{ARCHITECTURE}) or die "Can't initialize toolchain";
+
+    # = Run the hopen files =================================================
+    my $hrData = {};
+    my $idx = 0;
+    Hash::Merge::set_behavior('RETAINMENT_PRECEDENT');
+
+    foreach my $fn (@$lrHopenFiles) {
+        my $friendly_name = ($fn =~ s{"}{-}gr);
+            # as far as I can tell, #line can't handle embedded quotes.
+        my $text = File::Slurper::read_text($fn);
+        my $hrAddlData = eval(<<EOT);
+sub __R_file$idx {
+#line 1 "$friendly_name"
+$text
+}
+EOT
+
+        $hrData = Hash::Merge::merge($hrData, $hrAddlData);
+        ++$idx;
+    } # foreach hopen file
+
+} #_inner()
+
+# }}}1
+# === Command-line runner =============================================== {{{1
+
+# Command-line runner.  Call as Build::Hopen::App::_Main(\@ARGV).
+sub _Main {
+    my $lrArgs = shift // [];
+
+    # = Process options =====================================================
+
+    my %opts;
+    _parse_command_line(from => $lrArgs, into => \%opts);
+    ++$Build::Hopen::VERBOSE while $opts{VERBOSE}--;        # Verbosity first
+
+    eval { _inner(%opts); };
+    my $msg = $@;
+    if($msg) {
+        print STDERR $msg;
+        return EXIT_PROC_ERR;
+    }
+
+    return EXIT_OK;
 } #Main()
 
 # }}}1
@@ -187,11 +252,48 @@ Build::Hopen::App - hopen build system command-line interface
 
 =head1 USAGE
 
-    hopen [options] [--]
+    hopen [options] [--] [destination dir [project dir]]
+
+If no project directory is specified, the current directory is used.
+
+If no destination directory is specified, C<< <project dir>/built >> is used.
 
 =head1 OPTIONS
 
 =over
+
+=item -a C<architecture>
+
+Specify the architecture.  This is an arbitrary string interpreted by the
+generator or toolchain.
+
+=item --from C<project dir>
+
+Specify the project directory.  Overrides a project directory given as a
+positional argument.
+
+=item -g C<generator>
+
+Specify the generator.  The given C<generator> should be either a full package
+name or the part after C<Build::Hopen::Gen::>.
+
+=item -t C<toolchain>
+
+Specify the toolchain.  The given C<toolchain> should be either a full package
+name or the part after C<Build::Hopen::Toolchain::>.
+
+=item --to C<destination dir>
+
+Specify the destination directory.  Overrides a destination directory given
+as a positional argument.
+
+=item -q
+
+Produce no output (quiet).  Overrides C<-v>.
+
+=item -v
+
+Verbose.  Specify more C<-v>'s for more verbosity.
 
 =item --version
 

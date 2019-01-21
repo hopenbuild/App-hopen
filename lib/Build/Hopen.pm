@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw($E boolify hnew hlog UNSPECIFIED NOTHING);
-    @EXPORT_OK = qw(clone $VERBOSE);
+    @EXPORT_OK = qw(clone loadfrom $VERBOSE);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -127,6 +127,7 @@ sub hnew {
     my $class = shift or croak 'Need a class';
     my @stems = ('Build::Hopen::G::', 'Build::Hopen::', '');
     shift @stems if $class =~ /::/;
+
     foreach my $stem (@stems) {
         my $instance = eval {
             eval "require $stem$class";
@@ -135,8 +136,30 @@ sub hnew {
         };
         return $instance if $instance;
     }
-    die "Could not find class for $class";
+
+    croak "Could not find class for $class";
 } #hnew()
+
+=head2 loadfrom
+
+Load a package given a list of stems.  Usage:
+
+    my $fullname = loadfrom($name[, @stems]);
+
+Returns the full name of the loaded package, or falsy on failure.
+
+=cut
+
+sub loadfrom {
+    my $class = shift or croak 'Need a class';
+
+    foreach my $stem (@_) {
+        eval "require $stem$class";
+        return "$stem$class" unless $@;
+    }
+
+    croak "Could not find class for $class";
+} #loadfrom()
 
 =head2 hlog
 

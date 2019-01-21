@@ -115,6 +115,12 @@ sub run {
         foreach my $pred ($self->_graph->predecessors($node)) {
             hlog { ('From', $pred->name, 'to', $node->name) };
 
+            # Goals do not feed outputs to other Goals.  This is so you can
+            # add edges between Goals to set their order while keeping the
+            # data for each Goal separate.
+            # TODO add tests for this
+            next if $pred->DOES('Build::Hopen::G::Goal');
+
             my $links = $self->_graph->get_edge_attribute($pred, $node, LINKS);
 
             unless($links) {    # Simple case: predecessor's outputs become our inputs
