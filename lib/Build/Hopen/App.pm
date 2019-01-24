@@ -5,7 +5,7 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
-use Build::Hopen::Phase::Check;
+use Build::Hopen::AppUtil qw(find_hopen_files);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
 use Data::Dumper;
@@ -58,16 +58,15 @@ my %CMDLINE_OPTS = (
     # -h and --help reserved
     # INPUT_FILENAME assigned by _parse_command_line()
     #INCLUDE => ['i','|include=s@'],
-    #KEEP_GOING => ['k','|keep-going',false], #not in gawk
     #LIB => ['l','|load=s@'],
     #LANGUAGE => ['L','|language:s'],
     # --man reserved
-    # OUTPUT_FILENAME => ['o','|output=s', ""], # conflict with gawk
+    # OUTPUT_FILENAME => ['o','|output=s', ""],
     # OPTIMIZE => ['O','|optimize'],
     QUIET => ['q'],
     #SANDBOX => ['S','|sandbox',false],
     #SOURCES reserved
-    TOOLCHAIN => ['t','|T|toolchain=s', 'Gnu'],      # -T is from CMake
+    TOOLCHAIN => ['t','|T|toolchain=s'],        # -T is from CMake
     DEST_DIR => ['to','=s'],
     # --usage reserved
     PRINT_VERSION => ['version','', false],
@@ -147,7 +146,7 @@ sub _inner {
         } else {
             say "hopen $VERSION";
         }
-        if($opts{PRINT_VERSION} > 1) {
+        if($opts{VERBOSE} >= 1) {
             say "Build::Hopen: $INC{'Build/Hopen.pm'}";
         }
         return EXIT_OK;
@@ -157,7 +156,7 @@ sub _inner {
     my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
 
     # See if we have hopen files associated with the project dir
-    my $lrHopenFiles = Build::Hopen::Phase::Check::find_hopen_files($proj_dir);
+    my $lrHopenFiles = find_hopen_files($proj_dir);
     push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}}) if $opts{EVAL};
 
     hlog { 'hopen files: ', Dumper($lrHopenFiles) } 2;
@@ -166,6 +165,9 @@ sub _inner {
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
 project directory ``$proj_dir''.
 EOT
+
+    $HopenFiles = @$lrHopenFiles;
+    $Phase = 'Check';   # TODO
 
     # Get the destination dir
     my $dest_dir;
@@ -192,16 +194,23 @@ EOT
     hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
 
     $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
-        architecture => $opts{ARCHITECTURE}) or die "Can't initialize generator";
+        architecture => $opts{ARCHITECTURE})
+            or die "Can't initialize generator";
+    $Generator = $gen;
 
     # Load toolchain
     my ($toolchain, $toolchain_class);
-    $toolchain_class = loadfrom($opts{TOOLCHAIN}, 'Build::Hopen::Toolchain::', '');
+    $opts{TOOLCHAIN} //= $gen->default_toolchain;
+    $toolchain_class = loadfrom($opts{TOOLCHAIN},
+                                    'Build::Hopen::Toolchain::', '');
     die "Can't find toolchain $opts{TOOLCHAIN}" unless $toolchain_class;
+
     hlog { "Toolchain spec ``$opts{TOOLCHAIN}'' -> using toolchain $toolchain_class" };
 
-    $toolchain = "$toolchain_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
-        architecture => $opts{ARCHITECTURE}) or die "Can't initialize toolchain";
+    $toolchain = "$toolchain_class"->new(proj_dir => $proj_dir,
+        dest_dir => $dest_dir, architecture => $opts{ARCHITECTURE})
+            or die "Can't initialize toolchain";
+    $Toolchain = $toolchain;
 
     # Create the initial DAG
     $Build = hnew DAG => '__R_main';
@@ -238,7 +247,7 @@ EOT
 
     sub __R_file$idx {
 #line 1 "$friendly_name"
-    $text
+$text
     }
 
     return __R_file$idx(\$Build::Hopen::App::_hrData);
@@ -285,7 +294,7 @@ sub _Main {
 
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
-    ++$Build::Hopen::VERBOSE while $opts{VERBOSE}--;        # Verbosity first
+    ++$Build::Hopen::VERBOSE for 1..$opts{VERBOSE};        # Verbosity first
 
     eval { _inner(%opts); };
     my $msg = $@;

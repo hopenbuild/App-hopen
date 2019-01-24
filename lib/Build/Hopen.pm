@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolchain $Build);
+                $Toolchain $Build $Phase $HopenFiles);
     @EXPORT_OK = qw(clone loadfrom $VERBOSE);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -80,6 +80,14 @@ The current L<Build::Hopen::Toolchain> instance.
 The L<Build::Hopen::G::DAG> instance representing the current build.
 Goals in C<$Build> will become, e.g., top-level targets of a
 generated C<Makefile>.
+
+=head2 $Phase
+
+Which phase we're in.  TODO Is this a string, object, other?
+
+=head2 $HopenFiles
+
+The hopen files applicable to the current build.  An arrayref.
 
 =cut
 

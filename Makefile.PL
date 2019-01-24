@@ -206,8 +206,22 @@ my %opts = (
         'Import::Into' => '0',
         'Getopt::Long' => '2.5',    # for long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
+        # 'Module::Find' => '0.12', # For bugfixes
+                                    # - Use for finding plugins to load.
+                                    # - May also need Module::Runtime.
+                                    # - Alternative is Module::Pluggable,
+                                    #   but that appears to have more test
+                                    #   failures.
+
         # 'Number::Compare' => '0', # - looks cool
         'overload' => '0',
+        # 'Parse::RecDescent' => '1.967015',    # For bugfixes
+            # - Use for parsing Lua tables as inline config data?
+            #   I am thinking about using this for specifying flavors at
+            #   build time.  E.g., `--flavor debug=1,["+"]=42`.
+            # - Syntax at https://www.lua.org/pil/3.6.html .
+            # - See https://www.perlmonks.org/?node_id=462581 for operator
+            #   precedence in P::RD grammars.
         'Path::Class' => '0.37',    # For latest bugfixes
         'Pod::Usage' => '0',
 
