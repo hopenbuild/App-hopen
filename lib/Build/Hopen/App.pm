@@ -1,11 +1,14 @@
 # Build::Hopen::App: hopen(1) program
 package Build::Hopen::App;
-use Build::Hopen;
+use Build::Hopen qw(:default hlog hnew loadfrom);
 use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
 use Build::Hopen::Phase::Check;
+use Build::Hopen::Scope;
+use Build::Hopen::ScopeENV;
+use Data::Dumper;
 use File::Slurper;
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
@@ -43,12 +46,15 @@ my %CMDLINE_OPTS = (
     #DUMP_VARS => ['d', '|dump-variables', false],
     #DEBUG => ['debug','', false],
     DEFINE => ['D',':s%'],
-    #EVAL => ['e','|source=s@', $dr_save_source],
+    EVAL => ['e','|eval=s@'],   # Perl source to run as the last hopen file
     #RESTRICTED_EVAL => ['E','|exec=s@'],
     #SCRIPT => ['f','|file=s@', $dr_save_source],
     PROJ_DIR => ['from','=s'],
     # -F field separator?
+
     GENERATOR => ['g', '|G|generator=s', 'Make'],     # -G is from CMake
+        # *** This is where the default generator is set ***
+
     # -h and --help reserved
     # INPUT_FILENAME assigned by _parse_command_line()
     #INCLUDE => ['i','|include=s@'],
@@ -128,6 +134,8 @@ sub _parse_command_line {
 # }}}1
 # === Main worker code ================================================== {{{1
 
+our $_hrData;   # the hashref of current data
+
 # Do a run.  Dies on failure.  _Main() then translates the die() into a print
 # and error return.
 sub _inner {
@@ -146,10 +154,14 @@ sub _inner {
     }
 
     # Get the project dir
-    my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default cwd
+    my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
 
     # See if we have hopen files associated with the project dir
     my $lrHopenFiles = Build::Hopen::Phase::Check::find_hopen_files($proj_dir);
+    push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}}) if $opts{EVAL};
+
+    hlog { 'hopen files: ', Dumper($lrHopenFiles) } 2;
+
     die <<EOT unless @$lrHopenFiles;
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
 project directory ``$proj_dir''.
@@ -177,6 +189,7 @@ EOT
     my ($gen, $gen_class);
     $gen_class = loadfrom($opts{GENERATOR}, 'Build::Hopen::Gen::', '');
     die "Can't find generator $opts{GENERATOR}" unless $gen_class;
+    hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
 
     $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
         architecture => $opts{ARCHITECTURE}) or die "Can't initialize generator";
@@ -185,29 +198,79 @@ EOT
     my ($toolchain, $toolchain_class);
     $toolchain_class = loadfrom($opts{TOOLCHAIN}, 'Build::Hopen::Toolchain::', '');
     die "Can't find toolchain $opts{TOOLCHAIN}" unless $toolchain_class;
+    hlog { "Toolchain spec ``$opts{TOOLCHAIN}'' -> using toolchain $toolchain_class" };
 
     $toolchain = "$toolchain_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
         architecture => $opts{ARCHITECTURE}) or die "Can't initialize toolchain";
 
+    # Create the initial DAG
+    $Build = hnew DAG => '__R_main';
+
     # = Run the hopen files =================================================
-    my $hrData = {};
+
+    local $_hrData = {};
     my $idx = 0;
-    Hash::Merge::set_behavior('RETAINMENT_PRECEDENT');
+    my $e_count = 0;
+    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
     foreach my $fn (@$lrHopenFiles) {
-        my $friendly_name = ($fn =~ s{"}{-}gr);
-            # as far as I can tell, #line can't handle embedded quotes.
-        my $text = File::Slurper::read_text($fn);
-        my $hrAddlData = eval(<<EOT);
-sub __R_file$idx {
+
+        # Make the file executable
+
+        my ($friendly_name, $text);
+        if(ref $fn eq 'SCALAR') {
+            hlog { 'Processing -e number', ++$e_count };
+            $text = $$fn;
+            $friendly_name = "-e #$e_count";
+
+        } else {
+            hlog { 'Processing', $fn };
+            $text = File::Slurper::read_text($fn);
+            $friendly_name = ($fn =~ s{"}{-}gr);
+                # as far as I can tell, #line can't handle embedded quotes.
+        }
+
+        my $src = <<EOT;
+{
+    package __R_pkg$idx;
+    use Build::Hopen::Base;
+    use Build::Hopen ':all';
+
+    sub __R_file$idx {
 #line 1 "$friendly_name"
-$text
+    $text
+    }
+
+    return __R_file$idx(\$Build::Hopen::App::_hrData);
 }
 EOT
 
-        $hrData = Hash::Merge::merge($hrData, $hrAddlData);
+        # Run the file
+        my $hrAddlData = eval($src);
+        die "Error in $fn: $@" if $@;
+
+        hlog { 'new data', Dumper($hrAddlData) } 2;
+
+        # TODO? Remove all __R* hash keys from $hrAddlData unless it's a
+        # MY.hopen.pl file?
+
+        # Merge in the data
+        $_hrData = $merger->merge($_hrData, $hrAddlData) if $hrAddlData;
+        hlog { 'data after merge', Dumper($hrAddlData) } 2;
         ++$idx;
     } # foreach hopen file
+
+    hlog { 'final data', Dumper($_hrData) } 2;
+
+    # = Execute the resulting build graph ===================================
+
+    # Wrap the final data in a Scope
+    my $env = Build::Hopen::ScopeENV->new(name => 'outermost');
+    my $scope = Build::Hopen::Scope->new(name => 'from hopen files');
+    $scope->adopt_hash($_hrData);
+
+    # Run the DAG
+    my $result_data = $Build->run($scope);
 
 } #_inner()
 
@@ -266,6 +329,12 @@ If no destination directory is specified, C<< <project dir>/built >> is used.
 
 Specify the architecture.  This is an arbitrary string interpreted by the
 generator or toolchain.
+
+=item -e C<Perl code>
+
+Add the C<Perl code> as if it were a hopen file.  C<-e> files are processed
+after all other hopen files, so can modify anything that has been set up
+by those files.  Can be specified more than once.
 
 =item --from C<project dir>
 
@@ -345,5 +414,6 @@ Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 =cut
+
 # }}}1
 # vi: set ts=4 sts=4 sw=4 et ai foldmethod=marker: #

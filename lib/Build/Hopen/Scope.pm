@@ -252,7 +252,7 @@ particular implementation, the last-added value for a particular key wins.
 =cut
 
 sub add {
-    my $self = shift;
+    my $self = shift or croak 'Need an instance';
     my $hrContent = $self->_content;
     while(@_) {
         my $k = shift;
@@ -261,6 +261,26 @@ sub add {
     croak "Got an odd number of parameters" if @_;
     return $self;
 } #add()
+
+=head2 adopt_hash
+
+Takes over the given hash to be the new contents of the Scope.  Usage example:
+
+    $scope->adopt_hash({ foo => 42 });
+
+The scope uses exactly the hash passed, not a clone of it.  If this is not
+applicable to a subclass, that subclass should override it as C<...> or an
+express C<die>.
+
+=cut
+
+sub adopt_hash {
+    my $self = shift or croak 'Need an instance';
+    my $hrNew = shift or croak 'Need a hash to adopt';
+    croak 'Cannot adopt a non-hash' unless ref $hrNew eq 'HASH';
+    $self->_content($hrNew);
+    return $self;
+} #adopt_hash()
 
 =head2 _names_here
 

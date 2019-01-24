@@ -2,7 +2,6 @@
 package Build::Hopen::Toolchain;
 use Build::Hopen;
 use Build::Hopen::Base;
-use parent 'Exporter';
 
 our $VERSION = '0.000005'; # TRIAL
 

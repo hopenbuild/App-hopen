@@ -56,6 +56,14 @@ sub add {
     return $self;
 } #add()
 
+=head2 adopt_hash
+
+Not supported.
+
+=cut
+
+sub adopt_hash { ... }
+
 =head2 _names_here
 
 Add the names in C<%ENV> to the given L<Set::Scalar>.

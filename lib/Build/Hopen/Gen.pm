@@ -2,7 +2,6 @@
 package Build::Hopen::Gen;
 use Build::Hopen;
 use Build::Hopen::Base;
-use parent 'Exporter';
 
 our $VERSION = '0.000005'; # TRIAL
 
@@ -71,6 +70,15 @@ Do whatever the generator wants to do to finish up.
 =cut
 
 sub finalize { }
+
+=head2 default_toolchain
+
+Returns the package name of the default toolchain for this generator.
+Must be implemented by subclasses.
+
+=cut
+
+sub default_toolchain { ... }
 
 1;
 __END__

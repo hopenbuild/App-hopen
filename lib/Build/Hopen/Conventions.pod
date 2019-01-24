@@ -37,15 +37,44 @@ to select x86 vs. x64.
 
 =item Hopen file(s)
 
-One or more files matching C<.hopen.pl> or C<*.hopen.pl>.  Each hopen file is
-the body of a subroutine that returns a hashref.  That hashref is provided
-as input to the build graph.
+One or more files matching C<.hopen.pl> or C<*.hopen.pl>.  See L</HOPEN FILES>
+for details.
 
 The filename C<MY.hopen.pl> is reserved.  It is created by hopen in each
 destination directory to record the state of the build in that directory.
 
+=back
+
+=head1 HOPEN FILES
+
+Each hopen file is the body of a subroutine that returns a hashref.  That
+hashref is provided as input to the build graph.  Each hopen file's output
+hashref is appended to the input hashref.  Therefore, to leave the input
+unchanged, return C<undef>, not C<$_[0]>.
+
 Elements of the hashref starting with C<__R> are reserved.  Please don't read
 or write those elements if you want hopen to work! :)
+
+Each hopen file runs in an environment with L<Build::Hopen::Base> and
+everything from L<Build::Hopen> loaded.
+
+=head2 Variables usable in hopen files
+
+=over
+
+=item $Generator
+
+The current L<Build::Hopen::Gen> instance.
+
+=item $Toolchain
+
+The current L<Build::Hopen::Toolchain> instance.
+
+=item $Build
+
+The L<Build::Hopen::G::DAG> instance representing the current build.
+Goals in C<$Build> will become, e.g., top-level targets of a
+generated C<Makefile>.
 
 =back
 

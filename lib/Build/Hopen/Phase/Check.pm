@@ -77,7 +77,7 @@ sub find_hopen_files {
             bsd_glob(d('.hopen.pl'), GLOB_NOSORT),
         )
     );
-    hlog { "Candidates", @candidates };
+    hlog { 'Candidates:', @candidates ? @candidates : 'none' };
     @candidates = $candidates[$#candidates] if @candidates;
         # Only use the last one
 
@@ -99,7 +99,7 @@ sub find_hopen_files {
         }
     }
 
-    hlog { 'Using hopen files', @candidates };
+    hlog { @candidates ? ('Using hopen files', @candidates) : 'No hopen files found' };
     return [@candidates];
 } #find_hopen_files()
 

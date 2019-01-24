@@ -76,6 +76,15 @@ sub finalize {
     }
 } #finalize()
 
+=head2 default_toolchain
+
+Returns the package name of the default toolchain for this generator,
+which is L<Build::Hopen::Toolchain::Gnu>.
+
+=cut
+
+sub default_toolchain { 'Build::Hopen::Toolchain::Gnu' }
+
 1;
 __END__
 # vi: set fdm=marker: #

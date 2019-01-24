@@ -8,7 +8,8 @@ use Build::Hopen::Base;
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    @EXPORT = qw($E boolify hnew hlog UNSPECIFIED NOTHING);
+    @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
+                $Toolchain $Build);
     @EXPORT_OK = qw(clone loadfrom $VERBOSE);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -66,11 +67,26 @@ Not exported by default, except as noted.
 
 Set to truthy to get debug output on stderr from hopen's internals.
 
+=head2 $Generator
+
+The current L<Build::Hopen::Gen> instance.
+
+=head2 $Toolchain
+
+The current L<Build::Hopen::Toolchain> instance.
+
+=head2 $Build
+
+The L<Build::Hopen::G::DAG> instance representing the current build.
+Goals in C<$Build> will become, e.g., top-level targets of a
+generated C<Makefile>.
+
 =cut
 
 # }}}1
 
 our $VERBOSE = false;
+our ($Generator, $Toolchain, $Build);
 
 =head1 FUNCTIONS
 
@@ -165,7 +181,7 @@ sub loadfrom {
 
 Log information if L</$VERBOSE> is set.  Usage:
 
-    hlog { <list of things to log> };
+    hlog { <list of things to log> } [optional min verbosity level (default 1)];
 
 The items in the list are joined by C<' '> on output, and a C<'\n'> is added.
 Each line is prefixed with C<'# '> for the benefit of test runs.
@@ -174,13 +190,19 @@ The list is in C<{}> so that it won't be evaluated if logging is turned off.
 It is a full block, so you can run arbitrary code to decide what to log.
 If the block returns an empty list, hlog will not produce any output.
 
+The message will be output only if L</$VERBOSE> is at least the given minimum
+verbosity level (1 by default).
+
 =cut
 
-sub hlog (&) {
-    return unless $VERBOSE;
-    my $crLog = shift;
-    my @log = &$crLog();
-    say STDERR (join(' ', @log)) =~ s/^/# /gmr if @log;
+sub hlog (&;$) {
+    return unless $VERBOSE >= ($_[1] // 1);
+
+    my @log = &{$_[0]}();
+    return unless @log;
+
+    chomp $log[$#log];
+    say STDERR (join(' ', @log)) =~ s/^/# /gmr;
 } #hlog()
 
 =head2 clone
