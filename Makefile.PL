@@ -201,15 +201,17 @@ my %opts = (
         'feature' => '0',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         'File::Glob' => '0',
-        #'File::Globstar' => '0.5',      # Latest bugfix; fewer dependencies
+        #'File::Globstar' => '0.5',      # Fewer dependencies
         'File::Path::Tiny' => '0.9',
         'File::Slurper' => '0.011',
         'File::Spec' => '0',
         'Hash::Merge' => '0.299',
         'Hash::Ordered' => '0.011',
         'Import::Into' => '0',
-        'Getopt::Long' => '2.5',    # for long option bugfix
+        'Getopt::Long' => '2.5',    # For long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
+        'List::MoreUtils' => '0.428',
+
         # 'Module::Find' => '0.12', # For bugfixes
                                     # - Use for finding plugins to load.
                                     # - May also need Module::Runtime.
@@ -218,7 +220,9 @@ my %opts = (
                                     #   failures.
 
         # 'Number::Compare' => '0', # - looks cool
+
         'overload' => '0',
+
         # 'Parse::RecDescent' => '1.967015',
             # - Use for parsing Lua tables as inline config data?
             #   I am thinking about using this for specifying flavors at
@@ -226,6 +230,7 @@ my %opts = (
             # - Syntax at https://www.lua.org/pil/3.6.html .
             # - See https://www.perlmonks.org/?node_id=462581 for operator
             #   precedence in P::RD grammars.
+
         'Path::Class' => '0.37',
         'Pod::Usage' => '0',
 

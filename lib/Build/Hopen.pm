@@ -9,8 +9,8 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolchain $Build $Phase $HopenFiles MYH);
-    @EXPORT_OK = qw(clone loadfrom $VERBOSE);
+                $Toolchain $Build $Phase $HopenFiles isMYH);
+    @EXPORT_OK = qw(clone loadfrom $VERBOSE MYH);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -88,10 +88,6 @@ Which phase we're in.  TODO Is this a string, object, other?
 =head2 $HopenFiles
 
 The hopen files applicable to the current build.  An arrayref.
-
-=head2 MYH
-
-A constant for the name C<MY.hopen.pl>.
 
 =cut
 
@@ -232,6 +228,18 @@ sub clone {
     return Storable::dclone($val);
 } #clone()
 
+=head2 isMYH
+
+Returns truthy if the given argument is the name of a C<MY.hopen.pl> file.
+See also L</MYH>.
+
+=cut
+
+sub isMYH {
+    my $name = @_ ? $_[0] : $_;
+    return ($name =~ /\b\Q@{[MYH]}\E$/)
+} #isMYH()
+
 =head1 CONSTANTS
 
 =head2 UNSPECIFIED
@@ -253,6 +261,12 @@ same reference, so that it can be tested with C<==>.
 
 my $_NOTHING = Build::Hopen::Util::NameSet->new();
 sub NOTHING () { $_NOTHING };
+
+=head2 MYH
+
+The name C<MY.hopen.pl>, centralized here.  Not exported by default.
+
+=cut
 
 1; # End of Build::Hopen
 __END__

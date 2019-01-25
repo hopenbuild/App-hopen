@@ -1,10 +1,11 @@
 # Build::Hopen::App: hopen(1) program
 package Build::Hopen::App;
-use Build::Hopen qw(:default hlog hnew loadfrom);
-use Build::Hopen::Base;
-
 our $VERSION = '0.000005'; # TRIAL
 
+# Imports {{{1
+use Build::Hopen::Base;
+
+use Build::Hopen qw(:default loadfrom MYH);
 use Build::Hopen::AppUtil qw(find_hopen_files);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
@@ -13,7 +14,11 @@ use File::Path::Tiny;
 use File::Slurper;
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
+use List::MoreUtils qw(first_index);
 use Path::Class;
+
+# }}}1
+# Constants {{{1
 
 use constant DEBUG          => false;
 
@@ -22,9 +27,35 @@ use constant EXIT_OK        => 0;   # success
 use constant EXIT_PROC_ERR  => 1;   # error during processing
 use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
-my @PHASES = ['Check', 'Gen'];
-    # TODO be more sophisticated about this :)
+# Phases are case-insensitive.
+my @PHASES = ('Check', 'Gen');
+    # *** This is where the default phase ($PHASES[0]) is set ***
+    # TODO? be more sophisticated about this :)
 
+# }}}1
+# Documentation {{{1
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Build::Hopen::App - hopen build system command-line interface
+
+=head1 USAGE
+
+    hopen [options] [--] [destination dir [project dir]]
+
+If no project directory is specified, the current directory is used.
+
+If no destination directory is specified, C<< <project dir>/built >> is used.
+
+=head1 INTERNALS
+
+=cut
+
+# }}}1
 # === Command line parsing ============================================== {{{1
 
 my %CMDLINE_OPTS = (
@@ -55,6 +86,9 @@ my %CMDLINE_OPTS = (
     # --man reserved
     # OUTPUT_FILENAME => ['o','|output=s', ""],
     # OPTIMIZE => ['O','|optimize'],
+
+    PHASE => ['phase','=s'],    # NO DEFAULT so we can tell if --phase was used
+
     QUIET => ['q'],
     #SANDBOX => ['S','|sandbox',false],
     #SOURCES reserved
@@ -68,8 +102,13 @@ my %CMDLINE_OPTS = (
 );
 
 sub _parse_command_line { # {{{2
-    # Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
-    # values from the command line, keyed by the keys in %CMDLINE_OPTS.
+
+=head2 _parse_command_line
+
+Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
+values from the command line, keyed by the keys in C<%CMDLINE_OPTS>.
+
+=cut
 
     my %params = @_;
     #local @_Sources;
@@ -97,12 +136,31 @@ sub _parse_command_line { # {{{2
 
     # Help, if requested
     if(!$opts_ok || have('usage') || have('h') || have('man')) {
+
         # Only pull in the Pod routines if we actually need them.
+
+        # Terminal formatting, if present.
+        eval "require Pod::Text::Termcap";
+        $Pod::Usage::Formatter = 'Pod::Text::Termcap' unless $@;
+
         require Pod::Usage;
-        Pod::Usage::pod2usage(-verbose => 0, -exitval => EXIT_PARAM_ERR, -input => __FILE__) if !$opts_ok;    # unknown opt
-        Pod::Usage::pod2usage(-verbose => 0, -exitval => EXIT_OK, -input => __FILE__) if have('usage');
-        Pod::Usage::pod2usage(-verbose => 1, -exitval => EXIT_OK, -input => __FILE__) if have('h');
-        Pod::Usage::pod2usage(-verbose => 2, -exitval => EXIT_OK, -input => __FILE__) if have('man');
+
+        my @in = (-input => __FILE__);
+        Pod::Usage::pod2usage(-verbose => 0, -exitval => EXIT_PARAM_ERR, @in)
+            unless $opts_ok;   # unknown opt
+        Pod::Usage::pod2usage(-verbose => 0, -exitval => EXIT_OK, @in)
+            if have('usage');
+        Pod::Usage::pod2usage(-verbose => 1, -exitval => EXIT_OK, @in)
+            if have('h');
+
+        # --man: suppress "INTERNALS" section.  Note that this does
+        # get rid of the automatic pager we would otherwise get
+        # by virtue of pod2usage's invoking perldoc(1).  Oh well.
+
+        Pod::Usage::pod2usage(
+            -exitval => EXIT_OK, @in,
+            -verbose => 99, -sections => '!INTERNALS'   # suppress
+        ) if have('man');
     }
 
     # Map the option names from GetOptions back to the internal names we use,
@@ -112,7 +170,7 @@ sub _parse_command_line { # {{{2
         $hrOptsOut->{ $revmap{$optname} } = $hrOptsOut->{ $optname };
     }
 
-    # Process other arguments.  The first two non-option arguments are destination
+    # Process other arguments.  The first two non-option arguments are dest
     # dir and project dir, if --from and --to were not given.
     $hrOptsOut->{DEST_DIR} //= $params{from}->[0] if @{$params{from}};
     $hrOptsOut->{PROJ_DIR} //= $params{from}->[1] if @{$params{from}}>1;
@@ -125,10 +183,50 @@ sub _parse_command_line { # {{{2
 # }}}1
 # === Main worker code ================================================== {{{1
 
+# Helpers {{{2
+
+sub _phase_idx {
+
+=head2 _phase_idx
+
+Get the index of the current phase, or the phase given as a parameter.
+Returns undef if none.  Phases are case-insensitive.
+
+=cut
+
+    my $test_phase = @_ ? $_[0] : $Phase;
+    my $curr_idx = first_index { lc($_) eq lc($test_phase) } @PHASES;
+    return $curr_idx<0 ? undef : $curr_idx;
+} #_phase_idx()
+
+sub _next_phase {
+
+=head2 _next_phase
+
+Get the next phase, or undef if none.  Phases are case-insensitive.
+
+=cut
+
+    my $curr_idx = first_index { lc($_) eq lc($Phase) } @PHASES;
+    die "Phase $Phase is not one I know about (" . join(', ', @PHASES) . ')'
+        if $curr_idx<0;
+    return undef if $curr_idx == $#PHASES;  # Last one
+
+    return $PHASES[$curr_idx+1];
+} #_next_phase()
+
+# }}}2
+
 our $_hrData;   # the hashref of current data
 
-# Run the given phase by executing the hopen files and running the DAG. {{{2
-sub _run_phase {
+sub _run_phase {    # {{{2
+
+=head2 _run_phase
+
+Run a phase by executing the hopen files and running the DAG.
+
+=cut
+
     my %opts = @_;
     $Phase = $opts{phase} if $opts{phase};
     my $lrHopenFiles = $opts{files} // [];
@@ -154,6 +252,11 @@ sub _run_phase {
             $text = File::Slurper::read_text($fn);
             $friendly_name = ($fn =~ s{"}{-}gr);
                 # as far as I can tell, #line can't handle embedded quotes.
+
+            if( isMYH($fn) and !defined($opts{phase}) ) {
+                # TODO permit MY.hopen.pl files to set $Phase.
+                # However, --phase wins.
+            }
         }
 
         my $src = <<EOT;
@@ -161,6 +264,12 @@ sub _run_phase {
     package __R_pkg$idx;
     use Build::Hopen::Base;
     use Build::Hopen ':all';
+
+    our \$Phase;
+    local *Phase = \\"$Phase";
+        # Shadow \$Phase so the hopen file can't change it without
+        # really trying!  Note that we actually interpolated the current
+        # phase in as a literal so that it's read-only (see perlmod).
 
     sub __R_file$idx {
 #line 1 "$friendly_name"
@@ -171,10 +280,12 @@ $text
 }
 EOT
 
+        hlog { "Source for $fn\n", $src, "\n" } 3;
+
         # Run the package
 
         my $hrAddlData = eval($src);
-        die "Error in $fn: $@" if $@;
+        die "Error in $friendly_name: $@" if $@;
 
         hlog { 'new data', Dumper($hrAddlData) } 2;
 
@@ -208,10 +319,15 @@ EOT
     return $result_data;
 } #_run_phase() }}}2
 
-# _inner: Do a run.  {{{2
-# Dies on failure.  _Main() then translates the die() into a print and
-# error return.
-sub _inner {
+sub _inner {    # Do a run. {{{2
+
+=head2 _inner
+
+Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
+translates the die() into a print and error return.
+
+=cut
+
     my %opts = @_;
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
@@ -225,6 +341,11 @@ sub _inner {
         }
         return EXIT_OK;
     }
+
+    # Start with the default phase unless one was specified.
+    $Phase = $opts{PHASE} // $PHASES[0];
+    die "Phase $Phase is not one I know about (" . join(', ', @PHASES) . ')'
+        unless defined _phase_idx;
 
     # Get the project dir
     my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
@@ -256,7 +377,8 @@ EOT
     push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}})
         if $opts{EVAL} && @{$opts{EVAL}};
 
-    hlog { 'hopen files: ', Dumper($lrHopenFiles) } 2;
+    hlog { 'hopen files: ',
+            map { ref eq 'SCALAR' ? "{{{$$_}}}" : "``$_''" } @$lrHopenFiles } 2;
 
     die <<EOT unless @$lrHopenFiles;
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
@@ -264,11 +386,10 @@ project directory ``$proj_dir''.
 EOT
 
     $HopenFiles = @$lrHopenFiles;
-    $Phase = 'Check';   # TODO
 
     # = Initialize ==========================================================
 
-    say "Preparing ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
+    say "$Phase from ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
 
     # Load generator
     my ($gen, $gen_class);
@@ -302,7 +423,10 @@ EOT
     File::Path::Tiny::mk($dest_dir) or die "Couldn't create $dest_dir: $!";
 
     # = Run the hopen files =================================================
-    my $new_data = _run_phase(files => $lrHopenFiles);
+    my $new_data = _run_phase(
+        files => $lrHopenFiles,
+        $opts{PHASE} ? (phase => $opts{PHASE}) : ()
+    );
 
     # = Save state in MY.hopen.pl for the next run ==========================
 
@@ -325,8 +449,14 @@ EOT
 # }}}1
 # === Command-line runner =============================================== {{{1
 
-# Command-line runner.  Call as Build::Hopen::App::_Main(\@ARGV).
-sub _Main {
+sub Main { # {{{2
+
+=head2 Main
+
+Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
+
+=cut
+
     my $lrArgs = shift // [];
 
     # = Process options =====================================================
@@ -351,23 +481,7 @@ sub _Main {
 
 1; # End of Build::Hopen::App
 __END__
-# === Documentation ===================================================== {{{1
-
-=pod
-
-=encoding UTF-8
-
-=head1 NAME
-
-Build::Hopen::App - hopen build system command-line interface
-
-=head1 USAGE
-
-    hopen [options] [--] [destination dir [project dir]]
-
-If no project directory is specified, the current directory is used.
-
-If no destination directory is specified, C<< <project dir>/built >> is used.
+# === Command-line usage documentation ================================== {{{1
 
 =head1 OPTIONS
 
@@ -403,6 +517,11 @@ name or the part after C<Build::Hopen::Toolchain::>.
 
 Specify the destination directory.  Overrides a destination directory given
 as a positional argument.
+
+=item --phase
+
+Specify which phase of the process to run.  Note that this overrides whatever
+is specified in any MY.hopen.pl file, so may cause unexpected results!
 
 =item -q
 

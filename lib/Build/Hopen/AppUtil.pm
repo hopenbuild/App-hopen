@@ -1,6 +1,6 @@
 # Build::Hopen::AppUtil - utility routines used by Build::Hopen::App
 package Build::Hopen::AppUtil;
-use Build::Hopen;
+use Build::Hopen qw(:default MYH);
 use Build::Hopen::Base;
 use parent 'Exporter';
 
@@ -60,7 +60,7 @@ sub find_hopen_files {
 
     # Look for files that are included with the project
     my @candidates = sort(
-        grep { ($_ !~ /\Q@{[MYH]}\E$/) && (-r $_) } (
+        grep { !isMYH && -r } (
             bsd_glob(d('*.hopen.pl'), GLOB_NOSORT),
             bsd_glob(d('.hopen.pl'), GLOB_NOSORT),
         )
@@ -71,8 +71,8 @@ sub find_hopen_files {
 
     # Add a $dest_dir/MY.hopen.pl file first, if there is one.
     if($dest_dir) {
-        my $MY = $dest_dir->file(MYH);
-        unshift @candidates, $MY if -r $MY;
+        my $fn = $dest_dir->file(MYH);
+        unshift @candidates, $fn if -r $fn;
     }
 
     # Look in the parent dir for context files.
