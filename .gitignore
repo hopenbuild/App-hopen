@@ -63,3 +63,6 @@ Build-Hopen-*.tar.gz
 t/TEMPLATE-dot-t
 foo
 TODO
+
+# Things we generate
+built/

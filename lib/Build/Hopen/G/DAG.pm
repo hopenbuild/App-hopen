@@ -242,6 +242,17 @@ sub connect {
     return $link;
 } #connect()
 
+=head2 empty
+
+Returns truthy if the only node in the graph is the internal L</_final> node.
+
+=cut
+
+sub empty {
+    my $self = shift or croak 'Need an instance';
+    return ($self->_graph->vertices <= 1);
+} #empty()
+
 =head2 BUILD
 
 Initialize the instance.

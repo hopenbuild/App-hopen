@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolchain $Build $Phase $HopenFiles);
+                $Toolchain $Build $Phase $HopenFiles MYH);
     @EXPORT_OK = qw(clone loadfrom $VERBOSE);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -89,12 +89,18 @@ Which phase we're in.  TODO Is this a string, object, other?
 
 The hopen files applicable to the current build.  An arrayref.
 
+=head2 MYH
+
+A constant for the name C<MY.hopen.pl>.
+
 =cut
 
 # }}}1
 
 our $VERBOSE = false;
-our ($Generator, $Toolchain, $Build);
+our ($Generator, $Toolchain, $Build, $Phase, $HopenFiles);
+
+use constant MYH => 'MY.hopen.pl';
 
 =head1 FUNCTIONS
 

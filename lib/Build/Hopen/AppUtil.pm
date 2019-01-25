@@ -60,7 +60,7 @@ sub find_hopen_files {
 
     # Look for files that are included with the project
     my @candidates = sort(
-        grep { ($_ !~ /MY\.hopen\.pl$/) && (-r $_) } (
+        grep { ($_ !~ /\Q@{[MYH]}\E$/) && (-r $_) } (
             bsd_glob(d('*.hopen.pl'), GLOB_NOSORT),
             bsd_glob(d('.hopen.pl'), GLOB_NOSORT),
         )
@@ -71,7 +71,7 @@ sub find_hopen_files {
 
     # Add a $dest_dir/MY.hopen.pl file first, if there is one.
     if($dest_dir) {
-        my $MY = $dest_dir->file('MY.hopen.pl');
+        my $MY = $dest_dir->file(MYH);
         unshift @candidates, $MY if -r $MY;
     }
 

@@ -10,6 +10,9 @@ TEMPLATE
 Build-Hopen-*
 TODO
 
+# Things we generate
+\bbuilt[\\/]
+
 #modified included
 # Avoid version control files.
 \bRCS\b

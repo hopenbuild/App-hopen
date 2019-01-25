@@ -9,6 +9,7 @@ use Build::Hopen::AppUtil qw(find_hopen_files);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
 use Data::Dumper;
+use File::Path::Tiny;
 use File::Slurper;
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
@@ -21,16 +22,10 @@ use constant EXIT_OK        => 0;   # success
 use constant EXIT_PROC_ERR  => 1;   # error during processing
 use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
-# === Command line parsing ============================================== {{{1
+my @PHASES = ['Check', 'Gen'];
+    # TODO be more sophisticated about this :)
 
-## files/scripts to load, in order.  Each element is [isfile, text].
-## Package var so we can localize it.
-#our @_Sources;
-#
-#my $dr_save_source = sub {
-#    my ($which, $text) = @_;
-#    push @_Sources, [$which eq 'f', $text];
-#}; # dr_save_source
+# === Command line parsing ============================================== {{{1
 
 my %CMDLINE_OPTS = (
     # hash from internal name to array reference of
@@ -48,15 +43,12 @@ my %CMDLINE_OPTS = (
     DEFINE => ['D',':s%'],
     EVAL => ['e','|eval=s@'],   # Perl source to run as the last hopen file
     #RESTRICTED_EVAL => ['E','|exec=s@'],
-    #SCRIPT => ['f','|file=s@', $dr_save_source],
     PROJ_DIR => ['from','=s'],
-    # -F field separator?
 
     GENERATOR => ['g', '|G|generator=s', 'Make'],     # -G is from CMake
         # *** This is where the default generator is set ***
 
     # -h and --help reserved
-    # INPUT_FILENAME assigned by _parse_command_line()
     #INCLUDE => ['i','|include=s@'],
     #LIB => ['l','|load=s@'],
     #LANGUAGE => ['L','|language:s'],
@@ -75,7 +67,7 @@ my %CMDLINE_OPTS = (
 
 );
 
-sub _parse_command_line {
+sub _parse_command_line { # {{{2
     # Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
     # values from the command line, keyed by the keys in %CMDLINE_OPTS.
 
@@ -128,15 +120,97 @@ sub _parse_command_line {
     # Option overrides: -q beats -v
     $hrOptsOut->{VERBOSE} = 0 if $hrOptsOut->{QUIET};
 
-} #_parse_command_line()
+} #_parse_command_line() }}}2
 
 # }}}1
 # === Main worker code ================================================== {{{1
 
 our $_hrData;   # the hashref of current data
 
-# Do a run.  Dies on failure.  _Main() then translates the die() into a print
-# and error return.
+# Run the given phase by executing the hopen files and running the DAG. {{{2
+sub _run_phase {
+    my %opts = @_;
+    $Phase = $opts{phase} if $opts{phase};
+    my $lrHopenFiles = $opts{files} // [];
+
+    local $_hrData = $opts{data} // {};
+
+    my $idx = 0;
+    my $e_count = 0;    # How many -e commannds we've run
+    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
+
+    foreach my $fn (@$lrHopenFiles) {
+
+        # Make the hopen file into a package we can eval
+
+        my ($friendly_name, $text);
+        if(ref $fn eq 'SCALAR') {
+            hlog { 'Processing -e number', ++$e_count };
+            $text = $$fn;
+            $friendly_name = "-e #$e_count";
+
+        } else {
+            hlog { 'Processing', $fn };
+            $text = File::Slurper::read_text($fn);
+            $friendly_name = ($fn =~ s{"}{-}gr);
+                # as far as I can tell, #line can't handle embedded quotes.
+        }
+
+        my $src = <<EOT;
+{
+    package __R_pkg$idx;
+    use Build::Hopen::Base;
+    use Build::Hopen ':all';
+
+    sub __R_file$idx {
+#line 1 "$friendly_name"
+$text
+    }
+
+    return __R_file$idx(\$Build::Hopen::App::_hrData);
+}
+EOT
+
+        # Run the package
+
+        my $hrAddlData = eval($src);
+        die "Error in $fn: $@" if $@;
+
+        hlog { 'new data', Dumper($hrAddlData) } 2;
+
+        # TODO? Remove all __R* hash keys from $hrAddlData unless it's a
+        # MY.hopen.pl file?
+
+        # Merge in the data
+
+        $_hrData = $merger->merge($_hrData, $hrAddlData) if $hrAddlData;
+        hlog { 'data after merge', Dumper($hrAddlData) } 2;
+        ++$idx;
+    } # foreach hopen file
+
+    hlog { 'Graph is', $Build->empty ? 'empty.' : 'not empty.',
+            ' Final data is', Dumper($_hrData) } 2;
+
+    # If there is no build graph, just return the data.  This is useful for
+    # debugging.
+
+    return $_hrData if $Build->empty;
+
+    # = Execute the resulting build graph ===================================
+
+    # Wrap the final data in a Scope
+    my $env = Build::Hopen::ScopeENV->new(name => 'outermost');
+    my $scope = Build::Hopen::Scope->new(name => 'from hopen files');
+    $scope->adopt_hash($_hrData);
+
+    # Run the DAG
+    my $result_data = $Build->run($scope);
+    return $result_data;
+} #_run_phase() }}}2
+
+# _inner: Do a run.  {{{2
+# Dies on failure.  _Main() then translates the die() into a print and
+# error return.
 sub _inner {
     my %opts = @_;
 
@@ -155,20 +229,6 @@ sub _inner {
     # Get the project dir
     my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
 
-    # See if we have hopen files associated with the project dir
-    my $lrHopenFiles = find_hopen_files($proj_dir);
-    push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}}) if $opts{EVAL};
-
-    hlog { 'hopen files: ', Dumper($lrHopenFiles) } 2;
-
-    die <<EOT unless @$lrHopenFiles;
-I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
-project directory ``$proj_dir''.
-EOT
-
-    $HopenFiles = @$lrHopenFiles;
-    $Phase = 'Check';   # TODO
-
     # Get the destination dir
     my $dest_dir;
     if($opts{DEST_DIR}) {
@@ -182,6 +242,29 @@ EOT
 I'm sorry, but I don't support in-source builds (dir ``$proj_dir'').  Please
 specify a different project directory (--from) or destination directory (--to).
 EOT
+
+    # Prohibit builds if there's a MY.hopen.pl file in the project directory,
+    # since those are the marker of a destination directory.
+    die <<EOT if -e $proj_dir->file(MYH);
+I'm sorry, but project directory ``$proj_dir'' appears to actually be a
+build directory --- it has a @{[MYH]} file.  If you really want to build
+here, remove or rename @{[MYH]} and run me again.
+EOT
+
+    # See if we have hopen files associated with the project dir
+    my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir);
+    push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}})
+        if $opts{EVAL} && @{$opts{EVAL}};
+
+    hlog { 'hopen files: ', Dumper($lrHopenFiles) } 2;
+
+    die <<EOT unless @$lrHopenFiles;
+I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
+project directory ``$proj_dir''.
+EOT
+
+    $HopenFiles = @$lrHopenFiles;
+    $Phase = 'Check';   # TODO
 
     # = Initialize ==========================================================
 
@@ -215,73 +298,29 @@ EOT
     # Create the initial DAG
     $Build = hnew DAG => '__R_main';
 
+    # Prepare the destination directory if it doesn't exist
+    File::Path::Tiny::mk($dest_dir) or die "Couldn't create $dest_dir: $!";
+
     # = Run the hopen files =================================================
+    my $new_data = _run_phase(files => $lrHopenFiles);
 
-    local $_hrData = {};
-    my $idx = 0;
-    my $e_count = 0;
-    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
+    # = Save state in MY.hopen.pl for the next run ==========================
 
-    foreach my $fn (@$lrHopenFiles) {
+    # TODO? give the generators a way to stash information that will be
+    # written at the top of MY.hopen.pl.  This way, the user may only
+    # need to edit right at the top of the file, and not also at the
 
-        # Make the file executable
+    my $dumper = Data::Dumper->new([$new_data], ['__R_new_data']);
+    $dumper->Purity(1);
+    $dumper->Maxrecurse(0);     # no limit
+    $dumper->Sortkeys(true);    # For consistency between runs
+    $dumper->Sparseseen(true);  # We don't use Seen()
 
-        my ($friendly_name, $text);
-        if(ref $fn eq 'SCALAR') {
-            hlog { 'Processing -e number', ++$e_count };
-            $text = $$fn;
-            $friendly_name = "-e #$e_count";
+    hlog { Dumper($new_data) };
+    File::Slurper::write_text($dest_dir->file(MYH),
+        'do { my ' . $dumper->Dump . ' }');
 
-        } else {
-            hlog { 'Processing', $fn };
-            $text = File::Slurper::read_text($fn);
-            $friendly_name = ($fn =~ s{"}{-}gr);
-                # as far as I can tell, #line can't handle embedded quotes.
-        }
-
-        my $src = <<EOT;
-{
-    package __R_pkg$idx;
-    use Build::Hopen::Base;
-    use Build::Hopen ':all';
-
-    sub __R_file$idx {
-#line 1 "$friendly_name"
-$text
-    }
-
-    return __R_file$idx(\$Build::Hopen::App::_hrData);
-}
-EOT
-
-        # Run the file
-        my $hrAddlData = eval($src);
-        die "Error in $fn: $@" if $@;
-
-        hlog { 'new data', Dumper($hrAddlData) } 2;
-
-        # TODO? Remove all __R* hash keys from $hrAddlData unless it's a
-        # MY.hopen.pl file?
-
-        # Merge in the data
-        $_hrData = $merger->merge($_hrData, $hrAddlData) if $hrAddlData;
-        hlog { 'data after merge', Dumper($hrAddlData) } 2;
-        ++$idx;
-    } # foreach hopen file
-
-    hlog { 'final data', Dumper($_hrData) } 2;
-
-    # = Execute the resulting build graph ===================================
-
-    # Wrap the final data in a Scope
-    my $env = Build::Hopen::ScopeENV->new(name => 'outermost');
-    my $scope = Build::Hopen::Scope->new(name => 'from hopen files');
-    $scope->adopt_hash($_hrData);
-
-    # Run the DAG
-    my $result_data = $Build->run($scope);
-
-} #_inner()
+} #_inner() }}}2
 
 # }}}1
 # === Command-line runner =============================================== {{{1
@@ -294,7 +333,7 @@ sub _Main {
 
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
-    ++$Build::Hopen::VERBOSE for 1..$opts{VERBOSE};        # Verbosity first
+    ++$Build::Hopen::VERBOSE for 1 .. $opts{VERBOSE};   # Verbosity first
 
     eval { _inner(%opts); };
     my $msg = $@;
