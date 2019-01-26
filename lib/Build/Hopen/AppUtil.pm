@@ -38,9 +38,13 @@ Hopen files match C<*.hopen.pl> or C<.hopen.pl>.  Usage:
 Also locates context files.  For example, when processing C<~/foo/.hopen>,
 Check will also find C<~/foo.hopen> if it exists.
 
-    my $files_array = find_hopen_files([$proj_dir[, $dest_dir]])
+    my $files_array = find_hopen_files(
+        [$proj_dir[, $dest_dir[, $ignore_MY_hopen]]])
 
 If no C<$proj_dir> is given, the current directory is used.
+
+If C<$ignore_MY_hopen> is truthy, C<$dest_dir> will not be checked for
+a C<MY.hopen.pl> file.
 
 The returned files should be processed in left-to-right order.
 
@@ -51,8 +55,10 @@ name of the context file.
 =cut
 
 sub find_hopen_files {
+    say Dumper(\@_);
     my $proj_dir = @_ ? dir($_[0]) : dir;
-    my $dest_dir = $_[1] if @_>1;
+    my $dest_dir = dir($_[1]) if @_>=2;
+    my $ignore_MY_hopen = $_[2];
 
     local *d = sub { $proj_dir->file(shift) };
 
@@ -70,7 +76,8 @@ sub find_hopen_files {
         # Only use the last one
 
     # Add a $dest_dir/MY.hopen.pl file first, if there is one.
-    if($dest_dir) {
+    if($dest_dir && !$ignore_MY_hopen) {
+        say "Checking MY";
         my $fn = $dest_dir->file(MYH);
         unshift @candidates, $fn if -r $fn;
     }

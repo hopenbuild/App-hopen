@@ -172,7 +172,8 @@ my %opts = (
         'Import::Into' => '0',
         'rlib' => '0',
         'Scalar::Util' => '0',
-        'Test::Deep' => '0.084',    # for superhashof
+        'Test::Deep' => '0.084',        # for superhashof
+        'Test::Directory' => '0.02',    # for subdirs
         'Test::More' => '0',
     },
     PREREQ_PM => {

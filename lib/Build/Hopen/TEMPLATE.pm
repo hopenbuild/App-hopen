@@ -2,10 +2,22 @@
 package Build::Hopen::TEMPLATE;
 use Build::Hopen;
 use Build::Hopen::Base;
-use parent 'Exporter';
 
 our $VERSION = '0.000005'; # TRIAL
 
+# TODO if using exporter
+use parent 'Exporter';
+our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+BEGIN {
+    @EXPORT = qw();
+    @EXPORT_OK = qw(find_hopen_files);
+    %EXPORT_TAGS = (
+        default => [@EXPORT],
+        all => [@EXPORT, @EXPORT_OK]
+    );
+}
+
+# TODO if a class
 use parent 'TODO';
 use Class::Tiny qw(TODO);
 
@@ -34,13 +46,7 @@ sub todo {
     ...
 } #todo()
 
-#our @EXPORT = qw();
-#our @EXPORT_OK = qw();
-#our %EXPORT_TAGS = (
-#    default => [@EXPORT],
-#    all => [@EXPORT, @EXPORT_OK]
-#);
-
+# TODO if using a custom import()
 #sub import {    # {{{1
 #} #import()     # }}}1
 

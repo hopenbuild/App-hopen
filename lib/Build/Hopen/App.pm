@@ -7,6 +7,7 @@ use Build::Hopen::Base;
 
 use Build::Hopen qw(:default loadfrom MYH);
 use Build::Hopen::AppUtil qw(find_hopen_files);
+use Build::Hopen::Phases qw(:default phase_idx next_phase);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
 use Data::Dumper;
@@ -14,7 +15,6 @@ use File::Path::Tiny;
 use File::Slurper;
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
-use List::MoreUtils qw(first_index);
 use Path::Class;
 
 # }}}1
@@ -26,11 +26,6 @@ use constant DEBUG          => false;
 use constant EXIT_OK        => 0;   # success
 use constant EXIT_PROC_ERR  => 1;   # error during processing
 use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
-
-# Phases are case-insensitive.
-my @PHASES = ('Check', 'Gen');
-    # *** This is where the default phase ($PHASES[0]) is set ***
-    # TODO? be more sophisticated about this :)
 
 # }}}1
 # Documentation {{{1
@@ -69,15 +64,24 @@ my %CMDLINE_OPTS = (
     ARCHITECTURE => ['a','|A|architecture|platform=s', ''],
         # -A and --platform are for the comfort of folks migrating from CMake
 
+    #BUILD => ['build'],    # TODO implement this --- if specified, do not
+                            # run any phases.  Instead, run the
+                            # build tool indicated by the generator.
+
     #DUMP_VARS => ['d', '|dump-variables', false],
     #DEBUG => ['debug','', false],
     DEFINE => ['D',':s%'],
-    EVAL => ['e','|eval=s@'],   # Perl source to run as the last hopen file
+    EVAL => ['e','|eval=s@'],   # Perl source to run as a hopen file
     #RESTRICTED_EVAL => ['E','|exec=s@'],
+    FRESH => ['fresh'],         # Don't run MY.hopen.pl
     PROJ_DIR => ['from','=s'],
 
     GENERATOR => ['g', '|G|generator=s', 'Make'],     # -G is from CMake
         # *** This is where the default generator is set ***
+
+    #GO => ['go'],  # TODO implement this --- if specified, run all phases
+                    # and invoke the build tool without requiring the user to
+                    # re-run hopen.
 
     # -h and --help reserved
     #INCLUDE => ['i','|include=s@'],
@@ -183,43 +187,9 @@ values from the command line, keyed by the keys in C<%CMDLINE_OPTS>.
 # }}}1
 # === Main worker code ================================================== {{{1
 
-# Helpers {{{2
-
-sub _phase_idx {
-
-=head2 _phase_idx
-
-Get the index of the current phase, or the phase given as a parameter.
-Returns undef if none.  Phases are case-insensitive.
-
-=cut
-
-    my $test_phase = @_ ? $_[0] : $Phase;
-    my $curr_idx = first_index { lc($_) eq lc($test_phase) } @PHASES;
-    return $curr_idx<0 ? undef : $curr_idx;
-} #_phase_idx()
-
-sub _next_phase {
-
-=head2 _next_phase
-
-Get the next phase, or undef if none.  Phases are case-insensitive.
-
-=cut
-
-    my $curr_idx = first_index { lc($_) eq lc($Phase) } @PHASES;
-    die "Phase $Phase is not one I know about (" . join(', ', @PHASES) . ')'
-        if $curr_idx<0;
-    return undef if $curr_idx == $#PHASES;  # Last one
-
-    return $PHASES[$curr_idx+1];
-} #_next_phase()
-
-# }}}2
-
 our $_hrData;   # the hashref of current data
 
-sub _run_phase {    # {{{2
+sub _run_phase {    # Run a single phase. {{{2
 
 =head2 _run_phase
 
@@ -233,56 +203,127 @@ Run a phase by executing the hopen files and running the DAG.
 
     local $_hrData = $opts{data} // {};
 
-    my $idx = 0;
     my $e_count = 0;    # How many -e commannds we've run
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
+    # Set up code pieces related to phase control
+
+    my ($set_phase, $cannot_set_phase, $cannot_set_phase_warn);
+
+    $set_phase = q(
+        sub can_set_phase { true }
+        sub set_phase {
+            my $new_phase = shift or croak 'Need a phase';
+            croak "Phase $new_phase is not one of the ones I know about (" .
+                join(', ', @PHASES) . ')'
+                    unless defined phase_idx($new_phase);
+            $Build::Hopen::Phase = $new_phase;
+    ) .
+    ($opts{quiet} ? '' : 'say "Phase is now $new_phase";') . "}\n";
+
+    $cannot_set_phase = q(
+        sub can_set_phase { false }
+        sub set_phase {
+            croak "I'm sorry, but this file (``$FILENAME'') is not allowed to set the phase"
+        }
+    );
+
+    $cannot_set_phase_warn = q(
+        sub can_set_phase { false }
+        sub set_phase {
+    ) .
+    ($opts{quiet} ? '' :
+        q(
+            warn "``$FILENAME'': Ignoring attempt to set phase";
+        )
+    ) . "}\n";
+
+    my $lib_dirs = '';
+    if($opts{libs}) {
+        $lib_dirs .= "use lib '" .  (dir($_)->absolute =~ s/'/\\'/gr) .  "';\n"
+            foreach @{$opts{libs}};
+    }
+
+    # = Process the files ======================================
+
     foreach my $fn (@$lrHopenFiles) {
 
-        # Make the hopen file into a package we can eval
+        # == Make the hopen file into a package we can eval ==
 
-        my ($friendly_name, $text);
-        if(ref $fn eq 'SCALAR') {
-            hlog { 'Processing -e number', ++$e_count };
-            $text = $$fn;
+        my ($friendly_name, $pkg_name, $file_text, $phase_text);
+
+        $phase_text = q(
+            use Build::Hopen::Phases ':all';
+        );
+
+        # -- Load the file
+
+        if(ref $fn eq 'SCALAR') {       # it's a -e
+            ++$e_count;
+            hlog { 'Processing -e number', $e_count };
+            $file_text = $$fn;
             $friendly_name = "-e #$e_count";
+            $pkg_name = "CmdLineE$e_count";
+            $phase_text .= defined($opts{phase}) ? $cannot_set_phase : $set_phase;
+                # -e's can set phase unless --phase was specified
 
         } else {
             hlog { 'Processing', $fn };
-            $text = File::Slurper::read_text($fn);
+            $file_text = File::Slurper::read_text($fn);
             $friendly_name = ($fn =~ s{"}{-}gr);
                 # as far as I can tell, #line can't handle embedded quotes.
+            $pkg_name = ($fn =~ s/[^a-zA-Z0-9]/_/gr);
 
             if( isMYH($fn) and !defined($opts{phase}) ) {
-                # TODO permit MY.hopen.pl files to set $Phase.
-                # However, --phase wins.
+                # MY.hopen.pl files cat set $Phase unless --phase was given.
+                $phase_text .= $set_phase;
+
+            } else {
+                # For MY.hopen.pl, when --phase is set, set_phase doesn't croak.
+                # If this were not the case, every second or subsequent run
+                # of hopen(1) would croak if --phase were specified!
+                $phase_text .= isMYH($fn) ? $cannot_set_phase_warn : $cannot_set_phase;
             }
-        }
+        } #endif -e else
+
+        # -- Build the package
 
         my $src = <<EOT;
 {
-    package __R_pkg$idx;
+    package __Rpkg_$pkg_name;
     use Build::Hopen::Base;
     use Build::Hopen ':all';
+    use Build::Hopen::Phases ':all';
+    use Path::Class;
+
+    $lib_dirs
+
+    our \$FILENAME;
+    local *FILENAME = \\"$friendly_name";
+
+    $phase_text
 
     our \$Phase;
     local *Phase = \\"$Phase";
+EOT
         # Shadow \$Phase so the hopen file can't change it without
         # really trying!  Note that we actually interpolated the current
         # phase in as a literal so that it's read-only (see perlmod).
 
-    sub __R_file$idx {
+    $src .= <<EOT;
+
+    sub __Rsub_$pkg_name {
 #line 1 "$friendly_name"
-$text
+$file_text
     }
 
-    return __R_file$idx(\$Build::Hopen::App::_hrData);
+    return __Rsub_$pkg_name(\$Build::Hopen::App::_hrData);
 }
 EOT
 
         hlog { "Source for $fn\n", $src, "\n" } 3;
 
-        # Run the package
+        # == Run the package ==
 
         my $hrAddlData = eval($src);
         die "Error in $friendly_name: $@" if $@;
@@ -296,18 +337,18 @@ EOT
 
         $_hrData = $merger->merge($_hrData, $hrAddlData) if $hrAddlData;
         hlog { 'data after merge', Dumper($hrAddlData) } 2;
-        ++$idx;
+
     } # foreach hopen file
 
     hlog { 'Graph is', $Build->empty ? 'empty.' : 'not empty.',
             ' Final data is', Dumper($_hrData) } 2;
 
-    # If there is no build graph, just return the data.  This is useful for
-    # debugging.
+    # If there is no build graph, just return the data.  This is useful
+    # enough for debugging that I am making it documented behaviour.
 
     return $_hrData if $Build->empty;
 
-    # = Execute the resulting build graph ===================================
+    # = Execute the resulting build graph ======================
 
     # Wrap the final data in a Scope
     my $env = Build::Hopen::ScopeENV->new(name => 'outermost');
@@ -319,7 +360,7 @@ EOT
     return $result_data;
 } #_run_phase() }}}2
 
-sub _inner {    # Do a run. {{{2
+sub _inner {    # Run a single invocation of hopen(1). {{{2
 
 =head2 _inner
 
@@ -344,8 +385,9 @@ translates the die() into a print and error return.
 
     # Start with the default phase unless one was specified.
     $Phase = $opts{PHASE} // $PHASES[0];
-    die "Phase $Phase is not one I know about (" . join(', ', @PHASES) . ')'
-        unless defined _phase_idx;
+    die "Phase $Phase is not one of the ones I know about (" .
+        join(', ', @PHASES) . ')'
+            unless defined phase_idx($Phase);
 
     # Get the project dir
     my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
@@ -373,12 +415,11 @@ here, remove or rename @{[MYH]} and run me again.
 EOT
 
     # See if we have hopen files associated with the project dir
-    my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir);
-    push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}})
-        if $opts{EVAL} && @{$opts{EVAL}};
+    my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir, !!$opts{FRESH});
+    push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}}) if $opts{EVAL};
 
     hlog { 'hopen files: ',
-            map { ref eq 'SCALAR' ? "{{{$$_}}}" : "``$_''" } @$lrHopenFiles } 2;
+            map { ref eq 'SCALAR' ? "{{$$_}}" : "``$_''" } @$lrHopenFiles } 2;
 
     die <<EOT unless @$lrHopenFiles;
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
@@ -389,7 +430,7 @@ EOT
 
     # = Initialize ==========================================================
 
-    say "$Phase from ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
+    say "From ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
 
     # Load generator
     my ($gen, $gen_class);
@@ -425,10 +466,15 @@ EOT
     # = Run the hopen files =================================================
     my $new_data = _run_phase(
         files => $lrHopenFiles,
-        $opts{PHASE} ? (phase => $opts{PHASE}) : ()
+        $opts{PHASE} ? (phase => $opts{PHASE}) : (),
+        $opts{QUIET} ? (quiet => $opts{QUIET}) : ()
     );
 
     # = Save state in MY.hopen.pl for the next run ==========================
+
+    # If we get here, _run_phase succeeded.  Therefore, we can move
+    # on to the next phase.
+    my $new_phase = next_phase() // $Phase;
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only
@@ -440,16 +486,21 @@ EOT
     $dumper->Sortkeys(true);    # For consistency between runs
     $dumper->Sparseseen(true);  # We don't use Seen()
 
-    hlog { Dumper($new_data) };
-    File::Slurper::write_text($dest_dir->file(MYH),
-        'do { my ' . $dumper->Dump . ' }');
+    my $new_text = qq(
+        set_phase '$new_phase';
+        do { my @{[$dumper->Dump]} }
+    );
+
+    hlog { $new_text };
+    File::Slurper::write_text($dest_dir->file(MYH), $new_text
+    );
 
 } #_inner() }}}2
 
 # }}}1
 # === Command-line runner =============================================== {{{1
 
-sub Main { # {{{2
+sub Main {
 
 =head2 Main
 
@@ -464,6 +515,10 @@ Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
     ++$Build::Hopen::VERBOSE for 1 .. $opts{VERBOSE};   # Verbosity first
+
+    # Don't print the source of an eval'ed hopen file unless -vvv or higher.
+    # Need 3 for the "..." that Carp prints when truncating.
+    $Carp::MaxEvalLen = 3 unless $Build::Hopen::VERBOSE >= 3;
 
     eval { _inner(%opts); };
     my $msg = $@;
@@ -498,6 +553,11 @@ Add the C<Perl code> as if it were a hopen file.  C<-e> files are processed
 after all other hopen files, so can modify anything that has been set up
 by those files.  Can be specified more than once.
 
+=item --fresh
+
+Start a fresh build --- ignore any C<MY.hopen.pl> file that may exist in
+the destination directory.
+
 =item --from C<project dir>
 
 Specify the project directory.  Overrides a project directory given as a
@@ -523,13 +583,18 @@ as a positional argument.
 Specify which phase of the process to run.  Note that this overrides whatever
 is specified in any MY.hopen.pl file, so may cause unexpected results!
 
+If C<--phase> is given, no other hopen file can set the phase, and hopen will
+terminate if a file attempts to do so.
+
 =item -q
 
 Produce no output (quiet).  Overrides C<-v>.
 
 =item -v
 
-Verbose.  Specify more C<-v>'s for more verbosity.
+Verbose.  Specify more C<v>'s for more verbosity.  At present, C<-vv> gives
+you detailed traces of the data, and C<-vvv> gives you more detailed
+code tracebacks on error.
 
 =item --version
 

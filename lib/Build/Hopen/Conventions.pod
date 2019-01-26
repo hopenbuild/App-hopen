@@ -4,59 +4,118 @@ Build::Hopen::Conventions - conventions for using hopen(1) as a build system
 
 =head1 SYNOPSIS
 
-L<Build::Hopen> is a flexible dataflow processor and task runner.  However, its main
-use case is as a build system, e.g., a Makefile generator.  To stay as flexible as
-possible, hopen(1) expects its components to follow these conventions.
+L<Build::Hopen> is a flexible dataflow processor and task runner.  However, its
+main use case is as a build system, e.g., a Makefile generator.  To stay as
+flexible as possible, hopen(1) expects its components to follow these
+conventions.
+
+These conventions are generally implemented in L<Build::Hopen::App> and
+L<Build::Hopen::AppUtil>.
 
 =head2 Components used by the build system
 
 =over
 
-=item A project directory
+=item Project directory
 
-Where the main C<.hopen.pl> file of the project is.
+Where the main hopen file file of the project is (see L</"HOPEN FILES">).
 
-=item A destination directory
+=item Destination directory
 
 Where the output will go.  hopen(1) does not support in-source builds.
 The default directory is C<< <project dir>/built >>.
 
-=item A generator
+=item Generator
 
 A subclass of L<Build::Hopen::Gen> that creates the build-system files.
 
-=item A toolchain (optional)
+=item Toolchain (optional)
 
 A subclass of L<Build::Hopen::Toolchain> that applies any compiler-specific
-options that are independent of the generator.
+options that are independent of the generator.  If no toolchain is specified,
+the generator picks the default (if any).
 
 =item An architecture (optional)
 
 An arbitrary string understood by the toolchain or generator.  Used, e.g.,
 to select x86 vs. x64.
 
-=item Hopen file(s)
+=item "Blueprint" files
 
-One or more files matching C<.hopen.pl> or C<*.hopen.pl>.  See L</HOPEN FILES>
-for details.
-
-The filename C<MY.hopen.pl> is reserved.  It is created by hopen in each
-destination directory to record the state of the build in that directory.
+These are the outputs of hopen.  They are the inputs to make(1), ninja(1), or
+some other software-build tool.
 
 =back
 
 =head1 HOPEN FILES
 
-Each hopen file is the body of a subroutine that returns a hashref.  That
-hashref is provided as input to the build graph.  Each hopen file's output
-hashref is appended to the input hashref.  Therefore, to leave the input
-unchanged, return C<undef>, not C<$_[0]>.
+hopen configures a project by running one or more files matching C<.hopen.pl>
+or C<*.hopen.pl>.  As the extension suggests, these are Perl source files.
+
+The filename C<MY.hopen.pl> is reserved.  It is created by hopen in each
+destination directory to record the state of the build in that directory.
+
+=head2 Which hopen files are used
+
+On any hopen(1) run, up to three hopen files are automatically located and
+executed.  (Any of those can run any number of additional hopen files.)
+If any of these files does not exist, it is simply not run!
+The three files are, in order of execution:
+
+=over
+
+=item * Build-state file
+
+The C<MY.hopen.pl> in the destination directory.  This sets the current
+phase (see L</PHASES>) and loads the data output by the last hopen(1) run.
+
+=item * Project file
+
+The last-sorting C<.hopen.pl> or C<*.hopen.pl> file in the project directory.
+You can name your project file whatever you want --- only the extension
+has to match.
+
+=item * Context file
+
+Sometimes you need to tweak the build of someone else's project to make it fit
+your environment.  I run into this all the time on Cygwin.  Therefore, hopen
+will look for a hopen file in the project's I<parent directory>.  That file is
+referred to as a "context file".  Since the context file runs after the project
+file, the context file can change the way the project will be built.
+
+=back
+
+After those files are executed, any code provided by a C<-e> command-line
+option is executed as if it were its own hopen file on disk.
+
+=head2 Execution environment of a hopen file
+
+Each hopen file is the body of a subroutine that may return a hashref (C<{}>).
+That hashref is provided as input to the build graph.  Each hopen file's output
+hashref, if any, is appended to the input hashref (using L<Hash::Merge> with
+retainment precedent).  Therefore, to leave the input unchanged, return
+C<undef>, not C<$_[0]>.
 
 Elements of the hashref starting with C<__R> are reserved.  Please don't read
 or write those elements if you want hopen to work! :)
 
-Each hopen file runs in an environment with L<Build::Hopen::Base> and
-everything from L<Build::Hopen> loaded.
+Each hopen file runs in an environment with everything from the following
+packages loaded:
+
+=over
+
+=item L<Build::Hopen>
+
+=item L<Build::Hopen::Base>
+
+=item L<Build::Hopen::Phases>
+
+=item L<Path::Class>
+
+=back
+
+TODO?: The invoker will put the selected generator's path
+first in C<@INC>, but other than that it's all straight Perl.
 
 =head2 Variables usable in hopen files
 
@@ -76,5 +135,29 @@ The L<Build::Hopen::G::DAG> instance representing the current build.
 Goals in C<$Build> will become, e.g., top-level targets of a
 generated C<Makefile>.
 
+=item $Phase
+
+The current phase (B<read-only>).  Only C<MY.hopen.pl> is allowed to change
+the phase (and not even that if C<--phase> is specified on the hopen
+command line).
+
 =back
+
+=head1 PHASES
+
+hopen is a multi-phase build system.  Unlike cmake(1), hopen runs
+deterministically in multiple steps.  That way you don't have to run the build
+generator over and over again until it converges.  (Yes, I have had this
+problem with cmake.)  Each time you run hopen(1), it will run the next phase
+(saved in C<MY.hopen.pl>).  Currently, the phases are as follows, in order.
+
+=head2 Check
+
+=head2 Gen
+
+=head2 After all the phases are run
+
+Once all of hopen's phases have been run, you can run make(1), ninja(1), or
+whatever build system corresponds with the generator you have selected.
+You can do this by running C<hopen --build>, if you wish.
 

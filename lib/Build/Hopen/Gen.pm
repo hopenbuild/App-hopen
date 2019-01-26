@@ -80,6 +80,16 @@ Must be implemented by subclasses.
 
 sub default_toolchain { ... }
 
+=head2 run_build
+
+Runs the build tool for which this generator has created blueprint files.
+
+=cut
+
+sub run_build {
+    warn "This generator is not configured to run a build tool.  Sorry!";
+}
+
 1;
 __END__
 # vi: set fdm=marker: #
