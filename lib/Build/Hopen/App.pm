@@ -6,7 +6,7 @@ our $VERSION = '0.000005'; # TRIAL
 use Build::Hopen::Base;
 
 use Build::Hopen qw(:default loadfrom MYH);
-use Build::Hopen::AppUtil qw(find_hopen_files);
+use Build::Hopen::AppUtil qw(find_hopen_files dedent);
 use Build::Hopen::Phases qw(:default phase_idx next_phase);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
@@ -499,19 +499,24 @@ EOT
     # need to edit right at the top of the file, and not also at the
 
     my $dumper = Data::Dumper->new([$new_data], ['__R_new_data']);
+    $dumper->Quotekeys(0);
     $dumper->Purity(1);
     $dumper->Maxrecurse(0);     # no limit
     $dumper->Sortkeys(true);    # For consistency between runs
     $dumper->Sparseseen(true);  # We don't use Seen()
 
-    my $new_text = qq(
+    my $new_text = dedent [], qq(
+        # @{[MYH]} generated at @{[scalar gmtime]} GMT
+        # From ``@{[$proj_dir->absolute]}'' into ``@{[$dest_dir->absolute]}''
+
         set_phase '$new_phase';
-        do { my @{[$dumper->Dump]} }
+        do {
+            my @{[$dumper->Dump]}
+        }
     );
 
     hlog { $new_text };
-    File::Slurper::write_text($dest_dir->file(MYH), $new_text
-    );
+    File::Slurper::write_text($dest_dir->file(MYH), $new_text);
 
 } #_inner() }}}2
 

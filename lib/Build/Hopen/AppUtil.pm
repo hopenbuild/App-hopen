@@ -9,7 +9,7 @@ our $VERSION = '0.000005'; # TRIAL
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files);
+    @EXPORT_OK = qw(find_hopen_files dedent);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -55,7 +55,7 @@ name of the context file.
 =cut
 
 sub find_hopen_files {
-    say Dumper(\@_);
+    #say Dumper(\@_);
     my $proj_dir = @_ ? dir($_[0]) : dir;
     my $dest_dir = dir($_[1]) if @_>=2;
     my $ignore_MY_hopen = $_[2];
@@ -77,7 +77,6 @@ sub find_hopen_files {
 
     # Add a $dest_dir/MY.hopen.pl file first, if there is one.
     if($dest_dir && !$ignore_MY_hopen) {
-        say "Checking MY";
         my $fn = $dest_dir->file(MYH);
         unshift @candidates, $fn if -r $fn;
     }
@@ -99,6 +98,54 @@ sub find_hopen_files {
                             'No hopen files found on disk' };
     return [@candidates];
 } #find_hopen_files()
+
+=head2 dedent
+
+Yet Another routine for dedenting multiline strings.  Removes the leading
+horizontal whitespace on the first nonblank line from all lines.  If the first
+argument is a reference, also trims for use in multiline C<q()>/C<qq()>.
+Usage:
+
+    dedent " some\n multiline string";
+    dedent [], q(
+        very indented
+    );      # [] (or any ref) means do the extra trimming.
+
+The extra trimming includes:
+
+=over
+
+=item *
+
+Removing the initial C<\n>, if any; and
+
+=item *
+
+Removing trailing horizontal whitespace between the last C<\n> and the
+end of the string.
+
+=back
+
+=cut
+
+sub dedent {
+    my $extra_trim = (@_ && ref $_[0]) ? (shift, true) : false;
+    my $val = @_ ? $_[0] : $_;
+    my $initial_NL;
+
+    if($val =~ /\A\n/) {
+        $initial_NL = true;
+        $val =~ s/^\A\n//;
+    }
+
+    if($val =~ m/^(?<ws>\h+)\S/m) {
+        $val =~ s/^$+{ws}//gm;
+    }
+
+    $val =~ s/^\h+\z//m if $extra_trim;
+
+    return (($initial_NL && !$extra_trim) ? "\n" : '') . $val;
+} #dedent()
 
 1;
 __END__

@@ -9,12 +9,11 @@ Build::Hopen - A build generator with first-class edges and explicit dependencie
 Input is the last-sorting file in `.` matching `*.hopen`, unless you
 specify otherwise.  That way you can call your build file `.hopen` if
 you want it hidden, or `z.hopen` if you want it to sort below all your other
-files.  Sort order is Lua's `<`, which is by byte value.
+files.  Sort order is Perl's default, which is by byte value.
+See [Build::Hopen::Conventions](https://metacpan.org/pod/Build::Hopen::Conventions) for details of the input format.
 
 Output is a build file for a build system (Ninja or Make will
 be first).  You will eventually be able to pick a generator, a la CMake.
-The invoker will put the selected generator's path
-first in `@INC`, but other than that it's all straight Perl.
 
 # INSTALLATION
 

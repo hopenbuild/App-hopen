@@ -92,6 +92,8 @@ sub run {
     my $dag_scope_saver = $self->scope->outerize($outer_scope);
 
     my @order = eval { $self->_graph->toposort };
+        # TODO someday support multi-core-friendly topo-sort, so nodes can run
+        # in parallel until they block each other.
     die "Graph contains a cycle!" if $@;
 
     # Remove _final from the order for now - I don't yet know what it means

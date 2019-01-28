@@ -37,6 +37,10 @@ Phase names may only contain ASCII letters, digits, or underscore.  The first
 character of a phase may not be a digit.  This is so they can be used as
 identifiers if necessary.
 
+This package also defines a special export tag, C<:hopenfile>, for use when
+running hopen files.  The wrapper code in L<Build::Hopen::App> uses this
+tag.  Hopen files themselves do not need to use this tag.
+
 =head1 VARIABLES
 
 =head2 @PHASES
@@ -101,6 +105,7 @@ sub next_phase {
 Take a given action only in a specified phase.  Usage examples:
 
     on check => { foo => 42 };  # Just return the given hashref
+    on gen => 1337;             # Returns { Gen => 1337 }
     on check => sub { return { foo => 1337 } };
         # Call the given sub and return its return value.
 
@@ -128,12 +133,13 @@ sub on {
     my $which_idx = phase_idx($which_phase);
     return if $which_idx != phase_idx;
 
-    # We are in the correct phase.  Take appropriate action and stash the result
-    # for the caller.  However, don't change our own return value.
+    # We are in the correct phase.  Take appropriate action and stash the
+    # result for the caller.  However, don't change our own return value.
+    my $result = (ref($val) ne 'CODE') ? $val : &$val;
+    $result = { $PHASES[$which_idx] => $result } unless ref $result eq 'HASH';
     {
         no strict 'refs';
-        ${ $caller . "::__R_on_result" } =
-            (ref($val) ne 'CODE') ? $val : &$val;
+        ${ $caller . "::__R_on_result" } = $result;
     }
 
     # Done --- skip the rest of the hopen file if we're in one.
