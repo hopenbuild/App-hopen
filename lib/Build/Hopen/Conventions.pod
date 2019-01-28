@@ -94,10 +94,13 @@ Each hopen file is the body of a subroutine that may return a hashref (C<{}>).
 That hashref is provided as input to the build graph.  Each hopen file's output
 hashref, if any, is appended to the input hashref (using L<Hash::Merge> with
 retainment precedent).  Therefore, to leave the input unchanged, return
-C<undef>, not C<$_[0]>.
+C<{}>, not C<$_[0]>.
 
 Elements of the hashref starting with C<__R> are reserved.  Please don't read
-or write those elements if you want hopen to work! :)
+or write those elements if you want hopen to work! :)  Similarly, all variables
+starting with C<__R> are reserved.
+
+The hopen file is executed in scalar context.
 
 Each hopen file runs in an environment with everything from the following
 packages loaded:

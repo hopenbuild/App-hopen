@@ -8,11 +8,15 @@ our $VERSION = '0.000005'; # TRIAL
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
+    my @normal_export_ok = qw(is_phase phase_idx next_phase);
+    my @hopenfile_export = qw(on);
+
     @EXPORT = qw(@PHASES);
-    @EXPORT_OK = qw(is_phase phase_idx next_phase);
+    @EXPORT_OK = (@normal_export_ok, @hopenfile_export);
     %EXPORT_TAGS = (
         default => [@EXPORT],
-        all => [@EXPORT, @EXPORT_OK]
+        all => [@EXPORT, @normal_export_ok],
+        hopenfile => [@hopenfile_export],
     );
 }
 
@@ -89,6 +93,55 @@ sub next_phase {
 
     return $PHASES[$curr_idx+1];
 } #next_phase()
+
+=head1 ROUTINES FOR USE IN HOPEN FILES
+
+=head2 on
+
+Take a given action only in a specified phase.  Usage examples:
+
+    on check => { foo => 42 };  # Just return the given hashref
+    on check => sub { return { foo => 1337 } };
+        # Call the given sub and return its return value.
+
+This is designed for use within a hopen file.
+See L<Build::Hopen::App/_run_phase> for the execution environment C<on()> is
+designed to run in.
+
+When run as part of a hopen file, C<on()> will skip the rest of the file if it
+runs.  For example:
+
+    say "Hello, world!";                # This always runs
+    on check => { answer => $answer };  # This runs during the Check phase
+    on gen => { done => true };         # This runs during the Gen phase
+    say "Phase was neither Check nor Gen";  # Doesn't run in Check or Gen
+
+=cut
+
+sub on {
+    my $caller = caller;
+
+    my $which_phase = shift or croak "I need to know which phase this applies to";
+    croak "I need a single value or subroutine" unless @_ == 1;
+    my $val = shift;
+
+    my $which_idx = phase_idx($which_phase);
+    return if $which_idx != phase_idx;
+
+    # We are in the correct phase.  Take appropriate action and stash the result
+    # for the caller.  However, don't change our own return value.
+    {
+        no strict 'refs';
+        ${ $caller . "::__R_on_result" } =
+            (ref($val) ne 'CODE') ? $val : &$val;
+    }
+
+    # Done --- skip the rest of the hopen file if we're in one.
+    eval {
+        no warnings 'exiting';
+        last __R_DO;
+    };
+} #on()
 
 1;
 __END__

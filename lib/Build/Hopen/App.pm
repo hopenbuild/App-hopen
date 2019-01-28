@@ -144,8 +144,11 @@ values from the command line, keyed by the keys in C<%CMDLINE_OPTS>.
         # Only pull in the Pod routines if we actually need them.
 
         # Terminal formatting, if present.
-        eval "require Pod::Text::Termcap";
-        $Pod::Usage::Formatter = 'Pod::Text::Termcap' unless $@;
+        {
+            no warnings 'once';
+            eval "require Pod::Text::Termcap";
+            $Pod::Usage::Formatter = 'Pod::Text::Termcap' unless $@;
+        }
 
         require Pod::Usage;
 
@@ -293,10 +296,13 @@ Run a phase by executing the hopen files and running the DAG.
     package __Rpkg_$pkg_name;
     use Build::Hopen::Base;
     use Build::Hopen ':all';
-    use Build::Hopen::Phases ':all';
+    use Build::Hopen::Phases qw(:all :hopenfile);
     use Path::Class;
 
     $lib_dirs
+
+    # For Phases::on()
+    our \$__R_on_result;
 
     our \$FILENAME;
     local *FILENAME = \\"$friendly_name";
@@ -314,7 +320,19 @@ EOT
 
     sub __Rsub_$pkg_name {
 #line 1 "$friendly_name"
+        my \$__R_retval = do {   # return statements in here will exit the Rsub
+            __R_DO: {
 $file_text
+            }
+        };
+
+        return \$__R_retval if defined \$__R_retval;
+            # Doesn't happen if file_text return()ed or exited via Phases::on().
+        return \$__R_on_result if defined \$__R_on_result;
+            # Happens if file_text exited via Phases::on().
+
+        # Otherwise, no data.
+        return undef;
     }
 
     return __Rsub_$pkg_name(\$Build::Hopen::App::_hrData);

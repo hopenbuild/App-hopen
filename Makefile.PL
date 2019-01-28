@@ -175,6 +175,7 @@ my %opts = (
         'Test::Deep' => '0.084',        # for superhashof
         'Test::Directory' => '0.02',    # for subdirs
         'Test::More' => '0',
+        # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
     },
     PREREQ_PM => {
         #'Algorithm::Dependency' => '1.106',
