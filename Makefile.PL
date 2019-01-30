@@ -225,6 +225,8 @@ my %opts = (
 
         'overload' => '0',
 
+        'Package::Alias' => '0.12',
+
         # 'Parse::RecDescent' => '1.967015',
             # - Use for parsing Lua tables as inline config data?
             #   I am thinking about using this for specifying flavors at

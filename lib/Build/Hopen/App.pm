@@ -206,7 +206,7 @@ Run a phase by executing the hopen files and running the DAG.
 
     local $_hrData = $opts{data} // {};
 
-    my $e_count = 0;    # How many -e commannds we've run
+    my $e_count = 0;    # How many -e commands we've run
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
     # Set up code pieces related to phase control
@@ -294,29 +294,24 @@ Run a phase by executing the hopen files and running the DAG.
         my $src = <<EOT;
 {
     package __Rpkg_$pkg_name;
-    use Build::Hopen::Base;
-    use Build::Hopen ':all';
-    use Build::Hopen::Phases qw(:all :hopenfile);
-    use Path::Class;
+    use Build::Hopen::HopenFileKit "$friendly_name";
 
+    # Other lib dirs
     $lib_dirs
+    # /Other lib dirs
 
-    # For Phases::on()
-    our \$__R_on_result;
-
-    our \$FILENAME;
-    local *FILENAME = \\"$friendly_name";
-
+    # Other phase text
     $phase_text
-
-    our \$Phase;
-    local *Phase = \\"$Phase";
+    # /Other phase text
 EOT
-        # Shadow \$Phase so the hopen file can't change it without
-        # really trying!  Note that we actually interpolated the current
-        # phase in as a literal so that it's read-only (see perlmod).
+
+    # Now shadow \$Phase so the hopen file can't change it without
+    # really trying!  Note that we actually interpolate the current
+    # phase in as a literal so that it's read-only (see perlmod).
 
     $src .= <<EOT;
+    our \$Phase;
+    local *Phase = \\"$Phase";
 
     sub __Rsub_$pkg_name {
 #line 1 "$friendly_name"
