@@ -71,14 +71,36 @@ Do whatever the generator wants to do to finish up.
 
 sub finalize { }
 
-=head2 default_toolchain
+=head2 default_toolset
 
-Returns the package name of the default toolchain for this generator.
+Returns the package stem of the default toolset for this generator.
 Must be implemented by subclasses.
+
+When a hopen file invokes C<use language "Foo">, hopen will load
+C<< Build::Hopen::T::<stem>::Foo >>, where C<< <stem> >> is the return
+value of this function.
+
+As a sanity check, hopen will first try to load C<< Build::Hopen::T::<stem> >>,
+so make sure that is a valid package.
 
 =cut
 
-sub default_toolchain { ... }
+sub default_toolset { ... }
+
+=head2 also_require
+
+Returns the names of the packages, if any, that should be loaded along with
+this generator.
+
+=cut
+
+sub also_require { }
+
+=head2 TODO
+
+=cut
+
+sub TODO { ... }
 
 =head2 run_build
 

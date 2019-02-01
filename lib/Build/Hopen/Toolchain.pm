@@ -1,4 +1,4 @@
-# Build::Hopen::Toolchain - base class for hopen toolchains
+# Build::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
 package Build::Hopen::Toolchain;
 use Build::Hopen;
 use Build::Hopen::Base;
@@ -13,9 +13,27 @@ use Class::Tiny qw(proj_dir dest_dir), {
 
 =head1 NAME
 
-Build::Hopen::Toolchain - Base class for hopen toolchains
+Build::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
 
 =head1 SYNOPSIS
+
+TODO
+    - change this to "Tool" instead of "Toolchain"
+    - permit loading any number of tools
+    - The Generator specifies a default list of tools rather than a
+        single default toolchain.
+    - add G::ToolOp to invoke tools.  A ToolOp will take a language
+        and an opcode and invoke a corresponding Tool.  E.g., a GNU C
+        Tool will generate command-line options for gcc-style command lines.
+    - Only one Tool may be loaded for each (language, opcode) pair.
+        Otherwise the build would be ambiguous.
+    - In Conventions, define the formats for languages and opcodes.
+
+Maybe TODO:
+    - Each Generator must specify a list of Content-Types (media types)
+        it can consume.  Each Tool must specify a specific content-type
+        it produces.  Mismatches are an error unless overriden on the
+        hopen command line.
 
 The code that generates command lines to invoke specific toolchains lives under
 C<Build::Hopen::Toolchain>.  Those modules must implement the interface defined
@@ -69,6 +87,6 @@ Do whatever the toolchain wants to do to finish up.
 
 sub finalize { }
 
-1;
+false;  # SUPERSEDED --- will be removed.
 __END__
 # vi: set fdm=marker: #

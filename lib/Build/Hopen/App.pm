@@ -6,7 +6,7 @@ our $VERSION = '0.000005'; # TRIAL
 use Build::Hopen::Base;
 
 use Build::Hopen qw(:default loadfrom MYH);
-use Build::Hopen::AppUtil qw(find_hopen_files dedent);
+use Build::Hopen::AppUtil qw(find_hopen_files find_myhopen dedent);
 use Build::Hopen::Phases qw(:default phase_idx next_phase);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
@@ -73,6 +73,7 @@ my %CMDLINE_OPTS = (
     DEFINE => ['D',':s%'],
     EVAL => ['e','|eval=s@'],   # Perl source to run as a hopen file
     #RESTRICTED_EVAL => ['E','|exec=s@'],
+    # TODO add -f to specify additional hopen files
     FRESH => ['fresh'],         # Don't run MY.hopen.pl
     PROJ_DIR => ['from','=s'],
 
@@ -96,7 +97,7 @@ my %CMDLINE_OPTS = (
     QUIET => ['q'],
     #SANDBOX => ['S','|sandbox',false],
     #SOURCES reserved
-    TOOLCHAIN => ['t','|T|toolchain=s'],        # -T is from CMake
+    TOOLSET => ['t','|T|toolset=s'],        # -T is from CMake
     DEST_DIR => ['to','=s'],
     # --usage reserved
     PRINT_VERSION => ['version','', false],
@@ -197,6 +198,8 @@ sub _run_phase {    # Run a single phase. {{{2
 =head2 _run_phase
 
 Run a phase by executing the hopen files and running the DAG.
+
+TODO split run_file out so that MY.hopen.pl can be run first.
 
 =cut
 
@@ -314,9 +317,9 @@ EOT
     local *Phase = \\"$Phase";
 
     sub __Rsub_$pkg_name {
-#line 1 "$friendly_name"
         my \$__R_retval = do {   # return statements in here will exit the Rsub
             __R_DO: {
+#line 1 "$friendly_name"
 $file_text
             }
         };
@@ -428,13 +431,15 @@ here, remove or rename @{[MYH]} and run me again.
 EOT
 
     # See if we have hopen files associated with the project dir
+    my $myhopen = find_myhopen($dest_dir, !!$opts{FRESH});
     my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir, !!$opts{FRESH});
     push(@$lrHopenFiles, map { \$_ } @{$opts{EVAL}}) if $opts{EVAL};
 
     hlog { 'hopen files: ',
-            map { ref eq 'SCALAR' ? "{{$$_}}" : "``$_''" } @$lrHopenFiles } 2;
+            map { ref eq 'SCALAR' ? "{{$$_}}" : "``$_''" }
+                ($myhopen // (), @$lrHopenFiles) } 2;
 
-    die <<EOT unless @$lrHopenFiles;
+    die <<EOT unless $myhopen || @$lrHopenFiles;
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
 project directory ``$proj_dir''.
 EOT
@@ -444,6 +449,13 @@ EOT
     # = Initialize ==========================================================
 
     say "From ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
+
+    # Create the initial DAG before loading anything so that the
+    # generator and toolset can add initialization operations.
+    $Build = hnew DAG => '__R_main';
+
+    # TODO load MY.hopen.pl first so the results of the Probe phase are
+    # available to the generator and toolset.
 
     # Load generator
     my ($gen, $gen_class);
@@ -456,29 +468,28 @@ EOT
             or die "Can't initialize generator";
     $Generator = $gen;
 
-    # Load toolchain
-    my ($toolchain, $toolchain_class);
-    $opts{TOOLCHAIN} //= $gen->default_toolchain;
-    $toolchain_class = loadfrom($opts{TOOLCHAIN},
-                                    'Build::Hopen::Toolchain::', '');
-    die "Can't find toolchain $opts{TOOLCHAIN}" unless $toolchain_class;
+    # Load toolset
+    #my ($toolset, $toolset_class);
+    my $toolset_class;
+    $opts{TOOLSET} //= $gen->default_toolset;
+    $toolset_class = loadfrom($opts{TOOLSET},
+                                    'Build::Hopen::T::', '');
+    die "Can't find toolset $opts{TOOLSET}" unless $toolset_class;
 
-    hlog { "Toolchain spec ``$opts{TOOLCHAIN}'' -> using toolchain $toolchain_class" };
+    hlog { "Toolset spec ``$opts{TOOLSET}'' -> using toolset $toolset_class" };
+    $Toolset = $toolset_class;
 
-    $toolchain = "$toolchain_class"->new(proj_dir => $proj_dir,
-        dest_dir => $dest_dir, architecture => $opts{ARCHITECTURE})
-            or die "Can't initialize toolchain";
-    $Toolchain = $toolchain;
-
-    # Create the initial DAG
-    $Build = hnew DAG => '__R_main';
+    #$toolset = "$toolset_class"->new(proj_dir => $proj_dir,
+    #    dest_dir => $dest_dir, architecture => $opts{ARCHITECTURE})
+    #        or die "Can't initialize toolset";
+    #$Toolset = $toolset;
 
     # Prepare the destination directory if it doesn't exist
     File::Path::Tiny::mk($dest_dir) or die "Couldn't create $dest_dir: $!";
 
     # = Run the hopen files =================================================
     my $new_data = _run_phase(
-        files => $lrHopenFiles,
+        files => [$myhopen, @$lrHopenFiles],
         $opts{PHASE} ? (phase => $opts{PHASE}) : (),
         $opts{QUIET} ? (quiet => $opts{QUIET}) : ()
     );
@@ -563,7 +574,7 @@ __END__
 =item -a C<architecture>
 
 Specify the architecture.  This is an arbitrary string interpreted by the
-generator or toolchain.
+generator or toolset.
 
 =item -e C<Perl code>
 
@@ -586,10 +597,10 @@ positional argument.
 Specify the generator.  The given C<generator> should be either a full package
 name or the part after C<Build::Hopen::Gen::>.
 
-=item -t C<toolchain>
+=item -t C<toolset>
 
-Specify the toolchain.  The given C<toolchain> should be either a full package
-name or the part after C<Build::Hopen::Toolchain::>.
+Specify the toolset.  The given C<toolset> should be either a full package
+name or the part after C<Build::Hopen::T::>.
 
 =item --to C<destination dir>
 

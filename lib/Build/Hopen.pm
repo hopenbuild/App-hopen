@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolchain $Build $Phase $HopenFiles isMYH);
+                $Toolset $Build $Phase $HopenFiles isMYH);
     @EXPORT_OK = qw(clone loadfrom $VERBOSE MYH);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -70,9 +70,10 @@ Set to truthy to get debug output on stderr from hopen's internals.
 
 The current L<Build::Hopen::Gen> instance.
 
-=head2 $Toolchain
+=head2 $Toolset
 
-The current L<Build::Hopen::Toolchain> instance.
+The name of the current toolset.  Support for language C<Foo> is in
+package C<${Toolset}::Foo>.
 
 =head2 $Build
 
@@ -93,7 +94,7 @@ The hopen files applicable to the current build.  An arrayref.
 # }}}1
 
 our $VERBOSE = false;
-our ($Generator, $Toolchain, $Build, $Phase, $HopenFiles);
+our ($Generator, $Toolset, $Build, $Phase, $HopenFiles);
 
 use constant MYH => 'MY.hopen.pl';
 
@@ -183,7 +184,7 @@ sub loadfrom {
         return "$stem$class" unless $@;
     }
 
-    croak "Could not find class for $class";
+    return undef;
 } #loadfrom()
 
 =head2 hlog

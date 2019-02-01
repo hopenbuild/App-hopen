@@ -9,6 +9,7 @@ lua$
 TEMPLATE
 Build-Hopen-*
 TODO
+\brunhopen$
 
 # Things we generate
 \bbuilt[\\/]

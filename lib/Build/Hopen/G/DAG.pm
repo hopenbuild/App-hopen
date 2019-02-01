@@ -10,25 +10,37 @@ use Class::Tiny {
     goals   => sub { [] },
     default_goal => undef,
 
+    # Private attributes with simple defaults
+    _node_by_name => sub { +{} },   # map from node names to nodes in either
+                                    # _init_graph or _graph
+
     # Private attributes - initialized by BUILD()
-    _graph  => undef,
+    _graph  => undef,   # L<Graph> instance
     _final   => undef,  # The graph root - all goals have edges to this
+
+    #Initialization operations
+    _init_graph => undef,   # L<Graph> for initializations
+    _init_first => undef,   # Graph node for initialization - the first
+                            # init operation to be performed.
+
+    # TODO? also support fini to run operations after _graph runs?
 };
 
+use Build::Hopen::G::Goal;
 use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
-use Build::Hopen::G::Goal;
+use Build::Hopen::G::PassthroughOp;
 use Graph;
 use Storable ();
 
 # Class data {{{1
 
 use constant {
-    LINKS => 'link_list',    # Graph edge attribute: array of \BHG::Link
+    LINKS => 'link_list',    # Graph edge attr: array of BHG::Link instances
 };
 
-# A counter used for making unique DAG root-node names
-my $_dag_final_id = 0;
+# A counter used for making unique DAG-node names
+my $_dag_node_id = 0;
 
 # }}}1
 # Docs {{{1
@@ -55,13 +67,22 @@ The default goal for this DAG.
 
 =head2 _graph
 
-The actual graph.  Provided so you can use it if you want.  However, if you
-find that you do have to use it, please open an issue so we can see about
-providing a documented API for your use case!
+The actual L<Graph>.  If you find that you have to use it, please open an
+issue so we can see about providing a documented API for your use case!
 
 =head2 _final
 
 The node to which all goals are connected.
+
+=head2 _init_graph
+
+A separate L<Graph> of operations that will run before all the operations
+in L</_graph>.  This is because I don't want to add an edge to every
+single node just to force the topological sort to work out.
+
+=head2 _init_first
+
+The first node to be run in _init_graph.
 
 =head1 FUNCTIONS
 
@@ -91,6 +112,13 @@ sub run {
     # the duration of this call.
     my $dag_scope_saver = $self->scope->outerize($outer_scope);
 
+    # --- Get the initialization ops ---
+
+    my @init_order = eval { $self->_init_graph->toposort };
+    die "Initializations contain a cycle!" if $@;
+
+    # --- Get the runtime ops ---
+
     my @order = eval { $self->_graph->toposort };
         # TODO someday support multi-core-friendly topo-sort, so nodes can run
         # in parallel until they block each other.
@@ -103,7 +131,12 @@ sub run {
     pop @order;
 
     hlog { 'Traversing DAG ' . $self->name };
-    foreach my $node (@order) {
+    my $graph = $self->_init_graph;
+    foreach my $node (@init_order, undef, @order) {
+        if(!defined($node)) {   # undef is the marker between init and run
+            $graph = $self->_graph;
+            next;
+        }
 
         # Inputs to this node.  TODO should the provided inputs be given
         # to each node?  Any node with no predecessors?  Currently each
@@ -114,7 +147,7 @@ sub run {
             # on input edges, beats the scope of the DAG as a whole.
 
         # Iterate over each node's edges and process any Links
-        foreach my $pred ($self->_graph->predecessors($node)) {
+        foreach my $pred ($graph->predecessors($node)) {
             hlog { ('From', $pred->name, 'to', $node->name) };
 
             # Goals do not feed outputs to other Goals.  This is so you can
@@ -123,7 +156,7 @@ sub run {
             # TODO add tests for this
             next if $pred->DOES('Build::Hopen::G::Goal');
 
-            my $links = $self->_graph->get_edge_attribute($pred, $node, LINKS);
+            my $links = $graph->get_edge_attribute($pred, $node, LINKS);
 
             unless($links) {    # Simple case: predecessor's outputs become our inputs
                 $node_scope->add(%{$pred->outputs});
@@ -182,6 +215,7 @@ sub goal {
     my $name = shift or croak 'Need a goal name';
     my $goal = Build::Hopen::G::Goal->new(name => $name);
     $self->_graph->add_vertex($goal);
+    $self->_node_by_name->{$name} = $goal;
     $self->_graph->add_edge($goal, $self->_final);
     $self->default_goal($goal) unless $self->default_goal;
     return $goal;
@@ -235,6 +269,7 @@ sub connect {
             'to', $op2->name };
     # Add it to the graph (idempotent)
     $self->_graph->add_edge($op1, $op2);
+    $self->_node_by_name->{$_->name} = $_ foreach ($op1, $op2);
 
     # Save the BHG::Link as an edge attribute (not idempotent!)
     my $attrs = $self->_graph->get_edge_attribute($op1, $op2, LINKS) || [];
@@ -246,14 +281,55 @@ sub connect {
 
 =head2 empty
 
-Returns truthy if the only node in the graph is the internal L</_final> node.
+Returns truthy if the only nodes in the graph are internal nodes.
+Intended for use by hopen files.
 
 =cut
 
 sub empty {
     my $self = shift or croak 'Need an instance';
-    return ($self->_graph->vertices <= 1);
+    return ($self->_graph->vertices > 1);
+        # _final is the node in an empty() graph.
+        # We don't check the _init_graph since empty() is intended
+        # for use by hopen files, not toolsets.
 } #empty()
+
+=head2 init
+
+Add an initialization operation to the graph.  Initialization operations
+run before all other operations.  An attempt to add the same initialization
+operation twice (based on the node name) will be ignored.  Usage:
+
+    my $op = Build::Hopen::G::Op->new(name=>"whatever");
+    $dag->init($op[, $first]);
+
+If C<$first> is truthy, the op will be run before anything already in the
+graph.  However, later calls to C<init()> with C<$first> set will push
+operations even before C<$op>.
+
+Returns the node, for the sake of chaining.
+
+=cut
+
+sub init {
+    my $self = shift or croak 'Need an instance';
+    my $op = shift or croak 'Need an op';
+    my $first = shift;
+    return if $self->_node_by_name->{$op->name};
+
+    $self->_init_graph->add_vertex($op);
+    $self->_node_by_name->{$op->name} = $op;
+
+    if($first) {    # $op becomes the new _init_first node
+        $self->_init_graph->add_edge($op, $self->_init_first);
+        $self->_init_first($op);
+    } else {    # Not first, so can happen anytime.  Add it after the
+                # current first node.
+        $self->_init_graph->add_edge($self->_init_first, $op);
+    }
+
+    return $op;
+} #init()
 
 =head2 BUILD
 
@@ -267,14 +343,24 @@ sub BUILD {
     my $self = shift or croak 'Need an instance';
     # my $hrArgs = shift;
 
+    # Graph of normal operations
     my $graph = Graph->new( directed => true,
                             refvertexed => true);
     my $final = Build::Hopen::G::Node->new(
-                                    name => '_DAG_ROOT' . $_dag_final_id++);
+                                    name => '__R_DAG_ROOT' . $_dag_node_id++);
     $graph->add_vertex($final);
-
     $self->_graph($graph);
     $self->_final($final);
+
+    # Graph of initialization operations
+    my $init_graph = Graph->new( directed => true,
+                            refvertexed => true);
+    my $init = Build::Hopen::G::PassthroughOp->new(
+                                    name => '__R_DAG_INIT' . $_dag_node_id++);
+    $init_graph->add_vertex($init);
+
+    $self->_init_graph($init_graph);
+    $self->_init_first($init);
 } #BUILD()
 
 1;

@@ -76,14 +76,14 @@ sub finalize {
     }
 } #finalize()
 
-=head2 default_toolchain
+=head2 default_toolset
 
-Returns the package name of the default toolchain for this generator,
-which is L<Build::Hopen::Toolchain::Gnu>.
+Returns the package name of the default toolset for this generator,
+which is C<Gnu> (i.e., L<Build::Hopen::T::Gnu>).
 
 =cut
 
-sub default_toolchain { 'Build::Hopen::Toolchain::Gnu' }
+sub default_toolset { 'Gnu' }
 
 1;
 __END__

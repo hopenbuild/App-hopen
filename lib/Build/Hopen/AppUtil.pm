@@ -9,7 +9,7 @@ our $VERSION = '0.000005'; # TRIAL
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files dedent);
+    @EXPORT_OK = qw(find_hopen_files find_myhopen dedent);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -55,7 +55,6 @@ name of the context file.
 =cut
 
 sub find_hopen_files {
-    #say Dumper(\@_);
     my $proj_dir = @_ ? dir($_[0]) : dir;
     my $dest_dir = dir($_[1]) if @_>=2;
     my $ignore_MY_hopen = $_[2];
@@ -75,12 +74,6 @@ sub find_hopen_files {
     @candidates = $candidates[$#candidates] if @candidates;
         # Only use the last one
 
-    # Add a $dest_dir/MY.hopen.pl file first, if there is one.
-    if($dest_dir && !$ignore_MY_hopen) {
-        my $fn = $dest_dir->file(MYH);
-        unshift @candidates, $fn if -r $fn;
-    }
-
     # Look in the parent dir for context files.
     # The context file comes after the earlier candidate.
     my $parent = $proj_dir->parent;
@@ -98,6 +91,21 @@ sub find_hopen_files {
                             'No hopen files found on disk' };
     return [@candidates];
 } #find_hopen_files()
+
+=head2 find_myhopen
+
+Find a C<MY.hopen.pl> file, if any.  Returns undef if none is present.
+
+=cut
+
+sub find_myhopen {
+    return if $_[2];    # $ignore_MY_hopen
+    my $dest_dir = shift or return;     # No dest dir => no MY.hopen.pl
+
+    # Find $dest_dir/MY.hopen.pl, if there is one.
+    my $fn = $dest_dir->file(MYH);
+    return $fn if -r $fn;
+} #find_myhopen
 
 =head2 dedent
 

@@ -29,15 +29,16 @@ The default directory is C<< <project dir>/built >>.
 
 A subclass of L<Build::Hopen::Gen> that creates the build-system files.
 
-=item Toolchain (optional)
+=item Toolset
 
-A subclass of L<Build::Hopen::Toolchain> that applies any compiler-specific
-options that are independent of the generator.  If no toolchain is specified,
-the generator picks the default (if any).
+A collection of operations (L<Build::Hopen::G::Op> subclasses) that know
+how to process specific types of files, independent of which generator
+is in use.  If no toolset is specified,
+the generator picks the default.
 
 =item An architecture (optional)
 
-An arbitrary string understood by the toolchain or generator.  Used, e.g.,
+An arbitrary string understood by the toolset or generator.  Used, e.g.,
 to select x86 vs. x64.
 
 =item "Blueprint" files
@@ -86,7 +87,9 @@ file, the context file can change the way the project will be built.
 =back
 
 After those files are executed, any code provided by a C<-e> command-line
-option is executed as if it were its own hopen file on disk.
+option is executed as if it were its own hopen file on disk, and any
+hopen file referenced by a C<-f> option is executed.  C<-e> and C<-f> options
+are processed in the order given on the command line.
 
 =head2 Execution environment of a hopen file
 
@@ -103,7 +106,7 @@ starting with C<__R> are reserved.
 The hopen file is executed in scalar context.
 
 Each hopen file runs in an environment with everything from the following
-packages loaded:
+packages loaded (via L<Build::Hopen::HopenFileKit>):
 
 =over
 
@@ -128,9 +131,9 @@ first in C<@INC>, but other than that it's all straight Perl.
 
 The current L<Build::Hopen::Gen> instance.
 
-=item $Toolchain
+=item $Toolset
 
-The current L<Build::Hopen::Toolchain> instance.
+The name of the current C<< Build::Hopen::T::<stem> >> package root.
 
 =item $Build
 

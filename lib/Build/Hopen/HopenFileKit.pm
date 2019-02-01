@@ -2,6 +2,7 @@
 package Build::Hopen::HopenFileKit;
 
 # What we use
+use Build::Hopen qw(:default loadfrom);
 use Build::Hopen::Base;
 use Import::Into;
 use Package::Alias ();
@@ -68,12 +69,17 @@ C<import()> routine for the fake "language" package
     die "TODO permit aliases" if ref $_[0]; # TODO take { alias => name }
 
     foreach my $language (@_) {
-        # find the package for the given language
+
+        # Find the package for the given language
         my ($src_package, $dest_package);
-        # TODO
-        $dest_package = ($src_package =~ m/::([^:]+)$/) ? $1 : $src_package;
+        $src_package = loadfrom($language,
+            "${Toolset}::",
+            '')
+        or croak "Can't find a package for language ``$language'' " .
+                    "in toolset ``$Toolset''";
 
         # Import the given language into the root namespace
+        $dest_package = ($src_package =~ m/::([^:]+)$/) ? $1 : $src_package;
         Package::Alias->import::into($target,
             $dest_package => $src_package);
     } #foreach requested language
