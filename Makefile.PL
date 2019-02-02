@@ -183,6 +183,7 @@ my %opts = (
 
         'Carp' => '0',
 
+        'Class::Method::Modifiers' => '2.10',   # most recent code change
         'Class::Tiny' => '1.000',   # New API.  NOTE: <1.001 has no BUILDARGS
         #'Class::Tiny::Antlers' => '0',
 

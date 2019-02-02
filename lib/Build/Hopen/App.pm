@@ -489,7 +489,7 @@ EOT
 
     # = Run the hopen files =================================================
     my $new_data = _run_phase(
-        files => [$myhopen, @$lrHopenFiles],
+        files => [$myhopen // (), @$lrHopenFiles],
         $opts{PHASE} ? (phase => $opts{PHASE}) : (),
         $opts{QUIET} ? (quiet => $opts{QUIET}) : ()
     );

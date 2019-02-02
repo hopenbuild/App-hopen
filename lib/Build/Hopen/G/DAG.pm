@@ -55,7 +55,7 @@ This class encapsulates the DAG for a particular set of one or more goals.
 It is itself a L<Build::Hopen::G::Op> so that it can be composed into
 other DAGs.
 
-=head1 VARIABLES
+=head1 ATTRIBUTES
 
 =head2 goals
 
@@ -192,6 +192,8 @@ sub run {
     return $retval;
 } #run()
 
+=head1 ADDING DATA
+
 =head2 goal
 
 Creates a goal of the DAG.  Goals are names for sequences of operations,
@@ -279,20 +281,29 @@ sub connect {
     return $link;
 } #connect()
 
-=head2 empty
+=head2 add
 
-Returns truthy if the only nodes in the graph are internal nodes.
-Intended for use by hopen files.
+Add a regular node to the graph.  An attempt to add the same
+initialization operation twice (based on the node name) will be ignored.
+Usage:
+
+    my $node = Build::Hopen::G::Op->new(name=>"whatever");
+    $dag->add($node);
+
+Returns the node, for the sake of chaining.
 
 =cut
 
-sub empty {
+sub add {
     my $self = shift or croak 'Need an instance';
-    return ($self->_graph->vertices > 1);
-        # _final is the node in an empty() graph.
-        # We don't check the _init_graph since empty() is intended
-        # for use by hopen files, not toolsets.
-} #empty()
+    my $node = shift or croak 'Need a node';
+    return if $self->_node_by_name->{$node->name};
+
+    $self->_init_graph->add_vertex($node);
+    $self->_node_by_name->{$node->name} = $node;
+
+    return $node;
+} #add()
 
 =head2 init
 
@@ -330,6 +341,25 @@ sub init {
 
     return $op;
 } #init()
+
+=head1 ACCESSORS
+
+=head2 empty
+
+Returns truthy if the only nodes in the graph are internal nodes.
+Intended for use by hopen files.
+
+=cut
+
+sub empty {
+    my $self = shift or croak 'Need an instance';
+    return ($self->_graph->vertices > 1);
+        # _final is the node in an empty() graph.
+        # We don't check the _init_graph since empty() is intended
+        # for use by hopen files, not toolsets.
+} #empty()
+
+=head1 OTHER
 
 =head2 BUILD
 

@@ -7,7 +7,7 @@
 use language 'C';   # uses Build::Hopen::L::C, and makes ::C an alias for it.
     # The "language" package is synthesized by Build::Hopen::HopenFileKit.
 
-$Build->C::compile('hello.c')->C::link->default_goal;
+$Build->C::compile('hello.c')->C::link('hello')->default_goal;
     # A fluent interface provided by the DAG in cooperation with the BHL::*
     # routines.  This compiles as:
     #   default_goal(

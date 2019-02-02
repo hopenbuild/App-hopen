@@ -1,0 +1,3 @@
+#!/bin/sh
+# This is a convenience invoker for testing.
+perl -I../../../lib ../../../bin/hopen "$@"

@@ -211,7 +211,7 @@ sub hlog (&;$) {
     my @log = &{$_[0]}();
     return unless @log;
 
-    chomp $log[$#log];
+    chomp $log[$#log] if $log[$#log];
     say STDERR (join(' ', @log)) =~ s/^/# /gmr;
 } #hlog()
 

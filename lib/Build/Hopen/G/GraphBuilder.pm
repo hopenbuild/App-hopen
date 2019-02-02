@@ -4,7 +4,7 @@ use Build::Hopen;
 use Build::Hopen::Base;
 use Exporter 'import';
 
-our @EXPORT; BEGIN { @EXPORT=qw(GraphBuilder MODIFY_CODE_ATTRIBUTES); }
+our @EXPORT; BEGIN { @EXPORT=qw(make_GraphBuilder); }
 
 our $VERSION = '0.000005'; # TRIAL
 
@@ -16,7 +16,7 @@ use Class::Tiny {
     node => undef,
 };
 
-use Sub::Attribute;
+use Class::Method::Modifiers qw(install_modifier);
 
 # Docs {{{1
 
@@ -51,48 +51,125 @@ The current L<Build::Hopen::G::DAG> instance, if any.
 
 The current L<Build::Hopen::G::Node> instance, if any.
 
-=head1 STATIC FUNCTIONS
+=head1 INSTANCE FUNCTIONS
 
 =cut
 
 # }}}1
 
-=head2 GraphBuilder
+=head2 add
 
-A subroutine attribute that wraps the given subroutine so that it can
-take a DAG or a builder.
+Adds a node to the graph.  Returns the node.  Note that this B<does not>
+change the builder's current node (L</node>).
 
 =cut
 
-sub GraphBuilder :ATTR_SUB {
-    my($class, $sym_ref, $code_ref, $attr_name, $attr_data) = @_;
+sub add {
+    my $self = shift or croak 'Need an instance';
+    my $node = shift or croak 'Need a node';
+    $self->dag->add($node);
+    return $node;
+} #add()
 
-    local *wrapper = sub {
-        croak "Need a parameter" unless @_;
-        my $first = shift;
-        $first = __PACKAGE__->new(dag=>$first)
-            unless $first->DOES(__PACKAGE__);
-        croak "Parameter must be a DAG or Builder"
-            unless $first->dag->DOES('Build::Hopen::G::DAG');
+=head2 default_goal
 
-        unshift @_, $first;
-        &{$code_ref};   # @_ passed to code
-    }; #wrapper()
+Links the most recent node in the chain to the default goal in the DAG.
+If the DAG does not have a default goal, adds one called "all".
+Clears the builder's record of the current node.
 
-    say Dumper(\&wrapper);
-    say Dumper($sym_ref);
+=cut
 
-    # Thanks for syntax to
-    # https://metacpan.org/source/JIMBOB/Memoize-Memcached-Attribute-0.11/lib/Memoize/Memcached/Attribute.pm#L63
-    my $symbol_name = join('::', $class, *{ $sym_ref }{NAME});
-    say $symbol_name;
+sub default_goal {
+    my $self = shift or croak 'Need an instance';
+    croak "Need a node to link to the goal" unless $self->node;
 
-    {
-        no warnings 'redefine';
-        no strict 'refs';
-        *{$symbol_name} = \&wrapper;
+    my $goal = $self->dag->default_goal // $self->dag->goal('all');
+    $self->dag->add($self->node);   # no harm in it - DAG::add() is idempotent
+    $self->dag->connect($self->node, $goal);
+
+    $self->node(undef);     # Less likely to leak state between goals.
+
+    return $self;
+} #default_goal()
+
+=head2 goal
+
+Links the most recent node in the chain to the given goal in the DAG.
+Clears the builder's record of the current node.
+
+=cut
+
+sub goal {
+    my $self = shift or croak 'Need an instance';
+    my $goal_name = shift or croak 'Need a goal name';
+    croak "Need a node to link to the goal" unless $self->node;
+
+    my $goal = $self->dag->goal($goal_name);
+    $self->dag->add($self->node);   # no harm in it - DAG::add() is idempotent
+    $self->dag->connect($self->node, $goal);
+
+    $self->node(undef);     # Less likely to leak state between goals.
+
+    return $self;
+} #default_goal()
+
+=head1 STATIC FUNCTIONS
+
+=head2 make_GraphBuilder
+
+Given the name of a subroutine, wrap the given subroutine for use in a
+GraphBuilder chain such as that shown in the L</SYNOPSIS>.  Usage:
+
+    sub worker {
+        my $graphbuilder = shift;
+        ...
+        return $node;   # Will automatically be linked into the chain
     }
-} #todo()
+
+    make_GraphBuilder 'worker';
+        # now worker can take a DAG or GraphBuilder, and the
+        # return value will be the GraphBuilder.
+
+The C<worker> subroutine is called in scalar context.
+
+=cut
+
+sub _wrapper;
+
+sub make_GraphBuilder {
+    my $target = caller;
+    my $funcname = shift or croak 'Need the name of the sub to wrap';   # yum
+
+    install_modifier $target, 'around', $funcname, \&_wrapper;
+} #make_GraphBuilder()
+
+# The "around" modifier
+sub _wrapper {
+    my $orig = shift or die 'Need a function to wrap';
+    croak "Need a parameter" unless @_;
+
+    # Create the GraphBuilder if we don't have one already.
+    my $self = shift;
+    $self = __PACKAGE__->new(dag=>$self)
+        unless ref $self and $self->DOES(__PACKAGE__);
+    croak "Parameter must be a DAG or Builder"
+        unless $self->dag and $self->dag->DOES('Build::Hopen::G::DAG');
+
+    unshift @_, $self;     # Put the builder on the arg list
+
+    # Call the worker
+    my $worker_retval = &{$orig};   # @_ passed to code
+
+    # If we got a node, remember it.
+    if(ref $worker_retval && $worker_retval->DOES('Build::Hopen::G::Node')) {
+        $self->dag->add($worker_retval);    # Link it into the graph
+        $self->dag->connect($self->node, $worker_retval) if $self->node;
+
+        $self->node($worker_retval);        # It's now our current node
+    }
+
+    return $self;
+}; #_wrapper()
 
 1;
 __END__

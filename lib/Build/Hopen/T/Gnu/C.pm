@@ -5,9 +5,10 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
-# TODO if a class
 use parent 'Build::Hopen::Tool';
-use Class::Tiny qw(op);
+use Class::Tiny qw(op deps);
+
+use Build::Hopen::G::GraphBuilder;
 
 # Docs {{{1
 
@@ -20,8 +21,9 @@ Build::Hopen::T::Gnu::C - support for the GNU toolset, C language
 In a hopen file:
 
     use language 'C';
-    my $op = C->new(op=>'compile', ...);
-    $Build->C::compile(...);
+    my $op = C->new(op=>'compile', deps=>{hello=>['hello']});
+    $Build->C::compile(...)->default_goal;
+        # Using a Build::Hopen::G::GraphBuilder
 
 =head1 ATTRIBUTES
 
@@ -29,7 +31,13 @@ In a hopen file:
 
 What this node is going to do: C<compile> or C<link>.
 
-=head1 FUNCTIONS
+=head2 deps
+
+Hashref of which files this node will process.  Keys are destination filenames,
+without platform-specific suffixes.  Values are strings or arrayrefs of strings
+of source file names.  C<.c> is added to any filename not including a period.
+
+=head1 STATIC FUNCTIONS
 
 =cut
 
@@ -37,16 +45,38 @@ What this node is going to do: C<compile> or C<link>.
 
 =head2 compile
 
-Create a new with L</op> set to C<compile>.
+Create a new with L</op> set to C<compile>.  Pass the names of the
+source files.  Each source file will be compiled to a respective object
+file (TODO make this more flexible).
 
 =cut
 
 sub compile {
-    my $dag = shift or croak 'Need a DAG';  # TODO write the fluent interface
-    my $node = __PACKAGE__->new(op=>'compile');
-    $dag->_graph->add_vertex($node);    # TODO FIXME encapsulation violation!!!
-    return $node;
-} #todo()
+    my $builder = shift;
+    my $node = __PACKAGE__->new(op=>'compile', deps=>{});
+    $node->deps->{$_} = [$_] foreach @_;    # TODO permit more complicated arrangements
+    return $builder->add($node);
+} #compile()
+
+make_GraphBuilder 'compile';
+
+=head2 link
+
+Create a new with L</op> set to C<link>.  Pass the name of the
+executable (TODO make this more flexible).
+
+=cut
+
+sub link {
+    my $builder = shift;
+    my $exe_name = shift or croak 'Need the name of the executable';
+    my $node = __PACKAGE__->new(op=>'link', deps=>{$exe_name=>[]});
+    return $builder->add($node);
+} #link()
+
+make_GraphBuilder 'link';
+
+=head1 MEMBER FUNCTIONS
 
 =head2 run
 
@@ -55,7 +85,8 @@ Not yet implemented, but doesn't die!
 =cut
 
 sub run {
-    # TODO
+    my $self = shift or croak 'Need an instance';
+    hlog { 'Running', __PACKAGE__, 'node', $self->name };
 } #run()
 
 =head2 BUILD
