@@ -5,20 +5,8 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
-## TODO if using exporter
-#use parent 'Exporter';
-#our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
-#BEGIN {
-#    @EXPORT = qw();
-#    @EXPORT_OK = qw(find_hopen_files);
-#    %EXPORT_TAGS = (
-#        default => [@EXPORT],
-#        all => [@EXPORT, @EXPORT_OK]
-#    );
-#}
-
 use parent 'Build::Hopen::G::Op';
-#use Class::Tiny qw(TODO);
+use Class::Tiny;
 
 # Docs {{{1
 

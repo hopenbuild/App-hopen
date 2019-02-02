@@ -153,57 +153,57 @@ sub _fill_hashref {
     }
 } #_fill_hashref()
 
-=head2 TODO_execute
-
-Run a L<Build::Hopen::G::Runnable> given a set of inputs.  Fills in the inputs
-from the scope if possible.  Usage:
-
-    $scope->TODO_execute($runnable[, {inputs...})
-
-=cut
-
-# TODO Move out of this module
-sub TODO_execute {
-    my $self = shift;
-    my $runnable = shift;
-    my $provided_inputs = shift // {};
-    croak "$runnable is not a runnable"
-        unless $runnable and $runnable->DOES('Build::Hopen::G::Runnable');
-
-    croak "I don't know how to handle regexps in $runnable\->need"
-        if $runnable->need->complex;
-
-    my %runnable_inputs;    # actual node inputs we will use
-
-    # Requirements, which are a straight list of strings
-    foreach my $need (@{$runnable->need->strings}) {
-        $runnable_inputs{$need} = $self->find($need, $provided_inputs);
-        die "Missing required input $need to @{[$runnable->name]}"
-            unless defined $runnable_inputs{$need};
-    }
-
-    # Desires can be more complex.
-    my $done = Set::Scalar->new;    # Names we've already checked
-
-    # First, grab any we know we want.
-    foreach my $want (@{$runnable->want->strings}) {
-        $runnable_inputs{$want} = $self->find($want, $provided_inputs);
-        $done->insert($want);
-    }
-
-    # Next, the wants can grab any available data
-    if($runnable->want->complex) {
-        foreach my $name (keys %$provided_inputs, keys %$self, keys %ENV) {
-            next if $done->has($name);
-            if($name ~~ $runnable->want) {
-                $runnable_inputs{$name} = $self->find($name, $provided_inputs);
-                $done->insert($name);
-            }
-        }
-    } #endif want->complex
-
-    return $runnable->run(\%runnable_inputs);
-} #execute()
+#=head2 TODO_execute
+#
+#Run a L<Build::Hopen::G::Runnable> given a set of inputs.  Fills in the inputs
+#from the scope if possible.  Usage:
+#
+#    $scope->TODO_execute($runnable[, {inputs...})
+#
+#=cut
+#
+## TODO Move out of this module
+#sub TODO_execute {
+#    my $self = shift;
+#    my $runnable = shift;
+#    my $provided_inputs = shift // {};
+#    croak "$runnable is not a runnable"
+#        unless $runnable and eval { $runnable->DOES('Build::Hopen::G::Runnable') };
+#
+#    croak "I don't know how to handle regexps in $runnable\->need"
+#        if $runnable->need->complex;
+#
+#    my %runnable_inputs;    # actual node inputs we will use
+#
+#    # Requirements, which are a straight list of strings
+#    foreach my $need (@{$runnable->need->strings}) {
+#        $runnable_inputs{$need} = $self->find($need, $provided_inputs);
+#        die "Missing required input $need to @{[$runnable->name]}"
+#            unless defined $runnable_inputs{$need};
+#    }
+#
+#    # Desires can be more complex.
+#    my $done = Set::Scalar->new;    # Names we've already checked
+#
+#    # First, grab any we know we want.
+#    foreach my $want (@{$runnable->want->strings}) {
+#        $runnable_inputs{$want} = $self->find($want, $provided_inputs);
+#        $done->insert($want);
+#    }
+#
+#    # Next, the wants can grab any available data
+#    if($runnable->want->complex) {
+#        foreach my $name (keys %$provided_inputs, keys %$self, keys %ENV) {
+#            next if $done->has($name);
+#            if($name ~~ $runnable->want) {
+#                $runnable_inputs{$name} = $self->find($name, $provided_inputs);
+#                $done->insert($name);
+#            }
+#        }
+#    } #endif want->complex
+#
+#    return $runnable->run(\%runnable_inputs);
+#} #execute()
 
 =head2 outerize
 
@@ -221,7 +221,7 @@ sub outerize {
     my $new_outer = shift or croak 'Need a new Scope';
     croak 'Need a Scope' unless
         (!defined($new_outer)) or
-        (ref $new_outer && $new_outer->DOES('Build::Hopen::Scope'));
+        (ref $new_outer && eval { $new_outer->DOES('Build::Hopen::Scope') });
 
     # Protect the author of this function from himself
     croak 'Sorry, but I must insist that you save my return value'

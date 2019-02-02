@@ -9,7 +9,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolset $Build $Phase $HopenFiles isMYH);
+                $Toolset $Build $Phase isMYH);
     @EXPORT_OK = qw(clone loadfrom $VERBOSE MYH);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -83,18 +83,14 @@ generated C<Makefile>.
 
 =head2 $Phase
 
-Which phase we're in.  TODO Is this a string, object, other?
-
-=head2 $HopenFiles
-
-The hopen files applicable to the current build.  An arrayref.
+Which phase we're in (string).
 
 =cut
 
 # }}}1
 
 our $VERBOSE = false;
-our ($Generator, $Toolset, $Build, $Phase, $HopenFiles);
+our ($Generator, $Toolset, $Build, $Phase);
 
 use constant MYH => 'MY.hopen.pl';
 

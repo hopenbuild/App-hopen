@@ -9,6 +9,7 @@ use parent 'Build::Hopen::Tool';
 use Class::Tiny qw(op deps);
 
 use Build::Hopen::G::GraphBuilder;
+use Getargs::Mixed;
 
 # Docs {{{1
 
@@ -37,25 +38,34 @@ Hashref of which files this node will process.  Keys are destination filenames,
 without platform-specific suffixes.  Values are strings or arrayrefs of strings
 of source file names.  C<.c> is added to any filename not including a period.
 
-=head1 STATIC FUNCTIONS
-
 =cut
 
 # }}}1
+
+=head1 STATIC FUNCTIONS
 
 =head2 compile
 
 Create a new with L</op> set to C<compile>.  Pass the names of the
 source files.  Each source file will be compiled to a respective object
-file (TODO make this more flexible).
+file (TODO make this more flexible).  Usage:
+
+    use language 'C';
+    $builder_or_dag->C::compile('file1'[, 'file2'...][, -name=>'node name');
 
 =cut
 
 sub compile {
-    my $builder = shift;
+    my ($builder, %args) = parameters('self', [qw(first; name *)], @_);
     my $node = __PACKAGE__->new(op=>'compile', deps=>{});
-    $node->deps->{$_} = [$_] foreach @_;    # TODO permit more complicated arrangements
-    return $builder->add($node);
+    $node->name($args{name}) if $args{name};
+
+    croak "I need at least one filename to compile" unless $args{first};
+    $node->deps->{$_} = [$_] foreach ($args{first} // (), $args{'*'} // ());
+        # TODO permit more complicated arrangements
+
+    hlog { __PACKAGE__, 'Built compile node',Dumper($node) } 2;
+    return $node;   # The builder will automatically add it
 } #compile()
 
 make_GraphBuilder 'compile';
@@ -63,15 +73,20 @@ make_GraphBuilder 'compile';
 =head2 link
 
 Create a new with L</op> set to C<link>.  Pass the name of the
-executable (TODO make this more flexible).
+executable.  Usage:
+
+    use language 'C';
+    $builder_or_dag->C::link('file1'[, 'file2'...][, -name=>'node name');
 
 =cut
 
 sub link {
-    my $builder = shift;
-    my $exe_name = shift or croak 'Need the name of the executable';
-    my $node = __PACKAGE__->new(op=>'link', deps=>{$exe_name=>[]});
-    return $builder->add($node);
+    my ($builder, %args) = parameters('self', [qw(exe; name)], @_);
+    croak 'Need the name of the executable' unless $args{exe};
+    my $node = __PACKAGE__->new(op=>'link', deps=>{$args{exe}=>[]});
+    $node->name($args{name}) if $args{name};
+    hlog { __PACKAGE__, 'Built link node',Dumper($node) } 2;
+    return $node;
 } #link()
 
 make_GraphBuilder 'link';
@@ -87,6 +102,7 @@ Not yet implemented, but doesn't die!
 sub run {
     my $self = shift or croak 'Need an instance';
     hlog { 'Running', __PACKAGE__, 'node', $self->name };
+    +{}
 } #run()
 
 =head2 BUILD

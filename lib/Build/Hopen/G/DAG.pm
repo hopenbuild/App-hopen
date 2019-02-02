@@ -11,8 +11,8 @@ use Class::Tiny {
     default_goal => undef,
 
     # Private attributes with simple defaults
-    _node_by_name => sub { +{} },   # map from node names to nodes in either
-                                    # _init_graph or _graph
+    #_node_by_name => sub { +{} },   # map from node names to nodes in either
+    #                                # _init_graph or _graph
 
     # Private attributes - initialized by BUILD()
     _graph  => undef,   # L<Graph> instance
@@ -39,8 +39,8 @@ use constant {
     LINKS => 'link_list',    # Graph edge attr: array of BHG::Link instances
 };
 
-# A counter used for making unique DAG-node names
-my $_dag_node_id = 0;
+# A counter used for making unique names
+my $_id_counter = 0;    # threads: make shared
 
 # }}}1
 # Docs {{{1
@@ -154,7 +154,7 @@ sub run {
             # add edges between Goals to set their order while keeping the
             # data for each Goal separate.
             # TODO add tests for this
-            next if $pred->DOES('Build::Hopen::G::Goal');
+            next if eval { $pred->DOES('Build::Hopen::G::Goal') };
 
             my $links = $graph->get_edge_attribute($pred, $node, LINKS);
 
@@ -164,7 +164,8 @@ sub run {
             }
 
             # More complex case: Process all the links
-            my $link_scope = Build::Hopen::Scope->new->add(%{$pred->outputs});
+            my $hrPredOutputs = $pred->outputs; # this is undef if inlined.  Why????!?
+            my $link_scope = Build::Hopen::Scope->new->add(%{$hrPredOutputs});
                 # All links get the same outer scope --- they are parallel,
                 # not in series.
             $link_scope->outer($self->scope);
@@ -186,7 +187,7 @@ sub run {
         # While hacking, please make sure Goal nodes can appear
         # anywhere in the graph.
         $retval->{$node->name} = $step_output
-            if $node->DOES('Build::Hopen::G::Goal');
+            if eval { $node->DOES('Build::Hopen::G::Goal') };
     } #foreach node
 
     return $retval;
@@ -217,7 +218,7 @@ sub goal {
     my $name = shift or croak 'Need a goal name';
     my $goal = Build::Hopen::G::Goal->new(name => $name);
     $self->_graph->add_vertex($goal);
-    $self->_node_by_name->{$name} = $goal;
+    #$self->_node_by_name->{$name} = $goal;
     $self->_graph->add_edge($goal, $self->_final);
     $self->default_goal($goal) unless $self->default_goal;
     return $goal;
@@ -269,9 +270,10 @@ sub connect {
 
     hlog { 'DAG::connect(): Edge from', $op1->name, 'via', $link->name,
             'to', $op2->name };
+
     # Add it to the graph (idempotent)
     $self->_graph->add_edge($op1, $op2);
-    $self->_node_by_name->{$_->name} = $_ foreach ($op1, $op2);
+    #$self->_node_by_name->{$_->name} = $_ foreach ($op1, $op2);
 
     # Save the BHG::Link as an edge attribute (not idempotent!)
     my $attrs = $self->_graph->get_edge_attribute($op1, $op2, LINKS) || [];
@@ -283,9 +285,8 @@ sub connect {
 
 =head2 add
 
-Add a regular node to the graph.  An attempt to add the same
-initialization operation twice (based on the node name) will be ignored.
-Usage:
+Add a regular node to the graph.  An attempt to add the same node twice will be
+ignored.  Usage:
 
     my $node = Build::Hopen::G::Op->new(name=>"whatever");
     $dag->add($node);
@@ -297,19 +298,20 @@ Returns the node, for the sake of chaining.
 sub add {
     my $self = shift or croak 'Need an instance';
     my $node = shift or croak 'Need a node';
-    return if $self->_node_by_name->{$node->name};
+    return if $self->_graph->has_vertex($node);
+    hlog { __PACKAGE__, 'adding', Dumper($node) } 2;
 
-    $self->_init_graph->add_vertex($node);
-    $self->_node_by_name->{$node->name} = $node;
+    $self->_graph->add_vertex($node);
+    #$self->_node_by_name->{$node->name} = $node if $node->name;
 
     return $node;
 } #add()
 
 =head2 init
 
-Add an initialization operation to the graph.  Initialization operations
-run before all other operations.  An attempt to add the same initialization
-operation twice (based on the node name) will be ignored.  Usage:
+Add an initialization operation to the graph.  Initialization operations run
+before all other operations.  An attempt to add the same initialization
+operation twice will be ignored.  Usage:
 
     my $op = Build::Hopen::G::Op->new(name=>"whatever");
     $dag->init($op[, $first]);
@@ -326,10 +328,10 @@ sub init {
     my $self = shift or croak 'Need an instance';
     my $op = shift or croak 'Need an op';
     my $first = shift;
-    return if $self->_node_by_name->{$op->name};
+    return if $self->_init_graph->has_vertex($op);
 
     $self->_init_graph->add_vertex($op);
-    $self->_node_by_name->{$op->name} = $op;
+    #$self->_node_by_name->{$op->name} = $op;
 
     if($first) {    # $op becomes the new _init_first node
         $self->_init_graph->add_edge($op, $self->_init_first);
@@ -353,7 +355,7 @@ Intended for use by hopen files.
 
 sub empty {
     my $self = shift or croak 'Need an instance';
-    return ($self->_graph->vertices > 1);
+    return ($self->_graph->vertices == 1);
         # _final is the node in an empty() graph.
         # We don't check the _init_graph since empty() is intended
         # for use by hopen files, not toolsets.
@@ -371,13 +373,16 @@ sub BUILD {
     #use Data::Dumper;
     #say Dumper(\@_);
     my $self = shift or croak 'Need an instance';
-    # my $hrArgs = shift;
+    my $hrArgs = shift;
+
+    # DAGs always have names
+    $self->name('__R_DAG_' . $_id_counter++) unless $self->has_custom_name;
 
     # Graph of normal operations
     my $graph = Graph->new( directed => true,
                             refvertexed => true);
     my $final = Build::Hopen::G::Node->new(
-                                    name => '__R_DAG_ROOT' . $_dag_node_id++);
+                                    name => '__R_DAG_ROOT' . $_id_counter++);
     $graph->add_vertex($final);
     $self->_graph($graph);
     $self->_final($final);
@@ -386,7 +391,7 @@ sub BUILD {
     my $init_graph = Graph->new( directed => true,
                             refvertexed => true);
     my $init = Build::Hopen::G::PassthroughOp->new(
-                                    name => '__R_DAG_INIT' . $_dag_node_id++);
+                                    name => '__R_DAG_INIT' . $_id_counter++);
     $init_graph->add_vertex($init);
 
     $self->_init_graph($init_graph);

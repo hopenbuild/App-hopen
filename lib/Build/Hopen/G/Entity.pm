@@ -5,6 +5,8 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
+sub name;
+
 use Class::Tiny qw(name);
 
 =head1 NAME
@@ -27,6 +29,34 @@ are reserved for hopen's internal use.
 The name C<'0'> (a single digit zero) is forbidden (since it's falsy).
 
 =cut
+
+=head1 FUNCTIONS
+
+=head2 name
+
+A custom accessor for name.  If no name has been stored, return the stringifed
+version of the entity.  That way every entity always has a name.
+
+=cut
+
+sub name {
+    my $self = shift or croak 'Need an instance';
+    if (@_) {                               # Setter
+        return $self->{name} = shift;
+    } elsif ( exists $self->{name} ) {      # Getter
+        return $self->{name};
+    } else {                                # Default
+        return "$self";
+    }
+} #name()
+
+=head2 has_custom_name
+
+Returns truthy if a name has been set using L</name>.
+
+=cut
+
+sub has_custom_name { !!(shift)->{name} }
 
 1;
 __END__

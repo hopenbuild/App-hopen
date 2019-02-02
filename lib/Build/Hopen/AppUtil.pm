@@ -9,7 +9,7 @@ our $VERSION = '0.000005'; # TRIAL
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files find_myhopen dedent);
+    @EXPORT_OK = qw(find_hopen_files find_myhopen dedent forward_opts);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -99,7 +99,7 @@ Find a C<MY.hopen.pl> file, if any.  Returns undef if none is present.
 =cut
 
 sub find_myhopen {
-    return if $_[2];    # $ignore_MY_hopen
+    return if $_[1];    # $ignore_MY_hopen
     my $dest_dir = shift or return;     # No dest dir => no MY.hopen.pl
 
     # Find $dest_dir/MY.hopen.pl, if there is one.
@@ -154,6 +154,40 @@ sub dedent {
 
     return (($initial_NL && !$extra_trim) ? "\n" : '') . $val;
 } #dedent()
+
+=head2 forward_opts
+
+Returns a list of key-value pairs extracted from a given hashref.  Usage:
+
+    my %forwarded_opts = forward_opts(\%original_opts, [option hashref,]
+                                        'name'[, 'name2'...]);
+
+If the option hashref is given, the following can be provided:
+
+=over
+
+=item lc
+
+If truthy, lower-case the key names in the output
+
+=back
+
+=cut
+
+sub forward_opts {
+    my $hrIn = shift or croak 'Need an input option set';
+    croak 'Need a hashref' unless ref $hrIn eq 'HASH';
+    my $hrOpts = {};
+    $hrOpts = shift if ref $_[0] eq 'HASH';
+
+    my %result;
+    foreach my $name (@_) {
+        my $newname = $hrOpts->{lc} ? lc($name) : $name;
+        $result{$newname} = $hrIn->{$name} if exists $hrIn->{$name};
+    }
+
+    return %result;
+} #forward_opts()
 
 1;
 __END__

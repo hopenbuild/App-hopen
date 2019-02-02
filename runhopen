@@ -1,2 +1,9 @@
 #!/bin/sh
-perl -Ilib bin/hopen "$@"
+if [ "$1" = "-d" ]; then
+    dbg="-d"
+    shift
+else
+    dbg=""
+fi
+
+perl -Ilib $dbg bin/hopen "$@"

@@ -75,7 +75,7 @@ sub add {
 
 Links the most recent node in the chain to the default goal in the DAG.
 If the DAG does not have a default goal, adds one called "all".
-Clears the builder's record of the current node.
+Clears the builder's record of the current node and returns undef.
 
 =cut
 
@@ -89,13 +89,17 @@ sub default_goal {
 
     $self->node(undef);     # Less likely to leak state between goals.
 
-    return $self;
+    return undef;
+        # Return undef because, if this is the last thing in a hopen file,
+        # whatever it returns gets recorded in MY.hopen.pl.  Therefore,
+        # return $self causes a copy of the whole graph to be dropped into
+        # MY.hopen.pl, which is a Bad Thing.
 } #default_goal()
 
 =head2 goal
 
 Links the most recent node in the chain to the given goal in the DAG.
-Clears the builder's record of the current node.
+Clears the builder's record of the current node and returns undef.
 
 =cut
 
@@ -110,8 +114,8 @@ sub goal {
 
     $self->node(undef);     # Less likely to leak state between goals.
 
-    return $self;
-} #default_goal()
+    return undef;   # undef: See comment in goal()
+} #goal()
 
 =head1 STATIC FUNCTIONS
 
@@ -151,9 +155,9 @@ sub _wrapper {
     # Create the GraphBuilder if we don't have one already.
     my $self = shift;
     $self = __PACKAGE__->new(dag=>$self)
-        unless ref $self and $self->DOES(__PACKAGE__);
+        unless ref $self and eval { $self->DOES(__PACKAGE__) };
     croak "Parameter must be a DAG or Builder"
-        unless $self->dag and $self->dag->DOES('Build::Hopen::G::DAG');
+        unless $self->dag and eval { $self->dag->DOES('Build::Hopen::G::DAG') };
 
     unshift @_, $self;     # Put the builder on the arg list
 
@@ -161,7 +165,7 @@ sub _wrapper {
     my $worker_retval = &{$orig};   # @_ passed to code
 
     # If we got a node, remember it.
-    if(ref $worker_retval && $worker_retval->DOES('Build::Hopen::G::Node')) {
+    if(ref $worker_retval && eval { $worker_retval->DOES('Build::Hopen::G::Node') } ) {
         $self->dag->add($worker_retval);    # Link it into the graph
         $self->dag->connect($self->node, $worker_retval) if $self->node;
 

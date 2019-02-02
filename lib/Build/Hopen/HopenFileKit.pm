@@ -53,6 +53,9 @@ really know what you're doing!
 
 # }}}1
 
+# Which languages we've loaded
+my %_loaded_languages;
+
 sub  _language_import { # {{{1
 
 =head2
@@ -69,19 +72,24 @@ C<import()> routine for the fake "language" package
     die "TODO permit aliases" if ref $_[0]; # TODO take { alias => name }
 
     foreach my $language (@_) {
+        next if $_loaded_languages{$language};
+            # Only load any given language once.  This avoids cowardly warnings
+            # from Package::Alias, but still causes warnings if a language
+            # overrides an unrelated package.  (For example, saying
+            # `use language "Graph"` would be a Bad Idea :) .)
 
         # Find the package for the given language
         my ($src_package, $dest_package);
-        $src_package = loadfrom($language,
-            "${Toolset}::",
-            '')
-        or croak "Can't find a package for language ``$language'' " .
-                    "in toolset ``$Toolset''";
+        $src_package = loadfrom($language, "${Toolset}::", '')
+            or croak "Can't find a package for language ``$language'' " .
+                        "in toolset ``$Toolset''";
 
-        # Import the given language into the root namespace
+        # Import the given language into the root namespace.
+        # Use only the last ::-separated component if :: are present.
         $dest_package = ($src_package =~ m/::([^:]+)$/) ? $1 : $src_package;
-        Package::Alias->import::into($target,
-            $dest_package => $src_package);
+        Package::Alias->import::into($target, $dest_package => $src_package);
+
+        $_loaded_languages{$language} = true;
     } #foreach requested language
 } #_language_import }}}1
 
@@ -119,7 +127,7 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
         # Remove the filename; leave the rest of the args for Exporter's use
 
     # Export our stuff
-    Build::Hopen::HopenFileKit->export_to_level(1, @args);
+    __PACKAGE__->export_to_level(1, @args);
 
     # Re-export packages
     $_->import::into($target) foreach qw(Build::Hopen::Base Path::Class);

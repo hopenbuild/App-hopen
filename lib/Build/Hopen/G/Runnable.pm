@@ -54,7 +54,7 @@ use Class::Tiny {
 
 =head2 run
 
-Run the operation, whatever that means.  Usage:
+Run the operation, whatever that means.  B<Must> return a hashref.  Usage:
 
     my $hrOutputs = $op->run([$outer_scope])
 

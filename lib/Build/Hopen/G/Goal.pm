@@ -34,14 +34,13 @@ sub run {
     return $self->_passthrough->run(@_);
 }
 
-# TODO?  Override the setter so that name 'all' throws?
-
 =head2 BUILD
 
 =cut
 
 sub BUILD {
     my ($self, $args) = @_;
+    croak 'Goals must have names' unless $args->{name};
     # TODO refactor out the common code between Goal and PassthroughOp
     # rather than wrapping.
     my $p = hnew(PassthroughOp => ($args->{name} . '_inner'));

@@ -6,6 +6,7 @@ use Build::Hopen::Base;
 our $VERSION = '0.000005'; # TRIAL
 
 use parent 'Build::Hopen::G::Node';
+use Class::Tiny;
 
 =head1 NAME
 
