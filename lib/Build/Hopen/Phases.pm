@@ -20,6 +20,7 @@ BEGIN {
     );
 }
 
+use Build::Hopen::BuildSystemGlobals;
 use List::MoreUtils qw(first_index);
 
 # Docs {{{1

@@ -5,11 +5,13 @@ our $VERSION = '0.000005'; # TRIAL
 # Imports {{{1
 use Build::Hopen::Base;
 
-use Build::Hopen qw(:default loadfrom MYH);
+use Build::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
 use Build::Hopen::AppUtil ':all';
+use Build::Hopen::BuildSystemGlobals;
 use Build::Hopen::Phases qw(:default phase_idx next_phase);
 use Build::Hopen::Scope;
 use Build::Hopen::ScopeENV;
+use Build::Hopen::Util::Data qw(dedent forward_opts);
 use Data::Dumper;
 use File::Path::Tiny;
 use File::Slurper;
@@ -254,7 +256,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
             croak "Phase $new_phase is not one of the ones I know about (" .
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
-            $Build::Hopen::Phase = $new_phase;
+            $Build::Hopen::BuildSystemGlobals::Phase = $new_phase;
     ) .
     ($opts{quiet} ? '' : 'say "Phase is now $new_phase";') . "}\n";
 
@@ -376,7 +378,6 @@ EOT
                 if eval { \$__R_retval->DOES('Build::Hopen::G::GraphBuilder') };
         }
 
-        # Otherwise, no data.
         return \$__R_retval;
     } #__Rsub_$pkg_name
 
@@ -463,7 +464,8 @@ be run if it is empty.
     $scope->adopt_hash($_hrData);
 
     # Run the DAG
-    my $result_data = $Build->run($scope);
+    my $result_data = $Build->run(-scope => $scope, -phase => $Phase,
+                                    -generator => $Generator);
     return $result_data;
 } #_run_phase() }}}2
 
@@ -597,6 +599,8 @@ EOT
         $new_data = $_hrData;
     }
 
+    $Generator->finalize();
+
     # = Save state in MY.hopen.pl for the next run ==========================
 
     # If we get here, _run_phase succeeded.  Therefore, we can move
@@ -645,7 +649,8 @@ Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
 
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
-    if($opts{VERBOSE}) {    # Verbosity first
+    $QUIET = $opts{QUIET} // false;
+    if(!$QUIET && $opts{VERBOSE}) {     # Verbosity first
         $Build::Hopen::VERBOSE += $opts{VERBOSE};
 
         # Under -v, keep stdout and stderr lines in order.

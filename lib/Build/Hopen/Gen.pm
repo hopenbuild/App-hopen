@@ -9,6 +9,8 @@ use Class::Tiny qw(proj_dir dest_dir), {
     architecture => '',
 };
 
+use Path::Class ();
+
 # Docs {{{1
 
 =head1 NAME
@@ -26,12 +28,13 @@ implement the interface defined here.
 
 =head2 proj_dir
 
-A L<Path::Class::Dir> instance specifying the root directory of the project
+(Required) A L<Path::Class::Dir> instance specifying the root directory of
+the project.
 
 =head2 dest_dir
 
-A L<Path::Class::Dir> instance specifying where the generated output
-should be written.
+(Required) A L<Path::Class::Dir> instance specifying where the generated output
+(e.g., blueprint or other files) should be written.
 
 =head1 FUNCTIONS
 
@@ -48,24 +51,32 @@ That lack of access is the primary distinction between Ops and Links.
 =head2 visit_goal
 
 Do whatever the generator wants to do with a L<Build::Hopen::G::Goal>.
-By default, no-op.
+For example, the generator may change the goal's C<outputs>.
+By default, no-op.  Usage:
+
+    $generator->visit_goal($goal);
 
 =cut
 
 sub visit_goal { }
 
-=head2 visit_op
+=head2 visit_node
 
-Do whatever the generator wants to do with a L<Build::Hopen::G::Op> that
-is not a Goal (see L</visit_goal>).  By default, no-op.
+Do whatever the generator wants to do with a L<Build::Hopen::G::Node> that
+is not a Goal (see L</visit_goal>).  By default, no-op.  Usage:
+
+    $generator->visit_node($node)
 
 =cut
 
-sub visit_op { }
+sub visit_node { }
 
 =head2 finalize
 
-Do whatever the generator wants to do to finish up.
+Do whatever the generator wants to do to finish up.  By default, no-op.
+Is provided the L<Build::Hopen::G::DAG> instance as a parameter.  Usage:
+
+    $generator->finalize($dag)
 
 =cut
 
@@ -96,12 +107,6 @@ this generator.
 
 sub also_require { }
 
-=head2 TODO
-
-=cut
-
-sub TODO { ... }
-
 =head2 run_build
 
 Runs the build tool for which this generator has created blueprint files.
@@ -111,6 +116,20 @@ Runs the build tool for which this generator has created blueprint files.
 sub run_build {
     warn "This generator is not configured to run a build tool.  Sorry!";
 }
+
+=head2 BUILD
+
+Enforces the required arguments.
+
+=cut
+
+sub BUILD {
+    my ($self, $args) = @_;
+    croak "Need a project directory (Path::Class::Dir)"
+        unless eval { $self->proj_dir->DOES('Path::Class::Dir') };
+    croak "Need a destination directory (Path::Class::Dir)"
+        unless eval { $self->dest_dir->DOES('Path::Class::Dir') };
+} #BUILD()
 
 1;
 __END__

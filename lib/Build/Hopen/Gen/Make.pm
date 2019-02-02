@@ -47,16 +47,16 @@ sub visit_goal {
     $self->targets->set($goal->name, $goal);
 } #visit_goal()
 
-=head2 visit_op
-
-TODO
-
-=cut
-
-sub visit_op {
-    my $self = shift or croak 'Need an instance';
-    ...
-} #visit_op()
+#=head2 visit_node
+#
+#TODO
+#
+#=cut
+#
+#sub visit_node {
+#    my $self = shift or croak 'Need an instance';
+#    ...
+#} #visit_node()
 
 =head2 finalize
 
@@ -65,6 +65,7 @@ Write out the Makefile.
 =cut
 
 sub finalize {
+    # TODO return unless Gen phase
     my $self = shift or croak 'Need an instance';
     open my $fh, '>', $self->dest_dir->file('Makefile') or die "Couldn't create Makefile";
 
@@ -72,8 +73,9 @@ sub finalize {
     while( my ($name, $goal) = $iter->() ) {
         say $fh "$name:";
         say $fh "\techo \"$name\"";
-        say $fh;
+        say $fh '';
     }
+    close $fh;
 } #finalize()
 
 =head2 default_toolset

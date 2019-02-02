@@ -1,10 +1,10 @@
 # Build::Hopen::Scope - a nested key-value store
 package Build::Hopen::Scope;
-use Build::Hopen qw(clone);
 use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
+use Build::Hopen::Util::Data qw(clone);
 use Set::Scalar;
 use Sub::ScopeFinalizer qw(scope_finalizer);
 

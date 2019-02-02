@@ -9,6 +9,7 @@ use parent 'Build::Hopen::Tool';
 use Class::Tiny qw(op deps);
 
 use Build::Hopen::G::GraphBuilder;
+use Build::Hopen::Util::Data qw(forward_opts);
 use Getargs::Mixed;
 
 # Docs {{{1
@@ -23,8 +24,10 @@ In a hopen file:
 
     use language 'C';
     my $op = C->new(op=>'compile', deps=>{hello=>['hello']});
+        # Create instances manually
+
+    # Or use via Build::Hopen::G::GraphBuilder:
     $Build->C::compile(...)->default_goal;
-        # Using a Build::Hopen::G::GraphBuilder
 
 =head1 ATTRIBUTES
 
@@ -43,6 +46,10 @@ of source file names.  C<.c> is added to any filename not including a period.
 # }}}1
 
 =head1 STATIC FUNCTIONS
+
+Arguments to the static functions are parsed using L<Getargs::Mixed>.
+Therefore, named arguments start with a hyphen (e.g., C<< -name=>'foo' >>,
+not C<< name=>'foo' >>).
 
 =head2 compile
 
@@ -100,9 +107,13 @@ Not yet implemented, but doesn't die!
 =cut
 
 sub run {
-    my $self = shift or croak 'Need an instance';
+    my ($self, %args) = parameters('self', [qw(phase scope; generator *)], @_);
     hlog { 'Running', __PACKAGE__, 'node', $self->name };
-    +{}
+
+    # Currently we only do things at gen time.
+    return $self->passthrough(-scope=>$args{scope}) if $args{phase} ne 'Gen';
+
+    +{} # Required
 } #run()
 
 =head2 BUILD

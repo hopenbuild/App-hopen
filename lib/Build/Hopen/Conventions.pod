@@ -5,12 +5,12 @@ Build::Hopen::Conventions - conventions for using hopen(1) as a build system
 =head1 SYNOPSIS
 
 L<Build::Hopen> is a flexible dataflow processor and task runner.  However, its
-main use case is as a build system, e.g., a Makefile generator.  To stay as
-flexible as possible, hopen(1) expects its components to follow these
-conventions.
+main use case is as a build system (e.g., a Makefile generator).  To keep
+the core of hopen as flexible as possible, hopen(1) (build-system use cases)
+requires its components to follow the conventions described in this document.
 
-These conventions are generally implemented in L<Build::Hopen::App> and
-L<Build::Hopen::AppUtil>.
+These conventions are generally implemented/enforced in L<Build::Hopen::App>
+and L<Build::Hopen::AppUtil>.
 
 =head2 Components used by the build system
 
@@ -28,13 +28,17 @@ The default directory is C<< <project dir>/built >>.
 =item Generator
 
 A subclass of L<Build::Hopen::Gen> that creates the build-system files.
+The generator's job is to arrange for coordinating work that needs to be done.
 
 =item Toolset
 
 A collection of operations (L<Build::Hopen::G::Op> subclasses) that know
-how to process specific types of files, independent of which generator
-is in use.  If no toolset is specified,
-the generator picks the default.
+how to process specific types of files.  Toolsets are responsible for
+defining the work that the generator will coordinate.
+
+Toolsets are technically independent of which generator is in use.  However, a
+command-line toolset probably won't work with an XML-based generator!  If no
+toolset is specified, the generator picks the default.
 
 =item An architecture (optional)
 
@@ -56,12 +60,15 @@ or C<*.hopen.pl>.  As the extension suggests, these are Perl source files.
 The filename C<MY.hopen.pl> is reserved.  It is created by hopen in each
 destination directory to record the state of the build in that directory.
 
+Hopen itself does not (knowingly) use any source filters, text replacement,
+pluggable keywords, or other fancy features.  Everything in a hopen file is
+straight Perl.
+
 =head2 Which hopen files are used
 
 On any hopen(1) run, up to three hopen files are automatically located and
-executed.  (Any of those can run any number of additional hopen files.)
-If any of these files does not exist, it is simply not run!
-The three files are, in order of execution:
+executed.  (Any of those can run any number of additional hopen files.) None of
+the three files has to exist.  The three files are, in order of execution:
 
 =over
 
@@ -69,6 +76,8 @@ The three files are, in order of execution:
 
 The C<MY.hopen.pl> in the destination directory.  This sets the current
 phase (see L</PHASES>) and loads the data output by the last hopen(1) run.
+
+After C<MY.hopen.pl> runs, the generator and toolset are loaded.
 
 =item * Project file
 
@@ -120,10 +129,9 @@ packages loaded (via L<Build::Hopen::HopenFileKit>):
 
 =back
 
-TODO?: The invoker will put the selected generator's path
-first in C<@INC>, but other than that it's all straight Perl.
-
 =head2 Variables usable in hopen files
+
+These are defined in L<Build::Hopen>.
 
 =over
 
@@ -159,11 +167,16 @@ problem with cmake.)  Each time you run hopen(1), it will run the next phase
 
 =head2 Check
 
+During this phase, the generator, toolset, or hopen file can collect
+information about the environment.
+
 =head2 Gen
+
+During this phase, blueprint files and any supporting files
+(e.g., a C<config.h>) are written to the destination directory.
 
 =head2 After all the phases are run
 
 Once all of hopen's phases have been run, you can run make(1), ninja(1), or
 whatever build system corresponds with the generator you have selected.
 You can do this by running C<hopen --build>, if you wish.
-

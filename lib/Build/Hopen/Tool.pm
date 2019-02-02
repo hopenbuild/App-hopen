@@ -21,7 +21,14 @@ a build system to perform a particular action on a file belonging to a
 particular language.
 
 A tool is a L<Build::Hopen::G::Op>, so may interact with the current
-generator (L<Build::Hopen/$Generator>).
+generator (L<Build::Hopen/$Generator>).  Moreover, the generator will
+get a chance to visit the op after it is processed.
+
+Maybe TODO:
+    - Each Generator must specify a list of Content-Types (media types)
+        it can consume.  Each Tool must specify a specific content-type
+        it produces.  Mismatches are an error unless overriden on the
+        hopen command line.
 
 =cut
 

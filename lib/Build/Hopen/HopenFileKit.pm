@@ -4,6 +4,7 @@ package Build::Hopen::HopenFileKit;
 # What we use
 use Build::Hopen qw(:default loadfrom);
 use Build::Hopen::Base;
+use Build::Hopen::BuildSystemGlobals;
 use Import::Into;
 use Package::Alias ();
 
@@ -130,7 +131,8 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
     __PACKAGE__->export_to_level(1, @args);
 
     # Re-export packages
-    $_->import::into($target) foreach qw(Build::Hopen::Base Path::Class);
+    $_->import::into($target) foreach qw(Build::Hopen::Base Path::Class
+                                            Build::Hopen::BuildSystemGlobals);
     Build::Hopen->import::into($target, ':all');
     Build::Hopen::Phases->import::into($target, qw(:all :hopenfile));
 

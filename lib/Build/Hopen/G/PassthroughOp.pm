@@ -1,12 +1,15 @@
 # Build::Hopen::G::PassthroughOp - A no-op operation
 package Build::Hopen::G::PassthroughOp;
-use Build::Hopen qw(:default clone);
+use Build::Hopen qw(:default UNSPECIFIED);
 use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 #use Class::Tiny;
+
+use Build::Hopen::Util::Data qw(clone);
+use Getargs::Mixed;
 use Storable ();
 
 # Docs {{{1
@@ -31,19 +34,16 @@ L<Build::Hopen::G::DAG> to represent goals.
 
 Do nothing!  Usage:
 
-    my $hrOutputs = $op->run($scope)
+    my $hrOutputs = $op->run(-scope=>$scope)
 
 The output is C<{}> if no inputs are provided.
 
 =cut
 
 sub run {
-    my $self = shift or croak 'Need an instance';
-    my $outer_scope = shift or croak 'Need a scope';
+    my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
     hlog { Running => __PACKAGE__ , $self->name };
-
-    my $saver = $self->scope->outerize($outer_scope);
-    return $self->scope->as_hashref(deep => true);
+    return $self->passthrough(-scope => $args{scope});
 } #run()
 
 =head2 BUILD

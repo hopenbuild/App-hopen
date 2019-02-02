@@ -1,7 +1,7 @@
 # Build::Hopen::G::DAG - hopen build graph
 package Build::Hopen::G::DAG;
 use Build::Hopen::Base;
-use Build::Hopen;
+use Build::Hopen qw(hlog $QUIET);
 
 our $VERSION = '0.000005'; # TRIAL
 
@@ -30,6 +30,8 @@ use Build::Hopen::G::Goal;
 use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
 use Build::Hopen::G::PassthroughOp;
+use Build::Hopen::Util::Data qw(forward_opts);
+use Getargs::Mixed;
 use Graph;
 use Storable ();
 
@@ -98,13 +100,16 @@ of the DAG are aggregated and provided as the outputs of the DAG.
 The output is a hash keyed by the name of each goal, with each goal's outputs
 as the values under that name.  Usage:
 
-    my $hrOutputs = $dag->run($scope)
+    my $hrOutputs = $dag->run(-scope=>$scope[, other options])
+
+C<$scope> is required, and must be a L<Build::Hopen::Scope> or subclass.
+Other options are as L<Build::Hopen::Runnable/run>.
 
 =cut
 
 sub run {
-    my $self = shift or croak 'Need an instance';
-    my $outer_scope = shift;    # From the caller
+    my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
+    my $outer_scope = $args{scope};     # From the caller
     my $retval = {};
 
     # The scope attached to the DAG takes precedence over the provided Scope.
@@ -130,9 +135,15 @@ sub run {
         unless $order[$#order] == $self->_final;
     pop @order;
 
+    # --- Traverse ---
+
+    # Note: while hacking, please make sure Goal nodes can appear
+    # anywhere in the graph.
+
     hlog { 'Traversing DAG ' . $self->name };
     my $graph = $self->_init_graph;
     foreach my $node (@init_order, undef, @order) {
+
         if(!defined($node)) {   # undef is the marker between init and run
             $graph = $self->_graph;
             next;
@@ -173,21 +184,29 @@ sub run {
 
             foreach my $link (@$links) {
                 hlog { ('From', $pred->name, 'via', $link->name, 'to', $node->name) };
-                my $link_outputs = $link->run($link_scope);
+                my $link_outputs = $link->run(
+                    -scope=>$link_scope,
+                    forward_opts(\%args, {'-'=>1}, 'phase')
+                    # Generator not passed to links.
+                );
                 $node_scope->add(%$link_outputs);
                 #say 'Link ', $link->name, ' outputs: ', Dumper($link_outputs);   # DEBUG
             } #foreach incoming link
         } #foreach predecessor node
 
-        my $step_output = $node->run($node_scope);
+        my $step_output = $node->run(-scope=>$node_scope,
+            forward_opts(\%args, {'-'=>1}, 'phase', 'generator')
+        );
         $node->outputs($step_output);
 
-        #say 'Node ', $node->name, ' outputs: ', Dumper($step_output);   # DEBUG
+        # Give the Generator a chance, and stash the results if necessary.
+        if(eval { $node->DOES('Build::Hopen::G::Goal') }) {
+            $args{generator}->visit_goal($node) if $args{generator};
+            $retval->{$node->name} = $node->outputs;    # since the generator may tweak them
+        } else {
+            $args{generator}->visit_node($node) if $args{generator};
+        }
 
-        # While hacking, please make sure Goal nodes can appear
-        # anywhere in the graph.
-        $retval->{$node->name} = $step_output
-            if eval { $node->DOES('Build::Hopen::G::Goal') };
     } #foreach node
 
     return $retval;

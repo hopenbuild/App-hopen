@@ -1,6 +1,6 @@
 # Build::Hopen::AppUtil - utility routines used by Build::Hopen::App
 package Build::Hopen::AppUtil;
-use Build::Hopen qw(:default MYH);
+use Build::Hopen qw(:default isMYH MYH);
 use Build::Hopen::Base;
 use parent 'Exporter';
 
@@ -9,7 +9,7 @@ our $VERSION = '0.000005'; # TRIAL
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files find_myhopen dedent forward_opts);
+    @EXPORT_OK = qw(find_hopen_files find_myhopen);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -106,88 +106,6 @@ sub find_myhopen {
     my $fn = $dest_dir->file(MYH);
     return $fn if -r $fn;
 } #find_myhopen
-
-=head2 dedent
-
-Yet Another routine for dedenting multiline strings.  Removes the leading
-horizontal whitespace on the first nonblank line from all lines.  If the first
-argument is a reference, also trims for use in multiline C<q()>/C<qq()>.
-Usage:
-
-    dedent " some\n multiline string";
-    dedent [], q(
-        very indented
-    );      # [] (or any ref) means do the extra trimming.
-
-The extra trimming includes:
-
-=over
-
-=item *
-
-Removing the initial C<\n>, if any; and
-
-=item *
-
-Removing trailing horizontal whitespace between the last C<\n> and the
-end of the string.
-
-=back
-
-=cut
-
-sub dedent {
-    my $extra_trim = (@_ && ref $_[0]) ? (shift, true) : false;
-    my $val = @_ ? $_[0] : $_;
-    my $initial_NL;
-
-    if($val =~ /\A\n/) {
-        $initial_NL = true;
-        $val =~ s/^\A\n//;
-    }
-
-    if($val =~ m/^(?<ws>\h+)\S/m) {
-        $val =~ s/^$+{ws}//gm;
-    }
-
-    $val =~ s/^\h+\z//m if $extra_trim;
-
-    return (($initial_NL && !$extra_trim) ? "\n" : '') . $val;
-} #dedent()
-
-=head2 forward_opts
-
-Returns a list of key-value pairs extracted from a given hashref.  Usage:
-
-    my %forwarded_opts = forward_opts(\%original_opts, [option hashref,]
-                                        'name'[, 'name2'...]);
-
-If the option hashref is given, the following can be provided:
-
-=over
-
-=item lc
-
-If truthy, lower-case the key names in the output
-
-=back
-
-=cut
-
-sub forward_opts {
-    my $hrIn = shift or croak 'Need an input option set';
-    croak 'Need a hashref' unless ref $hrIn eq 'HASH';
-    my $hrOpts = {};
-    $hrOpts = shift if ref $_[0] eq 'HASH';
-
-    my %result;
-    foreach my $name (@_) {
-        my $newname = $hrOpts->{lc} ? lc($name) : $name;
-        $result{$newname} = $hrIn->{$name} if exists $hrIn->{$name};
-    }
-
-    return %result;
-} #forward_opts()
 
 1;
 __END__

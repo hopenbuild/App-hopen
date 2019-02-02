@@ -10,7 +10,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files);
+    @EXPORT_OK = qw();
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]

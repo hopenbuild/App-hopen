@@ -17,7 +17,9 @@ Build::Hopen::G::Goal - a named goal in a hopen build
 =head1 SYNOPSIS
 
 A C<Goal> is a named build target, e.g., C<doc> or C<dist>.  The name C<all>
-is reserved for the root goal.
+is reserved for the root goal.  Goals usually appear at the end of the build
+graph, but this is not required --- Goal nodes can appear anywhere in the
+graph.
 
 =head1 FUNCTIONS
 
@@ -30,8 +32,8 @@ Wraps a L<Build::Hopen::G::PassthroughOp>'s run function.
 # }}}1
 
 sub run {
-    my $self = shift or croak 'Need an instance';
-    return $self->_passthrough->run(@_);
+    my $self = shift or croak 'Need an instance';   # Don't need Getargs::Mixed
+    return $self->_passthrough->run(@_);            # since this is straight forwarding
 }
 
 =head2 BUILD

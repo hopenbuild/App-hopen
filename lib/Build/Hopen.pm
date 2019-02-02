@@ -8,9 +8,10 @@ use Build::Hopen::Base;
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    @EXPORT = qw(boolify hnew hlog UNSPECIFIED NOTHING $Generator
-                $Toolset $Build $Phase isMYH);
-    @EXPORT_OK = qw(clone loadfrom $VERBOSE MYH);
+    # TODO move more of these to a separate utility package?
+    # Probably keep hnew, hlog, $VERBOSE, and $QUIET here.
+    @EXPORT = qw(hnew hlog);
+    @EXPORT_OK = qw(loadfrom $VERBOSE $QUIET UNSPECIFIED NOTHING isMYH MYH);
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -64,66 +65,25 @@ Not exported by default, except as noted.
 
 =head2 $VERBOSE
 
-Set to truthy to get debug output on stderr from hopen's internals.
+Set to a positive integer to get debug output on stderr from hopen's internals.
+The higher the value, the more output you are likely to get.  See also L</hlog>.
 
-=head2 $Generator
+=head2 $QUIET
 
-The current L<Build::Hopen::Gen> instance.
-
-=head2 $Toolset
-
-The name of the current toolset.  Support for language C<Foo> is in
-package C<${Toolset}::Foo>.
-
-=head2 $Build
-
-The L<Build::Hopen::G::DAG> instance representing the current build.
-Goals in C<$Build> will become, e.g., top-level targets of a
-generated C<Makefile>.
-
-=head2 $Phase
-
-Which phase we're in (string).
+Set to truthy to suppress output.  Quiet overrides L</$VERBOSE>.
 
 =cut
 
 # }}}1
 
-our $VERBOSE = false;
-our ($Generator, $Toolset, $Build, $Phase);
+our $VERBOSE;   BEGIN { $VERBOSE = 0; }
+our $QUIET;     BEGIN { $QUIET = false; }
 
 use constant MYH => 'MY.hopen.pl';
 
 =head1 FUNCTIONS
 
 All are exported by default unless indicated.
-
-=head2 boolify
-
-Convert a scalar to a Boolean as Perl does, except:
-
-=over
-
-=item * Falsy
-
-C</^(false|off|no)$/i>
-
-=item * Truthy
-
-C<"0">
-
-=back
-
-So C<false>, C<off>, C<no>, empty string, C<undef>, and numeric C<0> are falsy,
-and all other values (including string C<'0'>) are truthy.
-
-=cut
-
-sub boolify {
-    return false if $_[0] =~ /^(false|off|no)$/i;
-    return true if $_[0] =~ /^0$/;
-    return !!$_[0];
-} #boolify()
 
 =head2 hnew
 
@@ -164,7 +124,7 @@ sub hnew {
 
 =head2 loadfrom
 
-Load a package given a list of stems.  Usage:
+(Not exported by default) Load a package given a list of stems.  Usage:
 
     my $fullname = loadfrom($name[, @stems]);
 
@@ -202,6 +162,7 @@ verbosity level (1 by default).
 =cut
 
 sub hlog (&;$) {
+    return if $QUIET;
     return unless $VERBOSE >= ($_[1] // 1);
 
     my @log = &{$_[0]}();
@@ -210,19 +171,6 @@ sub hlog (&;$) {
     chomp $log[$#log] if $log[$#log];
     say STDERR (join(' ', @log)) =~ s/^/# /gmr;
 } #hlog()
-
-=head2 clone
-
-Clones a scalar or a reference.  Thin wrapper around L<Storable/dclone>.
-Not exported by default.
-
-=cut
-
-sub clone {
-    my $val = shift;
-    return $val unless ref($val);
-    return Storable::dclone($val);
-} #clone()
 
 =head2 isMYH
 

@@ -6,6 +6,7 @@ our $VERSION = '0.000005'; # TRIAL
 
 use Build::Hopen::Scope;
 use Build::Hopen::Util::NameSet;
+use Getargs::Mixed;
 
 # Docs {{{1
 
@@ -54,23 +55,56 @@ use Class::Tiny {
 
 =head2 run
 
-Run the operation, whatever that means.  B<Must> return a hashref.  Usage:
+Run the operation, whatever that means.  B<Must> return a new hashref.  Usage:
 
-    my $hrOutputs = $op->run([$outer_scope])
+    my $hrOutputs = $op->run([options])
 
-C<$hrOutputs> is guaranteed to be a new hash, not the same hash as C<$hrInputs>.
+Options are:
 
-The C<$outer_scope> should include the inputs the caller wants to pass to the
-Runnable.  The Runnable itself should use its own L</scope>, usually by setting
-C<< $self->scope->outer($outer_scope) >> for the duration of the C<run()> call.
+=over
+
+=item -scope
+
+A L<Build::Hopen::Scope> or subclass including the inputs the caller wants to
+pass to the Runnable.  The Runnable itself should use its own L</scope>,
+usually by setting C<< $self->scope->outer($outer_scope) >> for the duration of
+the C<run()> call.
+
+=item -phase
+
+If given, the phase that is currently under way in a build-system run.
+
+=item -generator
+
+If given, the L<Build::Hopen::Gen> instance in use for the current
+build-system run.
+
+=back
 
 =cut
 
 sub run {
-    my $self = shift or croak 'Need an instance';
+    my ($self, %args) = parameters('self', [qw(; scope phase generator)], @_);
     my $outer_scope = shift // Build::Hopen::Scope->new;
     ...
 } #run()
+
+=head2 passthrough
+
+Returns a new hashref of this Runnable's data.  Usage:
+
+    my $hashref = $runnable->passthrough([-scope => $scope])
+
+=cut
+
+sub passthrough {
+    my ($self, %args) = parameters('self', [qw(; scope)], @_);
+    my $outer_scope = $args{scope};
+
+    # Link the outer scope to our scope
+    my $saver = $self->scope->outerize($outer_scope);
+    return $self->scope->as_hashref(deep => true);
+} #passthrough()
 
 1;
 __END__
