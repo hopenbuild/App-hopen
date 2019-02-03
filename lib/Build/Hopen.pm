@@ -169,6 +169,7 @@ sub hlog (&;$) {
     return unless @log;
 
     chomp $log[$#log] if $log[$#log];
+    # TODO add an option to number the lines of the output
     say STDERR (join(' ', @log)) =~ s/^/# /gmr;
 } #hlog()
 

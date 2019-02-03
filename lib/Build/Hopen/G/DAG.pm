@@ -194,15 +194,21 @@ sub run {
             } #foreach incoming link
         } #foreach predecessor node
 
+        hlog { 'Node', $node->name, 'input', Dumper($node_scope->as_hashref) } 3;
         my $step_output = $node->run(-scope=>$node_scope,
             forward_opts(\%args, {'-'=>1}, 'phase', 'generator')
         );
         $node->outputs($step_output);
+        hlog { 'Node', $node->name, 'output', Dumper($step_output) } 3;
 
         # Give the Generator a chance, and stash the results if necessary.
         if(eval { $node->DOES('Build::Hopen::G::Goal') }) {
             $args{generator}->visit_goal($node) if $args{generator};
-            $retval->{$node->name} = $node->outputs;    # since the generator may tweak them
+
+            # Save the result if there is one.  Don't save {}.
+            # use $node->outputs, not $step_output, since the generator may
+            # alter $node->outputs.
+            $retval->{$node->name} = $node->outputs if keys %{$node->outputs};
         } else {
             $args{generator}->visit_node($node) if $args{generator};
         }

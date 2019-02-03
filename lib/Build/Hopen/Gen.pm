@@ -76,7 +76,7 @@ sub visit_node { }
 Do whatever the generator wants to do to finish up.  By default, no-op.
 Is provided the L<Build::Hopen::G::DAG> instance as a parameter.  Usage:
 
-    $generator->finalize($dag)
+    $generator->finalize(-phase=>$Phase, -graph=>$dag)
 
 =cut
 

@@ -195,6 +195,7 @@ my %opts = (
         #'Role::Tiny' => '1.000000',
 
         'Class::XPath' => '1.4',
+        'Config' => '0',
         'Cwd' => '0',
 
         'constant' => '0',
@@ -206,8 +207,9 @@ my %opts = (
         'File::Glob' => '0',
         #'File::Globstar' => '0.5',      # Fewer dependencies
         'File::Path::Tiny' => '0.9',
-        'File::Slurper' => '0.011',
         'File::Spec' => '0',
+        'File::stat' => '0',
+        'File::Which' => '1.22',    # for msys2 support
         'Hash::Merge' => '0.299',
         'Hash::Ordered' => '0.011',
         'Import::Into' => '0',
@@ -240,6 +242,8 @@ my %opts = (
 
         'Path::Class' => '0.37',
         'Pod::Usage' => '0',
+        # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
+                                # Alternative: Padre::Perl
 
         'Set::Scalar' => '1.27',    # For correct metadata
         'Storable' => '3.06',

@@ -8,7 +8,7 @@ our $VERSION = '0.000005'; # TRIAL
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    my @normal_export_ok = qw(is_phase phase_idx next_phase);
+    my @normal_export_ok = qw(is_phase is_last_phase phase_idx next_phase);
     my @hopenfile_export = qw(on);
 
     @EXPORT = qw(@PHASES);
@@ -71,29 +71,38 @@ sub is_phase {
     return $curr_idx+1;     # -1 => falsy; all others => truthy
 } #is_phase()
 
+=head2 is_last_phase
+
+Return truthy if the argument is the name of the last phase.
+
+=cut
+
+sub is_last_phase { lc(shift) eq lc($PHASES[$#PHASES]) }
+
 =head2 phase_idx
 
-Get the index of the current phase, or the phase given as a parameter.
+Get the index of the phase given as a parameter.
 Returns undef if none.  Phases are case-insensitive.
 
 =cut
 
 sub phase_idx {
-    my $test_phase = lc(@_ ? $_[0] : $Phase);
+    my $test_phase = lc(shift) or croak "Need a phase";
     my $curr_idx = first_index { lc($_) eq $test_phase } @PHASES;
     return $curr_idx<0 ? undef : $curr_idx;
 } #phase_idx()
 
 =head2 next_phase
 
-Get the next phase, or undef if none.  Phases are case-insensitive.
+Get the phase after the given on.  Returns undef if the argument
+is the last phase.  Dies if the argument is not a phase.
 
 =cut
 
 sub next_phase {
-    croak 'I only process $Phase, but I got an argument' if @_;
-    my $curr_idx = phase_idx;
-    die "This shouldn't happen!" unless defined($curr_idx);
+    my $test_phase = lc(shift) or croak "Need a phase";
+    my $curr_idx = phase_idx $test_phase;
+    die "$test_phase is not a phase I know about" unless defined($curr_idx);
     return undef if $curr_idx == $#PHASES;  # Last one
 
     return $PHASES[$curr_idx+1];

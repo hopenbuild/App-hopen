@@ -4,6 +4,7 @@ lib/Build/Hopen.pm
 lib/Build/Hopen/App.pm
 lib/Build/Hopen/AppUtil.pm
 lib/Build/Hopen/Base.pm
+lib/Build/Hopen/BuildSystemGlobals.pm
 lib/Build/Hopen/Conventions.pod
 lib/Build/Hopen/G.pod
 lib/Build/Hopen/G/DAG.pm
@@ -28,6 +29,8 @@ lib/Build/Hopen/T/Gnu.pm
 lib/Build/Hopen/T/Gnu/C.pm
 lib/Build/Hopen/Tool.pm
 lib/Build/Hopen/Toolchain.pm
+lib/Build/Hopen/Util/Data.pm
+lib/Build/Hopen/Util/Filename.pm
 lib/Build/Hopen/Util/NameSet.pm
 LICENSE.md
 Makefile.PL
@@ -56,6 +59,7 @@ t/dir200/inner/.hopen.pl
 t/dir200/inner/z.hopen.pl
 t/lib/HopenTest.pm
 t/samples/01/01.hopen.pl
+t/samples/01/hello.c
 xt/boilerplate.t
 xt/manifest.t
 xt/pod-coverage.t

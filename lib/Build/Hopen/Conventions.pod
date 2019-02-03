@@ -93,7 +93,14 @@ will look for a hopen file in the project's I<parent directory>.  That file is
 referred to as a "context file".  Since the context file runs after the project
 file, the context file can change the way the project will be built.
 
+The filename of the context file is C<directory_name.hopen.pl> for a project
+in C<directory_name>.  It doesn't matter what the project calls itself; the
+context file is found solely based on the directory name.
+
 =back
+
+Note: if the project file or the context file has a newer modification time
+than the build-state file, the build-state file will not be loaded.
 
 After those files are executed, any code provided by a C<-e> command-line
 option is executed as if it were its own hopen file on disk, and any
@@ -180,3 +187,20 @@ During this phase, blueprint files and any supporting files
 Once all of hopen's phases have been run, you can run make(1), ninja(1), or
 whatever build system corresponds with the generator you have selected.
 You can do this by running C<hopen --build>, if you wish.
+
+=head1 INTERNALS
+
+=head2 The build graph
+
+Each operation (L<Build::Hopen::G::Op> subclass) returns or adds to a C<work>
+arrayref.  For example:
+
+    {
+        work => [
+            { from => 'hello.c', to => 'hello.o',
+                how => 'gcc -c #first -o #out' },
+            { from => 'hello.o', to => 'hello',
+                how => 'gcc #first -o #out' }
+        ]
+    }
+
