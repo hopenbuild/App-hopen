@@ -107,6 +107,8 @@ Other options are as L<Build::Hopen::Runnable/run>.
 
 =cut
 
+#    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');  # TODO
+
 sub run {
     my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
     my $outer_scope = $args{scope};     # From the caller
@@ -169,8 +171,16 @@ sub run {
 
             my $links = $graph->get_edge_attribute($pred, $node, LINKS);
 
+            # TODO RESUME HERE $scope->{_} = arrayref of inputs to the
+            # current node.  Provide some sugar in Scope for those
+            # (e.g., Scope::inputs()).  That way, each node can distinguish
+            # the inputs that came from different nodes.
+            # Also change passthrough() and PassthroughOp correspondingly,
+            # to merge+RETAINMENT the items in {_}.
+            # The underscore is by analogy to @_.
+
             unless($links) {    # Simple case: predecessor's outputs become our inputs
-                $node_scope->add(%{$pred->outputs});
+                push @{$node_scope->inputs}, $pred->outputs;
                 next;
             }
 
@@ -189,20 +199,26 @@ sub run {
                     forward_opts(\%args, {'-'=>1}, 'phase')
                     # Generator not passed to links.
                 );
-                $node_scope->add(%$link_outputs);
+                push @{$node_scope->inputs}, $link_outputs;
                 #say 'Link ', $link->name, ' outputs: ', Dumper($link_outputs);   # DEBUG
             } #foreach incoming link
         } #foreach predecessor node
 
+        hlog { 'Node', $node->name, 'input', Dumper($node_scope->as_hashref) } 3;
         my $step_output = $node->run(-scope=>$node_scope,
             forward_opts(\%args, {'-'=>1}, 'phase', 'generator')
         );
         $node->outputs($step_output);
+        hlog { 'Node', $node->name, 'output', Dumper($step_output) } 3;
 
         # Give the Generator a chance, and stash the results if necessary.
         if(eval { $node->DOES('Build::Hopen::G::Goal') }) {
             $args{generator}->visit_goal($node) if $args{generator};
-            $retval->{$node->name} = $node->outputs;    # since the generator may tweak them
+
+            # Save the result if there is one.  Don't save {}.
+            # use $node->outputs, not $step_output, since the generator may
+            # alter $node->outputs.
+            $retval->{$node->name} = $node->outputs if keys %{$node->outputs};
         } else {
             $args{generator}->visit_node($node) if $args{generator};
         }

@@ -8,7 +8,9 @@ use Build::Hopen::Util::Data qw(clone);
 use Set::Scalar;
 use Sub::ScopeFinalizer qw(scope_finalizer);
 
-use Class::Tiny {
+sub inputs;     # virtual attribute
+
+use Class::Tiny qw(inputs), {
     outer => undef,
     _content => sub { +{} },
     name => 'anonymous scope',
@@ -27,11 +29,12 @@ key-value store that falls back to an outer C<Scope> if a requested key
 isn't found.
 
 This particular Scope is a concrete implementation using a hash under the
-hood.  However, the public API is limited to L</outer>, L</add>, and L</find>
-(plus C<new> from L<Class::Tiny>).  Subclasses may use different
-representations.
+hood.  However, subclasses may use different representations.
+See L</"FUNCTIONS TO BE OVERRIDDEN IN SUBCLASSES"> for more on that topic.
 
 =head1 ATTRIBUTES
+
+See also L</inputs>, which is a virtual attribute.
 
 =head2 outer
 
@@ -46,6 +49,21 @@ Not used, but provided so you can use L<Build::Hopen/hnew> to make Scopes.
 
 See also L</add>, below, which is part of the public API.
 
+Several of the functions receive a C<$levels> parameter.  Its meaning is:
+
+=over
+
+=item *
+
+If C<$levels> is provided and nonzero, go up that many more levels
+(i.e., C<$levels==0> means only return this scope's local names).
+
+=item *
+If C<$levels> is not provided or not defined, go all the way to the
+outermost Scope.
+
+=back
+
 =cut
 
 # }}}1
@@ -54,7 +72,7 @@ See also L</add>, below, which is part of the public API.
 
 Find a named data item in the scope and return it.  Looks up the scope chain
 to the outermost scope if necessary.  Returns undef on
-failure.  Usage: C<< $scope->find($name) >>.
+failure.  Usage: C<< $scope->find($name[, $levels]) >>.
 Dies if given a falsy name, notably, C<'0'>.
 
 =cut
@@ -63,11 +81,17 @@ sub find {
     my $self = shift or croak 'Need an instance';
     my $name = shift or croak 'Need a name';
         # Therefore, '0' is not a valid name
+    my $levels = $_[0];
 
     my $here = $self->_find_here($name);
     return $here if defined $here;
 
-    return $self->outer->find($name) if $self->outer;
+    if($self->outer &&              # Search the outer scopes
+        (!defined($levels) || ($levels>0))
+    ) {
+        my $newlevels = defined($levels) ? ($levels-1) : undef;
+        return $self->outer->find($name, $newlevels);
+    }
 
     return undef;   # report failure
 } #find()
@@ -80,10 +104,6 @@ and example:
 
     my $set = $scope->names([$levels]);
     say "Name $_ is available" foreach @$set;   # Set::Scalar supports @$set
-
-If C<$levels> is provided and nonzero, go up that many more levels
-(i.e., C<$levels==0> means only return this scope's local names).
-If C<$levels> is not provided, go all the way to the outermost Scope.
 
 =cut
 
@@ -232,6 +252,38 @@ sub outerize {
     $self->outer($new_outer);
     return $saver;
 } #outerize()
+
+=head2 inputs
+
+A convenient accessor for an arrayref stored in the current scope under the
+name C<'_'>.  L<Build::Hopen::G::DAG/run> uses this to hold the inputs of the
+current node.  It is named by analogy with C<@_>.
+
+C<inputs> only searches the I<current scope>, not any outer scope.  This is
+deliberate: C<find('_')> might return the inputs for some scope other than
+the one under consideration.
+
+=cut
+
+sub inputs {
+    my $self = shift or croak 'Need an instance';
+    if (@_) {   # Setter
+        croak 'Inputs must be an array reference'
+            unless @_ && ref $_[0] eq 'ARRAY';
+        my $newval = shift;
+        $self->add(_ => $newval);
+        return $newval;
+    }
+
+    # Getter
+    my $candidate = $self->find('_', 0);    # inputs are only local
+    return $candidate if defined $candidate;
+
+    # Default
+    $candidate = [];
+    $self->add(_ => $candidate);
+    return $candidate;
+} #inputs()
 
 =head1 FUNCTIONS TO BE OVERRIDDEN IN SUBCLASSES
 
