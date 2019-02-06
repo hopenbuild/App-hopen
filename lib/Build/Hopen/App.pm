@@ -1,6 +1,6 @@
 # Build::Hopen::App: hopen(1) program
 package Build::Hopen::App;
-our $VERSION = '0.000005'; # TRIAL
+our $VERSION = '0.000006'; # TRIAL
 
 # Imports {{{1
 use Build::Hopen::Base;

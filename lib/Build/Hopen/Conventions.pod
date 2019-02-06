@@ -83,7 +83,9 @@ After C<MY.hopen.pl> runs, the generator and toolset are loaded.
 
 The last-sorting C<.hopen.pl> or C<*.hopen.pl> file in the project directory.
 You can name your project file whatever you want --- only the extension
-has to match.
+has to match.  That way you can call your build file C<.hopen> if
+you want it hidden, or C<z.hopen> if you want it to sort below all your other
+files.  Sort order is Perl's default, which is by byte value.
 
 =item * Context file
 

@@ -3,7 +3,7 @@ package Build::Hopen::Scope::Environment;
 use Build::Hopen::Base;
 use Build::Hopen qw(hlog);
 
-our $VERSION = '0.000005'; # TRIAL
+our $VERSION = '0.000006'; # TRIAL
 
 use parent 'Build::Hopen::Scope';
 

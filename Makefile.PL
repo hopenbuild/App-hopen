@@ -68,10 +68,10 @@ my $secure_perl_path = get_perl_filename();
             # Note: we don't have to worry about EOL; Appveyor uses gmake even
             # on Windows, and it only uses \n.
             print STDERR "TRIAL version\n";
-            my $newtext .=  # Command to rename the tgz
-                "\t$secure_perl_path -MExtUtils::Command -e mv -- " .
-                "\"\$(DISTVNAME).tar\$(SUFFIX)\" " .
-                "\"\$(DISTVNAME)-TRIAL.tar\$(SUFFIX)\"\n";
+            my $newtext .=  # Command to rename the tgz.  TODO see if this works on Windows.
+                "\t\"$secure_perl_path\" -MExtUtils::Command -e mv -- " .
+                '"$(DISTVNAME).tar$(SUFFIX)" ' .
+                '"$(DISTVNAME)-TRIAL.tar$(SUFFIX)"' . "\n";
 
             # Insert $newtext at the end of the `dist` target
             $text =~ s{
@@ -94,6 +94,7 @@ my $secure_perl_path = get_perl_filename();
         # succeed and generate META files even if Pod::Markdown is not yet
         # installed.
 
+        my $make_readme_md = File::Spec->catfile(qw(support readme.pl));
         return <<EOT;
 authortest:
 \tRELEASE_TESTING=1 prove -lvj4 xt
@@ -102,14 +103,10 @@ testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
 README.md: @{[$VERSION_FROM]} Makefile.PL
-\t-pod2markdown \$< | \\
-\t$secure_perl_path -ne 'print if /SUPPORT/; next if /VARIABLES/../SUPPORT/; print "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)\\n\\n" if /SYNOPSIS/; print' \\
-\t> \$@
+\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
 
 README: @{[$VERSION_FROM]} Makefile.PL
-\t-pod2text \$< | \\
-\t$secure_perl_path -ne 'print if /SUPPORT/; next if /VARIABLES/../SUPPORT/; print' \\
-\t> \$@
+\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
 
 all :: README.md README
 dist :: README.md README
@@ -163,6 +160,8 @@ my %opts = (
         'File::Spec' => '0',
     },
     BUILD_REQUIRES => {
+        'Getopt::Long' => '0',
+        'Path::Class' => '0.37',
         'Pod::Markdown' => '0',     # pod2markdown
         'Pod::Text' => '0',         # pod2text
     },

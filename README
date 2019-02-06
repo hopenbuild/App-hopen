@@ -2,29 +2,39 @@ NAME
     Build::Hopen - A build generator with first-class edges and explicit
     dependencies
 
-SYNOPSIS
-    Input is the last-sorting file in "." matching "*.hopen", unless you
-    specify otherwise. That way you can call your build file ".hopen" if you
-    want it hidden, or "z.hopen" if you want it to sort below all your other
-    files. Sort order is Perl's default, which is by byte value. See
-    Build::Hopen::Conventions for details of the input format.
+    hopen is a cross-platform software build generator.  It makes files you
+    can pass to Make, Ninja, Visual Studio, or other build tools, to compile
+    and link your software.  hopen gives you:
 
-    Output is a build file for a build system (Ninja or Make will be first).
-    You will eventually be able to pick a generator, a la CMake.
+    *   A full, Turing-complete, robust programming language to write your
+        build scripts (specifically, Perl 5.14+)
+
+    *   No hidden magic!  All your data is visible and accessible in a build
+        graph.
+
+    *   Context-sensitivity.  Your users can tweak their own builds for their
+        own platforms without affecting your project.
+
+    See Build::Hopen::Conventions for details of the input format.
+
+    Why Perl?  Because (1) you probably already have it installed, and (2) it
+    is the original write-once, run-everywhere language!
 
 INSTALLATION
     Easiest: install "cpanminus" if you don't have it - see
-    <https://metacpan.org/pod/App::cpanminus#INSTALLATION>. Then run "cpanm
+    <https://metacpan.org/pod/App::cpanminus#INSTALLATION>.  Then run "cpanm
     Build::Hopen".
 
-    Manually: clone or untar into a working directory. Then, in that
+    Manually: clone or untar into a working directory.  Then, in that
     directory,
 
         perl Makefile.PL
         make
         make test
 
-    ... and if all the tests pass,
+    (you may need to install dependencies as well - see
+    <https://www.cpan.org/modules/INSTALL.html> for resources).  If all the
+    tests pass,
 
         make install
 
@@ -74,11 +84,11 @@ LICENSE AND COPYRIGHT
     your option) any later version.
 
     This program is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
-    General Public License for more details.
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+    License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program; if not, write to the Free Software Foundation,
-    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 

@@ -1,19 +1,23 @@
-# NAME
-
-Build::Hopen - A build generator with first-class edges and explicit dependencies
+# Build::Hopen - A build generator with first-class edges and explicit dependencies
 
 [![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)
 
-# SYNOPSIS
 
-Input is the last-sorting file in `.` matching `*.hopen`, unless you
-specify otherwise.  That way you can call your build file `.hopen` if
-you want it hidden, or `z.hopen` if you want it to sort below all your other
-files.  Sort order is Perl's default, which is by byte value.
+
+hopen is a cross-platform software build generator.  It makes files you can
+pass to Make, Ninja, Visual Studio, or other build tools, to compile and
+link your software.  hopen gives you:
+
+- A full, Turing-complete, robust programming language to write your
+build scripts (specifically, Perl 5.14+)
+- No hidden magic!  All your data is visible and accessible in a build graph.
+- Context-sensitivity.  Your users can tweak their own builds for their own
+platforms without affecting your project.
+
 See [Build::Hopen::Conventions](https://metacpan.org/pod/Build::Hopen::Conventions) for details of the input format.
 
-Output is a build file for a build system (Ninja or Make will
-be first).  You will eventually be able to pick a generator, a la CMake.
+Why Perl?  Because (1) you probably already have it installed, and
+(2) it is the original write-once, run-everywhere language!
 
 # INSTALLATION
 
@@ -27,7 +31,9 @@ Manually: clone or untar into a working directory.  Then, in that directory,
     make
     make test
 
-... and if all the tests pass,
+(you may need to install dependencies as well -
+see [https://www.cpan.org/modules/INSTALL.html](https://www.cpan.org/modules/INSTALL.html) for resources).
+If all the tests pass,
 
     make install
 

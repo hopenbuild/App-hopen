@@ -21,7 +21,7 @@ BEGIN {
 use Build::Hopen::Util::NameSet;
 use Storable ();
 
-our $VERSION = '0.000005'; # TRIAL
+our $VERSION = '0.000006'; # TRIAL
 
 # Docs {{{1
 
@@ -31,14 +31,32 @@ Build::Hopen - A build generator with first-class edges and explicit dependencie
 
 =head1 SYNOPSIS
 
-Input is the last-sorting file in C<.> matching C<*.hopen>, unless you
-specify otherwise.  That way you can call your build file C<.hopen> if
-you want it hidden, or C<z.hopen> if you want it to sort below all your other
-files.  Sort order is Perl's default, which is by byte value.
+hopen is a cross-platform software build generator.  It makes files you can
+pass to Make, Ninja, Visual Studio, or other build tools, to compile and
+link your software.  hopen gives you:
+
+=over
+
+=item *
+
+A full, Turing-complete, robust programming language to write your
+build scripts (specifically, Perl 5.14+)
+
+=item *
+
+No hidden magic!  All your data is visible and accessible in a build graph.
+
+=item *
+
+Context-sensitivity.  Your users can tweak their own builds for their own
+platforms without affecting your project.
+
+=back
+
 See L<Build::Hopen::Conventions> for details of the input format.
 
-Output is a build file for a build system (Ninja or Make will
-be first).  You will eventually be able to pick a generator, a la CMake.
+Why Perl?  Because (1) you probably already have it installed, and
+(2) it is the original write-once, run-everywhere language!
 
 =head1 INSTALLATION
 
@@ -52,7 +70,9 @@ Manually: clone or untar into a working directory.  Then, in that directory,
     make
     make test
 
-... and if all the tests pass,
+(you may need to install dependencies as well -
+see L<https://www.cpan.org/modules/INSTALL.html> for resources).
+If all the tests pass,
 
     make install
 
