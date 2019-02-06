@@ -3,17 +3,15 @@
 use rlib 'lib';
 use HopenTest;
 
-BEGIN {
-    use_ok 'Build::Hopen::Scope';
-    use_ok 'Build::Hopen::ScopeENV';
-}
+use Build::Hopen::Scope::Hash;
+use Build::Hopen::Scope::Environment;
 
-my $innermost = Build::Hopen::Scope->new();
-isa_ok($innermost, 'Build::Hopen::Scope');
-my $middle = Build::Hopen::Scope->new();
-isa_ok($middle, 'Build::Hopen::Scope');
-my $scope_env = Build::Hopen::ScopeENV->new();
-isa_ok($scope_env, 'Build::Hopen::ScopeENV');
+my $innermost = Build::Hopen::Scope::Hash->new();
+isa_ok($innermost, 'Build::Hopen::Scope::Hash');
+my $middle = Build::Hopen::Scope::Hash->new();
+isa_ok($middle, 'Build::Hopen::Scope::Hash');
+my $scope_env = Build::Hopen::Scope::Environment->new();
+isa_ok($scope_env, 'Build::Hopen::Scope::Environment');
 
 $middle->outer($scope_env);
 $innermost->outer($middle);

@@ -9,12 +9,10 @@ sub makeset {
     return $set;
 }
 
-BEGIN {
-    use_ok 'Build::Hopen::Scope';
-}
+use Build::Hopen::Scope::Hash;
 
-my $s = Build::Hopen::Scope->new();
-isa_ok($s, 'Build::Hopen::Scope');
+my $s = Build::Hopen::Scope::Hash->new();
+isa_ok($s, 'Build::Hopen::Scope::Hash');
 
 $s->add(foo => 42);
 cmp_ok($s->find('foo'), '==', 42, 'Retrieving works');
@@ -22,7 +20,7 @@ cmp_ok($s->find('foo'), '==', 42, 'Retrieving works');
 ok($s->names->is_equal(makeset('foo')), 'names works with a non-nested scope');
 ok($s->names(0)->is_equal(makeset('foo')), 'names(0) works with a non-nested scope');
 
-my $t = Build::Hopen::Scope->new()->add(bar => 1337);
+my $t = Build::Hopen::Scope::Hash->new()->add(bar => 1337);
 $t->outer($s);
 ok($t->names->is_equal(makeset(qw(foo bar))), 'names works with a nested scope');
 ok($t->names(1)->is_equal(makeset(qw(foo bar))), 'names(1) works with a nested scope');
@@ -30,7 +28,7 @@ ok($t->names(0)->is_equal(makeset(qw(bar))), 'names(0) works with a nested scope
 
 cmp_ok($s->find('foo'), '==', 42, 'Retrieving from a parent (outer) scope works');
 
-my $u = Build::Hopen::Scope->new()->add(quux => 128);
+my $u = Build::Hopen::Scope::Hash->new()->add(quux => 128);
 $u->outer($t);
 ok($u->names->is_equal(makeset(qw(foo bar quux))), 'names works with a doubly-nested scope');
 ok($u->names(2)->is_equal(makeset(qw(foo bar quux))), 'names(2) works with a doubly-nested scope');

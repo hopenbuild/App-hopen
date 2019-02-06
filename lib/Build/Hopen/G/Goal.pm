@@ -32,7 +32,7 @@ Wraps a L<Build::Hopen::G::PassthroughOp>'s run function.
 # }}}1
 
 sub run {
-    my $self = shift or croak 'Need an instance';   # Don't need Getargs::Mixed
+    my $self = shift or croak 'Need an instance';   # Don't need Build::Hopen::Arrrgs
     return $self->_passthrough->run(@_);            # since this is straight forwarding
 }
 

@@ -5,14 +5,14 @@ use HopenTest;
 use Test::Deep;
 
 use Build::Hopen;
-use Build::Hopen::Scope;
-use Build::Hopen::ScopeENV;
+use Build::Hopen::Scope::Hash;
+use Build::Hopen::Scope::Environment;
 use Build::Hopen::G::Link;
 
 $Build::Hopen::VERBOSE = true;
 
 sub run {
-    my $outermost_scope = Build::Hopen::Scope->new()->add(foo => 42);
+    my $outermost_scope = Build::Hopen::Scope::Hash->new()->add(foo => 42);
 
     my $dag = hnew DAG => 'dag';
 

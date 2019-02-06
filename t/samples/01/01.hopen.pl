@@ -4,6 +4,7 @@ use language 'C';   # uses <toolset>::C, and makes `C` an alias for it.
     # The "language" package is synthesized by Build::Hopen::HopenFileKit.
 
 $Build
-    ->C::compile('hello.c', -name=>'CompileHello')
+    ->H::files('hello.c', -name=>'FilesHello')  # H is automatically loaded
+    ->C::compile(-name=>'CompileHello')
     ->C::link('hello', -name=>'LinkHello')
     ->default_goal;

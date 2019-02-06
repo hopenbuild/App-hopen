@@ -143,7 +143,11 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
             # Need `eval` to make it read-only - even \"$target..." isn't RO
     }
 
+    # Create packages at the top level
     _create_language();
+    Package::Alias->import::into($target, 'H' => 'Build::Hopen::H')
+        unless eval { scalar keys %H:: };
+        # Don't import twice, but without the need to set Package::Alias::BRAVE
 } #import()     # }}}1
 
 1;

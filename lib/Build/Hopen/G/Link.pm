@@ -11,7 +11,7 @@ use Class::Tiny {
 };
 
 use Build::Hopen::Util::Data qw(clone);
-use Getargs::Mixed;
+use Build::Hopen::Arrrgs;
 
 =head1 NAME
 

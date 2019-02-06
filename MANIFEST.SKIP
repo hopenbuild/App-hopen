@@ -10,6 +10,7 @@ TEMPLATE
 Build-Hopen-*
 TODO
 \brunhopen$
+\.stackdump$
 
 # Things we generate
 \bbuilt[\\/]

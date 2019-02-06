@@ -1,24 +1,41 @@
 # Build::Hopen::Scope - a nested key-value store
 package Build::Hopen::Scope;
 use Build::Hopen::Base;
+use Exporter 'import';
 
 our $VERSION = '0.000005'; # TRIAL
 
-use Build::Hopen::Util::Data qw(clone);
-use Set::Scalar;
-use Sub::ScopeFinalizer qw(scope_finalizer);
-
+# Class definition
 use Class::Tiny {
     outer => undef,
-    _content => sub { +{} },
+    local => false,
     name => 'anonymous scope',
+
+    # Internal
+    _first_set => undef,    # name of the first set
 };
+
+# Static exports
+our @EXPORT; BEGIN { @EXPORT=qw(FIRST_ONLY); }
+
+my $_first_only = {};
+sub FIRST_ONLY { $_first_only }
+
+use constant _LOCAL => 'local';
+
+# What we use
+use Config;
+use Build::Hopen::Arrrgs;
+use POSIX ();
+use Build::Hopen::Util::Data qw(forward_opts);
+use Set::Scalar;
+use Sub::ScopeFinalizer qw(scope_finalizer);
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Scope - a hierarchical name table
+Build::Hopen::Scope - a nested key-value store.
 
 =head1 SYNOPSIS
 
@@ -26,10 +43,16 @@ A Scope represents a set of data available to operations.  It is a
 key-value store that falls back to an outer C<Scope> if a requested key
 isn't found.
 
-This particular Scope is a concrete implementation using a hash under the
-hood.  However, the public API is limited to L</outer>, L</add>, and L</find>
-(plus C<new> from L<Class::Tiny>).  Subclasses may use different
-representations.
+This class is the abstract base of Scopes.  See L<Build::Hopen::Scope::Hash>
+for an example of a concrete implementation using a hash under the
+hood.  Different subclasses use different representations.
+See L</"FUNCTIONS TO BE OVERRIDDEN IN SUBCLASSES"> for more on that topic.
+
+=head1 STATIC EXPORTS
+
+=head2 FIRST_ONLY
+
+A flag used as a L</$set> (q.v.).
 
 =head1 ATTRIBUTES
 
@@ -38,9 +61,77 @@ representations.
 The fallback C<Scope> for looking up names not found in this C<Scope>.
 If non is provided, it is C<undef>, and no fallback will happen.
 
+=head2 local
+
+(Default falsy.)  If truthy, do not go past this scope when doing local
+lookups (see L</$levels> below).
+
 =head2 name
 
 Not used, but provided so you can use L<Build::Hopen/hnew> to make Scopes.
+
+=head1 PARAMETERS
+
+The methods generally receive the same parameters.  They are as follows.
+
+=head2 $name
+
+The name of an item to be looked up.  Names must be truthy.  That means,
+among other things, that C<'0'> is not a valid key.
+
+=head2 $set
+
+A Scope can have multiple sets of data.  C<$set> specifies which one to
+look in.
+
+=over
+
+=item *
+
+If specified as a number or a name, look only in that set.
+
+=item *
+
+If C<'*'>, look in every available set at this level, and return a
+hashref of C<< { set_name => value } >>.
+Note that this is not recursive --- it won't collect all instances
+of the given name from all sets in all the levels. (TODO? change this?)
+
+=item *
+
+If L</FIRST_ONLY>, look in only the first set (usually named C<0>).
+
+=item *
+
+If unspecified or undefined, look in every available set at this level, and
+return the first one found, regardless of which set it comes from.
+
+=back
+
+=head2 $levels
+
+How many levels up (L</outer>) to go when performing an operation.  Note:
+chains more than C<POSIX::INT_MAX> (L<POSIX/LIMITS>) Scopes long may fail in
+unexpected ways, depending on your platform!  For 32- or 64-bit platforms,
+that number is at least 2,000,000,000, so you're probably OK :) .
+
+=over
+
+=item *
+
+If numeric and non-negative, go up that many more levels
+(i.e., C<$levels==0> means only return this scope's local names).
+
+=item *
+
+If C<'local'>, go up until reaching a scope with L</local> set.
+If the current scope has L</local> set, don't go up at all.
+
+=item *
+
+If not provided or not defined, go all the way to the outermost Scope.
+
+=back
 
 =head1 METHODS
 
@@ -50,26 +141,62 @@ See also L</add>, below, which is part of the public API.
 
 # }}}1
 
+# Handle $levels and invoke a function on the outer scope if appropriate.
+# Usage:
+#   $self->_invoke(coderef, $levels, [other args to be passed, starting with
+#                               invocant, if any]
+# A new levels value will be added to the end of the args as -levels=>$val.
+# Returns undef if there's no more traversing to be done.
+
+sub _invoke {
+    my $self = shift or croak 'Need an instance';
+    my $coderef = shift or croak 'Need a coderef';
+    my $levels = shift;
+
+    # Handle 'local'-scoped searches by terminating when $self->local is set.
+    $levels = 0 if ( ($levels//'') eq _LOCAL) && $self->local;
+
+    # Search the outer scopes
+    if($self->outer &&              # Search the outer scopes
+        (!defined($levels) || ($levels eq _LOCAL) || ($levels>0) )
+    ) {
+        my $newlevels =
+            !defined($levels) ? undef :
+                ( ($levels eq _LOCAL) ? _LOCAL : ($levels-1) );
+
+        unshift @_, $self->outer;
+        push @_, -levels => $newlevels;
+        goto &$coderef;
+    }
+    return undef;
+} #_invoke()
+
 =head2 find
 
 Find a named data item in the scope and return it.  Looks up the scope chain
 to the outermost scope if necessary.  Returns undef on
-failure.  Usage: C<< $scope->find($name) >>.
+failure.  Usage:
+
+    $scope->find($name[, $set[, $levels]]);
+    $scope->find($name[, -set => $set][, -levels => $levels]);
+        # Alternative using named arguments
+
 Dies if given a falsy name, notably, C<'0'>.
 
 =cut
 
 sub find {
-    my $self = shift or croak 'Need an instance';
-    my $name = shift or croak 'Need a name';
+    my ($self, %args) = parameters('self', [qw(name ; set levels)], @_);
+    croak 'Need a name' unless $args{name};
         # Therefore, '0' is not a valid name
+    my $levels = $args{levels};
 
-    my $here = $self->_find_here($name);
+    my $here = $self->_find_here($args{name}, $args{set});
     return $here if defined $here;
 
-    return $self->outer->find($name) if $self->outer;
-
-    return undef;   # report failure
+    return $self->_invoke(\&find, $args{levels},
+        forward_opts(\%args, {'-'=>1}, qw(name set))
+    );
 } #find()
 
 =head2 names
@@ -81,31 +208,25 @@ and example:
     my $set = $scope->names([$levels]);
     say "Name $_ is available" foreach @$set;   # Set::Scalar supports @$set
 
-If C<$levels> is provided and nonzero, go up that many more levels
-(i.e., C<$levels==0> means only return this scope's local names).
-If C<$levels> is not provided, go all the way to the outermost Scope.
+TODO?  Support a C<$set> parameter?
 
 =cut
 
 sub names {
-    my ($self, $levels) = @_;
+    my ($self, %args) = parameters('self', [qw(; levels)], @_);
     my $retval = Set::Scalar->new;
-    $self->_fill_names($retval, $levels);
+    $self->_fill_names($retval, $args{levels});
     return $retval;
 } #names()
 
 # Implementation of names()
 sub _fill_names {
-    my ($self, $retval, $levels) = @_;
+    #say Dumper(\@_);
+    my ($self, %args) = parameters('self', [qw(retval levels)], @_);
 
-    $self->_names_here($retval);    # Insert this scope's names
+    $self->_names_here($args{retval});    # Insert this scope's names
 
-    if($self->outer &&              # Insert the outer scopes' names
-        (!defined($levels) || ($levels>0))
-    ) {
-        my $newlevels = defined($levels) ? ($levels-1) : undef;
-        $self->outer->_fill_names($retval, $newlevels);
-    }
+    return $self->_invoke(\&_fill_names, $args{levels}, -retval=>$args{retval});
 } #_fill_names()
 
 =head2 as_hashref
@@ -113,7 +234,7 @@ sub _fill_names {
 Returns a hash of the items available through this Scope, optionally
 including all its parent Scopes (if any).  Usage:
 
-    my $hashref = $scope->as_hashref([levels => $levels][, deep => $deep])
+    my $hashref = $scope->as_hashref([-levels => $levels][, -deep => $deep])
 
 If C<$levels> is provided and nonzero, go up that many more levels
 (i.e., C<$levels==0> means only return this scope's local names).
@@ -122,88 +243,34 @@ If C<$levels> is not provided, go all the way to the outermost Scope.
 If C<$deep> is provided and truthy, make a deep copy of each value (using
 L<Build::Hopen/clone>.  Otherwise, just copy.
 
+TODO?  Support a C<$set> parameter?
+
 =cut
 
 sub as_hashref {
-    my $self = shift;
-    my %opts = @_;
+    my ($self, %args) = parameters('self', [qw(; levels deep)], @_);
     my $hrRetval = {};
-    $self->_fill_hashref($hrRetval, $opts{deep}, $opts{levels});
+    $self->_fill_hashref($hrRetval, $args{deep}, $args{levels});
     return $hrRetval;
 } #as_hashref()
 
 # Implementation of as_hashref.  Mutates the provided $hrRetval.
+# TODO move this to subclasses.
 sub _fill_hashref {
-    my ($self, $hrRetval, $deep, $levels) = @_;
+    my ($self, %args) = parameters('self', [qw(retval levels deep)], @_);
+    my $hrRetval = $args{retval};
 
     # Innermost wins, so copy ours first.
     foreach my $k (keys %{$self->_content}) {
         unless(exists($hrRetval->{$k})) {   # An inner scope might have set it
             $hrRetval->{$k} =
-                ($deep ? clone($self->_content->{$k}) : $self->_content->{$k});
+                ($args{deep} ? clone($self->_content->{$k}) : $self->_content->{$k});
         }
     }
 
-    # Then move out in scope
-    if($self->outer &&
-        (!defined($levels) || ($levels>0))
-    ) {
-        my $newlevels = defined($levels) ? ($levels-1) : undef;
-        $self->outer->_fill_hashref($hrRetval, $deep, $newlevels);
-    }
+    return $self->_invoke(\&_fill_hashref, $args{levels},
+        forward_opts(\%args, {'-'=>1}, qw(retval deep)));
 } #_fill_hashref()
-
-#=head2 TODO_execute
-#
-#Run a L<Build::Hopen::G::Runnable> given a set of inputs.  Fills in the inputs
-#from the scope if possible.  Usage:
-#
-#    $scope->TODO_execute($runnable[, {inputs...})
-#
-#=cut
-#
-## TODO Move out of this module
-#sub TODO_execute {
-#    my $self = shift;
-#    my $runnable = shift;
-#    my $provided_inputs = shift // {};
-#    croak "$runnable is not a runnable"
-#        unless $runnable and eval { $runnable->DOES('Build::Hopen::G::Runnable') };
-#
-#    croak "I don't know how to handle regexps in $runnable\->need"
-#        if $runnable->need->complex;
-#
-#    my %runnable_inputs;    # actual node inputs we will use
-#
-#    # Requirements, which are a straight list of strings
-#    foreach my $need (@{$runnable->need->strings}) {
-#        $runnable_inputs{$need} = $self->find($need, $provided_inputs);
-#        die "Missing required input $need to @{[$runnable->name]}"
-#            unless defined $runnable_inputs{$need};
-#    }
-#
-#    # Desires can be more complex.
-#    my $done = Set::Scalar->new;    # Names we've already checked
-#
-#    # First, grab any we know we want.
-#    foreach my $want (@{$runnable->want->strings}) {
-#        $runnable_inputs{$want} = $self->find($want, $provided_inputs);
-#        $done->insert($want);
-#    }
-#
-#    # Next, the wants can grab any available data
-#    if($runnable->want->complex) {
-#        foreach my $name (keys %$provided_inputs, keys %$self, keys %ENV) {
-#            next if $done->has($name);
-#            if($name ~~ $runnable->want) {
-#                $runnable_inputs{$name} = $self->find($name, $provided_inputs);
-#                $done->insert($name);
-#            }
-#        }
-#    } #endif want->complex
-#
-#    return $runnable->run(\%runnable_inputs);
-#} #execute()
 
 =head2 outerize
 
@@ -217,11 +284,11 @@ C<$new_outer> may be C<undef> or a valid C<Scope>.
 =cut
 
 sub outerize {
-    my $self = shift or croak 'Need an instance';
-    my $new_outer = shift or croak 'Need a new Scope';
+    my ($self, %args) = parameters('self', [qw(outer)], @_);
+
     croak 'Need a Scope' unless
-        (!defined($new_outer)) or
-        (ref $new_outer && eval { $new_outer->DOES('Build::Hopen::Scope') });
+        (!defined($args{outer})) or
+        (ref $args{outer} && eval { $args{outer}->DOES('Build::Hopen::Scope') });
 
     # Protect the author of this function from himself
     croak 'Sorry, but I must insist that you save my return value'
@@ -229,7 +296,7 @@ sub outerize {
 
     my $old_outer = $self->outer;
     my $saver = scope_finalizer { $self->outer($old_outer) };
-    $self->outer($new_outer);
+    $self->outer($args{outer});
     return $saver;
 } #outerize()
 
@@ -249,67 +316,44 @@ chain.  Example usage:
 C<add> is responsible for handling any conflicts that may occur.  In this
 particular implementation, the last-added value for a particular key wins.
 
+TODO add $set option.
+
 =cut
 
 sub add {
-    my $self = shift or croak 'Need an instance';
-    my $hrContent = $self->_content;
-    while(@_) {
-        my $k = shift;
-        $hrContent->{$k} = shift;
-    }
-    croak "Got an odd number of parameters" if @_;
-    return $self;
+    ...
 } #add()
-
-=head2 adopt_hash
-
-Takes over the given hash to be the new contents of the Scope.  Usage example:
-
-    $scope->adopt_hash({ foo => 42 });
-
-The scope uses exactly the hash passed, not a clone of it.  If this is not
-applicable to a subclass, that subclass should override it as C<...> or an
-express C<die>.
-
-=cut
-
-sub adopt_hash {
-    my $self = shift or croak 'Need an instance';
-    my $hrNew = shift or croak 'Need a hash to adopt';
-    croak 'Cannot adopt a non-hash' unless ref $hrNew eq 'HASH';
-    $self->_content($hrNew);
-    return $self;
-} #adopt_hash()
 
 =head2 _names_here
 
 Populates a L<Set::Scalar> with the names of the items stored in this Scope,
 but B<not> any outer Scope.  Called as:
 
-    $scope->_names_here($set_scalar_instance);
+    $scope->_names_here($retval[, $set])
+
+C<$retval> is the C<Set::Scalar> instance.  C<$set> is as
+defined L<above|/$set>.
 
 No return value.
 
 =cut
 
 sub _names_here {
-    my ($self, $retval) = @_;
-    $retval->insert(keys %{$self->_content});
+    ...
 } #_names_here()
 
 =head2 _find_here
 
 Looks for a given item in this scope, but B<not> any outer scope.  Called as:
 
-    $scope->_find_here($name)
+    $scope->_find_here($name[, $set])
 
 Returns the value, or C<undef> if not found.
 
 =cut
 
 sub _find_here {
-    $_[0]->_content->{$_[1]};
+    ...
 } #_find_here()
 
 1;

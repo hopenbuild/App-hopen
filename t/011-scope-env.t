@@ -1,19 +1,17 @@
 #!perl
-# t/011-scope-env.t: test Build::Hopen::ScopeENV
+# t/011-scope-env.t: test Build::Hopen::Scope::Environment
 use rlib 'lib';
 use HopenTest;
-use Build::Hopen::Scope;
+use Build::Hopen::Scope::Hash;
 
 $Build::Hopen::VERBOSE=@ARGV;
     # say `perl -Ilib t/011-scope-env.t -- foo` to turn on verbose output
 
-BEGIN {
-    use_ok 'Build::Hopen::ScopeENV' or say "Bail out!";
-}
+use Build::Hopen::Scope::Environment;
 
-my $s = Build::Hopen::ScopeENV->new();
-isa_ok($s, 'Build::Hopen::ScopeENV');
-ok($s->DOES('Build::Hopen::Scope'), 'ScopeENV DOES Scope');
+my $s = Build::Hopen::Scope::Environment->new();
+isa_ok($s, 'Build::Hopen::Scope::Environment');
+ok($s->DOES('Build::Hopen::Scope'), 'Scope::Environment DOES Scope');
 
 $s->add(foo_hopen => 42);
 cmp_ok($ENV{foo_hopen}, '==', 42, 'add() updates %ENV');
@@ -31,14 +29,14 @@ local *varname_outer = \'+;!@#$%^&*() Another crazy variable name that is not a 
 local *varname_env = \'__ENV_VAR_FOR_TESTING_HOPEN_';
     # On Win32, ENV variable names are all uppercase.
 
-my $inner = Build::Hopen::Scope->new()->add($varname_inner => 42);
-my $outer = Build::Hopen::Scope->new()->add($varname_outer => 1337);
+my $inner = Build::Hopen::Scope::Hash->new()->add($varname_inner => 42);
+my $outer = Build::Hopen::Scope::Hash->new()->add($varname_outer => 1337);
 
 $inner->outer($s);
 $s->outer($outer);
 
-cmp_ok($inner->find($varname_outer), '==', 1337, 'find() through intervening ScopeENV works');
-cmp_ok($s->find($varname_outer), '==', 1337, 'find() from ScopeENV to outer works');
+cmp_ok($inner->find($varname_outer), '==', 1337, 'find() through intervening Scope::Environment works');
+cmp_ok($s->find($varname_outer), '==', 1337, 'find() from Scope::Environment to outer works');
 
 $ENV{$varname_env} = 'C=128';
 #diag "New environment var $varname_env is $ENV{$varname_env} (should be 'C=128')";
@@ -47,7 +45,7 @@ ok(!$outer->names->has($varname_env),'$ENV{}-set var is not in scope in outer');
 
 ok($s->names->has($varname_env), '$ENV{}-set var is in scope');
 ok($inner->names->has($varname_env), '$ENV{}-set var is in scope starting from inner');
-is($inner->find($varname_env), 'C=128', 'find() from inner up to ScopeENV works');
+is($inner->find($varname_env), 'C=128', 'find() from inner up to Scope::Environment works');
 
 done_testing();
 # vi: set fenc=utf8:

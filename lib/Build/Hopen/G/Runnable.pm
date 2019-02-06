@@ -4,9 +4,10 @@ use Build::Hopen::Base;
 
 our $VERSION = '0.000005'; # TRIAL
 
-use Build::Hopen::Scope;
+use Build::Hopen::Scope::Hash;
 use Build::Hopen::Util::NameSet;
-use Getargs::Mixed;
+use Build::Hopen::Arrrgs;
+use Hash::Merge;
 
 # Docs {{{1
 
@@ -48,14 +49,15 @@ use Class::Tiny {
     want => sub { Build::Hopen::Util::NameSet->new },
     need => sub { Build::Hopen::Util::NameSet->new },
 
-    scope => sub { Build::Hopen::Scope->new },
+    scope => sub { Build::Hopen::Scope::Hash->new },
 };
 
 =head1 FUNCTIONS
 
 =head2 run
 
-Run the operation, whatever that means.  B<Must> return a new hashref.  Usage:
+Run the operation, whatever that means.  B<Must> return a new hashref.
+Must be implemented by subclasses.  Usage:
 
     my $hrOutputs = $op->run([options])
 
@@ -67,8 +69,8 @@ Options are:
 
 A L<Build::Hopen::Scope> or subclass including the inputs the caller wants to
 pass to the Runnable.  The Runnable itself should use its own L</scope>,
-usually by setting C<< $self->scope->outer($outer_scope) >> for the duration of
-the C<run()> call.
+usually by setting C<< $self->scope->outer($outer_scope) >> within its
+C<run()> call.
 
 =item -phase
 
@@ -81,29 +83,46 @@ build-system run.
 
 =back
 
+See the source for this function, which contains as an example of setting the
+scope.
+
 =cut
 
 sub run {
     my ($self, %args) = parameters('self', [qw(; scope phase generator)], @_);
-    my $outer_scope = shift // Build::Hopen::Scope->new;
-    ...
+    my $outer_scope = $args{scope};     # which may be undef - that's OK
+
+    # Link the outer scope to our scope
+    my $saver = $self->scope->outerize($outer_scope);
+    ...     # Subclasses have to do the work.  TODO provide _run_inner for
+            # use by subclasses?
 } #run()
 
 =head2 passthrough
 
-Returns a new hashref of this Runnable's data.  Usage:
+Returns a new hashref of this Runnable's local values, as defined
+by L<Build::Hopen::Scope/local>.  Usage:
 
-    my $hashref = $runnable->passthrough([-scope => $scope])
+    my $hashref = $runnable->passthrough([-scope => $outer_scope])
 
 =cut
 
+# TODO RESUME HERE - update this to handle $scope->inputs() correctly.
+# Maybe just pass the inputs(), not anything else?
 sub passthrough {
     my ($self, %args) = parameters('self', [qw(; scope)], @_);
-    my $outer_scope = $args{scope};
+    my $outer_scope = $args{scope};     # which may be undef - that's OK
 
     # Link the outer scope to our scope
     my $saver = $self->scope->outerize($outer_scope);
-    return $self->scope->as_hashref(deep => true);
+
+    my $names = $self->scope->names('local');
+
+    my $retval = {};
+    foreach my $input (@{$names}) {
+        $retval->{$input} = $self->scope->find($input, -levels=>'local');
+    }
+    return $retval;
 } #passthrough()
 
 1;

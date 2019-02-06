@@ -9,12 +9,12 @@ use Build::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
 use Build::Hopen::AppUtil ':all';
 use Build::Hopen::BuildSystemGlobals;
 use Build::Hopen::Phases qw(:default phase_idx next_phase);
-use Build::Hopen::Scope;
-use Build::Hopen::ScopeENV;
+use Build::Hopen::Scope::Hash;
+use Build::Hopen::Scope::Environment;
 use Build::Hopen::Util::Data qw(dedent forward_opts);
 use Data::Dumper;
 use File::Path::Tiny;
-use File::Slurper;
+use File::stat ();
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
 use Path::Class;
@@ -206,6 +206,14 @@ The hashref of the current data we have built up by processing hopen files.
 
 our $_hrData;   # the hashref of current data
 
+=head2 $_did_set_phase
+
+Set to truthy if MY.hopen.pl sets the phase.
+
+=cut
+
+our $_did_set_phase = false;
+
 sub _execute_hopen_file {       # Load and run a single hopen file {{{2
 
 =head2 _execute_hopen_file
@@ -257,8 +265,9 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
             $Build::Hopen::BuildSystemGlobals::Phase = $new_phase;
+            $Build::Hopen::App::_did_set_phase = true;
     ) .
-    ($opts{quiet} ? '' : 'say "Phase is now $new_phase";') . "}\n";
+    ($opts{quiet} ? '' : 'say "Running $new_phase phase";') . "}\n";
 
     $cannot_set_phase = q(
         sub can_set_phase { false }
@@ -303,7 +312,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
     } else {
         hlog { 'Processing', $fn };
-        $file_text = File::Slurper::read_text($fn);
+        $file_text = file($fn)->slurp;
         $pkg_name = ($fn =~ s/[^a-zA-Z0-9]/_/gr);
         $friendly_name = $fn;
 
@@ -459,13 +468,14 @@ be run if it is empty.
     # = Execute the resulting build graph ======================
 
     # Wrap the final data in a Scope
-    my $env = Build::Hopen::ScopeENV->new(name => 'outermost');
-    my $scope = Build::Hopen::Scope->new(name => 'from hopen files');
+    my $env = Build::Hopen::Scope::Environment->new(name => 'outermost');
+    my $scope = Build::Hopen::Scope::Hash->new(name => 'from hopen files');
     $scope->adopt_hash($_hrData);
 
     # Run the DAG
     my $result_data = $Build->run(-scope => $scope, -phase => $Phase,
                                     -generator => $Generator);
+    hlog { Data::Dumper->new([$result_data], ['Build graph result data'])->Indent(1)->Dump } 2;
     return $result_data;
 } #_run_phase() }}}2
 
@@ -528,7 +538,25 @@ EOT
     my $myhopen = find_myhopen($dest_dir, !!$opts{FRESH});
     my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir, !!$opts{FRESH});
 
-    if($opts{EVAL}) {   # Add -e's to the list as hashrefs.
+    # Check the mtimes - we don't use MYH if another hopen file is newer.
+    if($myhopen && -e $myhopen) {
+        my $myhstat = file($myhopen)->stat;
+
+        foreach my $fn (@$lrHopenFiles) {
+            my $stat = file($fn)->stat;
+
+            if( $stat->mtime > $myhstat->mtime ||
+                $stat->ctime > $myhstat->ctime)
+            {
+                say "Skipping out-of-date ``$myhopen''" unless $opts{QUIET};
+                $myhopen = undef;
+                last;
+            }
+        } #foreach hopen file
+    } #if MYH exists
+
+    # Add -e's to the list of hopen files
+    if($opts{EVAL}) {
         my $which_e = 0;
         push @$lrHopenFiles,
             map {
@@ -565,6 +593,9 @@ EOT
         );  # TODO support _e_h_f libs option
     }
 
+    # Tell the user the initial phase if MY.hopen.pl didn't change it
+    say "Running $Phase phase" unless $_did_set_phase or $opts{QUIET};
+
     # Load generator
     my ($gen, $gen_class);
     $gen_class = loadfrom($opts{GENERATOR}, 'Build::Hopen::Gen::', '');
@@ -599,13 +630,15 @@ EOT
         $new_data = $_hrData;
     }
 
-    $Generator->finalize();
+    $Generator->finalize(-phase => $Phase, -dag => $Build,
+        -data => $new_data);
+        # TODO RESUME HERE - figure out how the generator works into this.
 
     # = Save state in MY.hopen.pl for the next run ==========================
 
     # If we get here, _run_phase succeeded.  Therefore, we can move
     # on to the next phase.
-    my $new_phase = next_phase() // $Phase;
+    my $new_phase = next_phase($Phase) // $Phase;
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only
@@ -628,7 +661,7 @@ EOT
         }
     );
 
-    File::Slurper::write_text($dest_dir->file(MYH), $new_text);
+    $dest_dir->file(MYH)->spew($new_text);
 
 } #_inner() }}}2
 
@@ -753,7 +786,9 @@ Christopher White, C<cxwembedded at gmail.com>
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Build::Hopen::App
+    perldoc Build::Hopen::App               For command-line options
+    perldoc Build::Hopen                    For the README
+    perldoc Build::Hopen::Conventions       For terminology and workflow
 
 You can also look for information at:
 
@@ -771,7 +806,7 @@ L<https://metacpan.org/pod/Build::Hopen::App>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2018 Christopher White.  All rights reserved.
+Copyright (c) 2018--2019 Christopher White.  All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

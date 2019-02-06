@@ -31,7 +31,7 @@ use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
 use Build::Hopen::G::PassthroughOp;
 use Build::Hopen::Util::Data qw(forward_opts);
-use Getargs::Mixed;
+use Build::Hopen::Arrrgs;
 use Graph;
 use Storable ();
 
@@ -107,6 +107,8 @@ Other options are as L<Build::Hopen::Runnable/run>.
 
 =cut
 
+#    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');  # TODO
+
 sub run {
     my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
     my $outer_scope = $args{scope};     # From the caller
@@ -152,7 +154,8 @@ sub run {
         # Inputs to this node.  TODO should the provided inputs be given
         # to each node?  Any node with no predecessors?  Currently each
         # node has the option.
-        my $node_scope = Build::Hopen::Scope->new;
+        my $node_scope = Build::Hopen::Scope::Hash->new;
+            # TODO make this a BH::Scope::Inputs once it's implemented
         $node_scope->outer($self->scope);
             # Data specifically being provided to the current node, e.g.,
             # on input edges, beats the scope of the DAG as a whole.
@@ -170,13 +173,13 @@ sub run {
             my $links = $graph->get_edge_attribute($pred, $node, LINKS);
 
             unless($links) {    # Simple case: predecessor's outputs become our inputs
-                $node_scope->add(%{$pred->outputs});
+                push @{$node_scope->inputs}, $pred->outputs;
                 next;
             }
 
             # More complex case: Process all the links
-            my $hrPredOutputs = $pred->outputs; # this is undef if inlined.  Why????!?
-            my $link_scope = Build::Hopen::Scope->new->add(%{$hrPredOutputs});
+            my $hrPredOutputs = $pred->outputs; # In one test, outputs was undef if not on its own line.
+            my $link_scope = Build::Hopen::Scope::Hash->new->add(%{$hrPredOutputs});
                 # All links get the same outer scope --- they are parallel,
                 # not in series.
             $link_scope->outer($self->scope);
@@ -189,20 +192,26 @@ sub run {
                     forward_opts(\%args, {'-'=>1}, 'phase')
                     # Generator not passed to links.
                 );
-                $node_scope->add(%$link_outputs);
+                $node_scope->add($_, $link_outputs->{$_}) foreach keys %{$link_outputs};
                 #say 'Link ', $link->name, ' outputs: ', Dumper($link_outputs);   # DEBUG
             } #foreach incoming link
         } #foreach predecessor node
 
+        hlog { 'Node', $node->name, 'input', Dumper($node_scope->as_hashref) } 3;
         my $step_output = $node->run(-scope=>$node_scope,
             forward_opts(\%args, {'-'=>1}, 'phase', 'generator')
         );
         $node->outputs($step_output);
+        hlog { 'Node', $node->name, 'output', Dumper($step_output) } 3;
 
         # Give the Generator a chance, and stash the results if necessary.
         if(eval { $node->DOES('Build::Hopen::G::Goal') }) {
             $args{generator}->visit_goal($node) if $args{generator};
-            $retval->{$node->name} = $node->outputs;    # since the generator may tweak them
+
+            # Save the result if there is one.  Don't save {}.
+            # use $node->outputs, not $step_output, since the generator may
+            # alter $node->outputs.
+            $retval->{$node->name} = $node->outputs if keys %{$node->outputs};
         } else {
             $args{generator}->visit_node($node) if $args{generator};
         }

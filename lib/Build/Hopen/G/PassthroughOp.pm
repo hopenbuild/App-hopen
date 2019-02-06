@@ -9,7 +9,7 @@ use parent 'Build::Hopen::G::Op';
 #use Class::Tiny;
 
 use Build::Hopen::Util::Data qw(clone);
-use Getargs::Mixed;
+use Build::Hopen::Arrrgs;
 use Storable ();
 
 # Docs {{{1
