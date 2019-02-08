@@ -13,7 +13,7 @@ use Build::Hopen ();
 use Build::Hopen::Phases ();
 use Path::Class ();
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Exporter';  # Exporter-exported symbols {{{1
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);

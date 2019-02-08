@@ -21,7 +21,7 @@ BEGIN {
 use Build::Hopen::Util::NameSet;
 use Storable ();
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 # Docs {{{1
 

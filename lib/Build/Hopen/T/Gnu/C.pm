@@ -1,22 +1,24 @@
 # Build::Hopen::T::Gnu::C - support GNU toolset, C language
-# TODO RESUME HERE - forward dependencies so that link nodes  automatically
-# fills in {from} based on the preceding nodes' {to} entries.
+# TODO RESUME HERE - put .o files in the dest dir
 package Build::Hopen::T::Gnu::C;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::Tool';
 use Class::Tiny qw(op files _cc);
 
+use Build::Hopen::Arrrgs;
+use Build::Hopen::BuildSystemGlobals;   # For $DestDir.
+    # TODO make the dirs available to nodes through the context.
 use Build::Hopen::G::GraphBuilder;
 use Build::Hopen::Util::Data qw(forward_opts);
 use Build::Hopen::Util::Filename;
 use Config;
 use Deep::Hash::Utils qw(deepvalue);
 use File::Which ();
-use Build::Hopen::Arrrgs;
+use Path::Class;
 
 my $FN = Build::Hopen::Util::Filename->new;     # for brevity
 our $_CC;   # Cached compiler name
@@ -39,6 +41,7 @@ In a hopen file:
     $Build->H::files(...)->C::compile->default_goal;
 
 The inputs come from earlier in the build graph.
+TODO support specifying compiler arguments.
 
 =head1 ATTRIBUTES
 
@@ -74,7 +77,7 @@ compilation options or object-file names).  Usage:
 
 sub compile {
     my ($builder, %args) = parameters('self', [qw(; name)], @_);
-    my $node = __PACKAGE__->new(op=>'compile', files=>[],
+    my $node = __PACKAGE__->new(op=>'compile',
         forward_opts(\%args, 'name')
     );
 
@@ -99,7 +102,7 @@ sub link {
     croak 'Need the name of the executable' unless $args{exe};
 
     my $node = __PACKAGE__->new(
-        op=>'link', files => [$FN->exe($args{exe})],
+        op=>'link', files => [$DestDir->file($FN->exe($args{exe}))->absolute],
         forward_opts(\%args, 'name')
     );
     hlog { __PACKAGE__, 'Built link node', Dumper($node) } 2;
@@ -110,38 +113,52 @@ make_GraphBuilder 'link';
 
 =head1 MEMBER FUNCTIONS
 
-=head2 run
+=head2 _run
 
-Not yet implemented, but doesn't die!
+Create the compile or link command lines.
 
 =cut
 
-sub run {
-    my ($self, %args) = parameters('self', [qw(phase scope; generator *)], @_);
-    hlog { 'Running', __PACKAGE__, 'node', $self->name };
+sub _run {
+    my ($self, %args) = parameters('self', [qw(phase ; generator *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-scope=>$args{scope}) if $args{phase} ne 'Gen';
+    return $self->passthrough(-nocontext=>1) if $args{phase} ne 'Gen';
 
     # Find the work up to this point
-    my $old_work = $args{scope}->find('work') // [];
-    my ($from, @work);
+    my $hrOldWork =
+        $self->scope->find(-name => 'work', -set => '*', -levels => 'local') // {};
 
-    $from = deepvalue($old_work, qw(0 from)) // '';     # don't autovivify
+    if($self->op eq 'compile' && scalar keys %$hrOldWork != 1) {
+        die "C::compile nodes can only take one input at present";
+        # TODO relax this requirement
+    }
+    my $lrOldWork = %$hrOldWork{(keys %$hrOldWork)[0]};  # list of hashrefs
+
+    hlog { 'found old work', Dumper($lrOldWork) } 2;
+    my ($lrFrom, @work);
+
+    $lrFrom = deepvalue($lrOldWork, qw(0 to)) // [];     # don't autovivify
+    if($self->op eq 'compile' && $#$lrFrom != 0) {
+        die "C::compile nodes can only take one input filename at present";
+        # TODO relax this requirement
+    }
 
     # Add the new work
-    foreach my $file (@{$self->files}) {
-        my $hr = { to => $file, from => [$from] };
+    foreach my $file (@{$lrFrom}) {
+        my $hr = { from => [ $file ] };
+        $hr->{to} = [ $self->op eq 'compile' ?
+            $FN->obj($file) :
+            $self->files->[0] ];
         $hr->{how} = $self->op eq 'compile' ?
             $self->_cc . " -c #first -o #out" :
             $self->_cc . " #first -o #out";
         push @work, $hr;
-        $from = [$file];
+        $lrFrom = [$file];
     }
 
-    # Copy the existing work
-    push @work, @$old_work if $old_work;
-
+    # Add the existing work at the end
+    push @work, @$lrOldWork if @$lrOldWork;
 
     return { work => \@work };
 } #run()

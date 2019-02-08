@@ -14,7 +14,7 @@ build scripts (specifically, Perl 5.14+)
 - Context-sensitivity.  Your users can tweak their own builds for their own
 platforms without affecting your project.
 
-See [Build::Hopen::Conventions](https://metacpan.org/pod/Build::Hopen::Conventions) for details of the input format.
+See [Build::Hopen::Conventions](https://metacpan.org/pod/release/CXW/Build-Hopen-0.000006-TRIAL/lib/Build/Hopen/Conventions.pod) for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!

@@ -27,12 +27,10 @@ tools used in the hopen build system are under L<Build::Hopen::Tool>.
 
 =head2 C<Build::Hopen::G::Op>
 
-An operation.  Operations should, generally speaking, invoke a generator
-routine (L<Build::Hopen::Gen>) based on their inputs.  Operations should
-output values representing the generator action they took.
-
-B<TODO> Should operations pass through all inputs they don't use or transform?
-I am inclined to think they should, but this needs testing.
+An operation.  Operations can, e.g., transform their inputs or invoke a
+generator routine (L<Build::Hopen::Gen>) based on their inputs.  Operations
+can output values representing the generator action they took, or that will
+later be used by the generator or downstream nodes.
 
 =head2 C<Build::Hopen::G::Link>
 

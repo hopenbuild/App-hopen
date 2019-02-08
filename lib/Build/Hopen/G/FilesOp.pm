@@ -3,7 +3,7 @@ package Build::Hopen::G::FilesOp;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {
@@ -35,7 +35,7 @@ L<Build::Hopen::Conventions/INTERNALS>.
 
 =cut
 
-sub run {
+sub _run {
     my $self = shift or croak 'Need an instance';
 
     return { work => [ {

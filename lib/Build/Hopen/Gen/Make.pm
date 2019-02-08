@@ -4,7 +4,7 @@ use Build::Hopen qw(:default $QUIET);
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use Hash::Ordered;
 
@@ -84,26 +84,26 @@ EOT
     my $iter = $self->targets->iterator;
     # TODO make this more robust and flexible
     while( my ($name, $goal) = $iter->() ) {
-        hlog { __PACKAGE__, 'goal', $name, Dumper($goal) } 2;
+        hlog { __PACKAGE__, 'goal', $name } 2;
+        say $fh "### Goal $name ###";
         unless(eval { scalar @{$goal->outputs->{work}} }) {
             warn "No work for goal $name" unless $QUIET;
             next;
         }
 
         my @work = @{$goal->outputs->{work}};
-        unshift @work, { to => [$name], from => [$work[0]->{to}], how => undef };
+        unshift @work, { to => [$name], from => $work[0]->{to}, how => undef };
             # Make a fake record for the goal.  TODO move this to visit_goal?
 
+        hlog { 'Work to do', Dumper(\@work) } 3;
         foreach my $item (@work) {
+            next unless @{$item->{from}};   # no prerequisites => assume it's a file
             say $fh $item->{to}->[0], ': ', join(' ', @{$item->{from}});
             say $fh (_expand($item) =~ s/^/\t/gmr);
             say $fh '';
         }
 
-        say $fh "$name:";
-        say $fh "\techo \"$name\"";
-        say $fh '';
-    }
+    } #foreach goal
     close $fh;
 } #finalize()
 

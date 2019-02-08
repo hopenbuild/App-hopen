@@ -8,6 +8,7 @@ lib/Build/Hopen/Base.pm
 lib/Build/Hopen/BuildSystemGlobals.pm
 lib/Build/Hopen/Conventions.pod
 lib/Build/Hopen/G.pod
+lib/Build/Hopen/G/CollectOp.pm
 lib/Build/Hopen/G/DAG.pm
 lib/Build/Hopen/G/Entity.pm
 lib/Build/Hopen/G/FilesOp.pm
@@ -16,7 +17,6 @@ lib/Build/Hopen/G/GraphBuilder.pm
 lib/Build/Hopen/G/Link.pm
 lib/Build/Hopen/G/Node.pm
 lib/Build/Hopen/G/Op.pm
-lib/Build/Hopen/G/PassthroughOp.pm
 lib/Build/Hopen/G/Runnable.pm
 lib/Build/Hopen/Gen.pm
 lib/Build/Hopen/Gen/Make.pm
@@ -51,7 +51,7 @@ t/002-link.t
 t/003-node.t
 t/004-goal.t
 t/005-op.t
-t/006-passthrough-op.t
+t/006-collect-op.t
 t/007-hnew.t
 t/008-nameset.t
 t/009-hopen-constants.t

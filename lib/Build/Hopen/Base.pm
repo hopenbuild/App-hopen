@@ -8,7 +8,7 @@ package Build::Hopen::Base;
 use parent 'Exporter';
 use Import::Into;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 # Pragmas
 use 5.014;
@@ -48,9 +48,7 @@ sub import {
 
     # Re-export pragmas
     feature->import::into($target, qw(:5.14));
-    foreach my $pragma (qw(strict warnings)) {
-        ${pragma}->import::into($target);
-    };
+    "$_"->import::into($target) foreach qw(strict warnings);
 
     # Re-export packages
     Data::Dumper->import::into($target);

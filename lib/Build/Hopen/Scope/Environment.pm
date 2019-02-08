@@ -3,7 +3,7 @@ package Build::Hopen::Scope::Environment;
 use Build::Hopen::Base;
 use Build::Hopen qw(hlog);
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::Scope';
 
@@ -36,8 +36,9 @@ with L<Build::Hopen::Scope::Hash>.
 # Returns truthy of OK, falsy if not.
 # Better a readily-obvious crash than a subtle bug!
 sub _set0 {
+    $_[0] //= 0;    # Give the caller a default set
     my $set = shift;
-    return false if defined($set) && $set ne '0';
+    return false if defined($set) && $set ne '0' && $set ne '*';
     return true;
 } #_set0()
 
@@ -51,7 +52,9 @@ failure.
 sub _find_here {
     my ($self, %args) = parameters('self', [qw(name ; set)], @_);
     _set0 $args{set} or croak 'I only support set 0';
-    return $ENV{$args{name}}
+    my $val = $ENV{$args{name}};
+    return undef unless defined $val;
+    return ($args{set} eq '*') ? { 0 => $val } : $val;
 } #_find_here()
 
 =head2 add
@@ -80,9 +83,8 @@ Add the names in C<%ENV> to the given L<Set::Scalar>.
 sub _names_here {
     my ($self, %args) = parameters('self', [qw(retval ; set)], @_);
     _set0 $args{set} or croak 'I only support set 0';
-    hlog { __PACKAGE__ . '::_names_here' };
     $args{retval}->insert(keys %ENV);
-    hlog { Dumper $args{retval} };
+    hlog { __PACKAGE__ . '::_names_here', Dumper $args{retval} };
 } #_names_here()
 
 1;

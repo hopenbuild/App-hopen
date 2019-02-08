@@ -1,6 +1,6 @@
 # Build::Hopen::App: hopen(1) program
 package Build::Hopen::App;
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 # Imports {{{1
 use Build::Hopen::Base;
@@ -18,6 +18,7 @@ use File::stat ();
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
 use Path::Class;
+use Scalar::Util qw(looks_like_number);
 
 # }}}1
 # Constants {{{1
@@ -109,6 +110,7 @@ my %CMDLINE_OPTS = (
     # --usage reserved
     PRINT_VERSION => ['version','', false],
     VERBOSE => ['v','+', 0],
+    VERBOSE2 => ['verbose',':s'],   # --verbose=<n>
     # -? reserved
 
 );
@@ -190,8 +192,12 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
     $hrOptsOut->{DEST_DIR} //= $params{from}->[0] if @{$params{from}};
     $hrOptsOut->{PROJ_DIR} //= $params{from}->[1] if @{$params{from}}>1;
 
-    # Option overrides: -q beats -v
-    $hrOptsOut->{VERBOSE} = 0 if $hrOptsOut->{QUIET};
+    # Sanity check VERBOSE2, and give it a default of 0
+    my $v2 = $hrOptsOut->{VERBOSE2} // 0;
+    $v2 = 1 if $v2 eq '';   # --verbose without value === --verbose=1
+    die "--verbose requires a positive numeric argument"
+        if (defined $v2) && ( !looks_like_number($v2) || (int($v2) < 0) );
+    $hrOptsOut->{VERBOSE2} = int($v2 // 0);
 
 } #_parse_command_line() }}}2
 
@@ -390,16 +396,21 @@ EOT
         return \$__R_retval;
     } #__Rsub_$pkg_name
 
-    return __Rsub_$pkg_name(\$Build::Hopen::App::_hrData);
+    our \$hrNewData = __Rsub_$pkg_name(\$Build::Hopen::App::_hrData);
 } #package
 EOT
+        # Put the result in a package variable because that way I don't have
+        # to remember the rules for the return value of eval().
 
     hlog { "Source for $fn\n", $src, "\n" } 3;
 
     # == Run the package ==
 
-    my $hrAddlData = eval($src);
+    eval($src);
     die "Error in $friendly_name: $@" if $@;
+
+    # Get the data from the package we just ran
+    my $hrAddlData = eval ("\$__Rpkg_${pkg_name}" . '::hrNewData');
 
     hlog { 'old data', Dumper($_hrData) } 3;
     hlog { 'new data', Dumper($hrAddlData) } 2;
@@ -446,6 +457,7 @@ be run if it is empty.
     $Phase = $opts{phase} if $opts{phase};
     my $lrHopenFiles = $opts{files};
     croak 'Need files=>[...]' unless ref $lrHopenFiles eq 'ARRAY';
+    hlog { Phase => $Phase, Running => Dumper($lrHopenFiles) };
 
     # = Process the files ======================================
 
@@ -458,7 +470,7 @@ be run if it is empty.
     hlog { 'Graph is', ($Build->empty ? 'empty.' : 'not empty.'),
             ' Final data is', Dumper($_hrData) } 2;
 
-    hlog { Data::Dumper->new([$Build], ['$Build'])->Indent(1)->Dump } 4;
+    hlog { Data::Dumper->new([$Build], ['$Build'])->Indent(1)->Dump } 5;
 
     # If there is no build graph, just return the data.  This is useful
     # enough for debugging that I am making it documented behaviour.
@@ -473,7 +485,7 @@ be run if it is empty.
     $scope->adopt_hash($_hrData);
 
     # Run the DAG
-    my $result_data = $Build->run(-scope => $scope, -phase => $Phase,
+    my $result_data = $Build->run(-context => $scope, -phase => $Phase,
                                     -generator => $Generator);
     hlog { Data::Dumper->new([$result_data], ['Build graph result data'])->Indent(1)->Dump } 2;
     return $result_data;
@@ -511,6 +523,7 @@ translates the die() into a print and error return.
 
     # Get the project dir
     my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
+    $ProjDir = $proj_dir;
 
     # Get the destination dir
     my $dest_dir;
@@ -519,6 +532,7 @@ translates the die() into a print and error return.
     } else {
         $dest_dir = $proj_dir->subdir('built');
     }
+    $DestDir = $dest_dir;
 
     # Prohibit in-source builds
     die <<EOT if $proj_dir eq $dest_dir;
@@ -682,9 +696,18 @@ Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
 
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
+
+    # Verbosity is the max of -v and --verbose
+    $opts{VERBOSE} = $opts{VERBOSE2} if $opts{VERBOSE2} > $opts{VERBOSE};
+
+    # Option overrides: -q beats -v
+    $opts{VERBOSE} = 0 if $opts{QUIET};
     $QUIET = $opts{QUIET} // false;
-    if(!$QUIET && $opts{VERBOSE}) {     # Verbosity first
-        $Build::Hopen::VERBOSE += $opts{VERBOSE};
+
+    # Implement verbosity
+    if(!$QUIET && $opts{VERBOSE}) {
+        $VERBOSE += $opts{VERBOSE};
+        #hlog { Verbosity => $VERBOSE };
 
         # Under -v, keep stdout and stderr lines in order.
         use IO::Handle;
@@ -694,7 +717,9 @@ Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
 
     # Don't print the source of an eval'ed hopen file unless -vvv or higher.
     # Need 3 for the "..." that Carp prints when truncating.
-    $Carp::MaxEvalLen = 3 unless $Build::Hopen::VERBOSE >= 3;
+    $Carp::MaxEvalLen = 3 unless $VERBOSE >= 3;
+
+    # = Do it, Rockapella! ==================================================
 
     eval { _inner(%opts); };
     my $msg = $@;
@@ -766,9 +791,10 @@ terminate if a file attempts to do so.
 
 Produce no output (quiet).  Overrides C<-v>.
 
-=item -v
+=item -v, --verbose=n
 
-Verbose.  Specify more C<v>'s for more verbosity.  At present, C<-vv> gives
+Verbose.  Specify more C<v>'s for more verbosity.  At present, C<-vv>
+(equivalently, C<--verbose=2>) gives
 you detailed traces of the data, and C<-vvv> gives you more detailed
 code tracebacks on error.
 

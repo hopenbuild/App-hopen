@@ -2,7 +2,7 @@
 package Build::Hopen::Scope::Hash;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::Scope';
 use Class::Tiny {
@@ -66,8 +66,9 @@ outermost Scope.
 # Returns truthy of OK, falsy if not.
 # Better a readily-obvious crash than a subtle bug!
 sub _set0 {
+    $_[0] //= 0;    # Give the caller a default set
     my $set = shift;
-    return false if defined($set) && $set ne '0';
+    return false if defined($set) && $set ne '0' && $set ne '*';
     return true;
 } #_set0()
 
@@ -151,7 +152,9 @@ sub _find_here {
     my ($self, %args) = parameters('self', [qw(name ; set)], @_);
     _set0 $args{set} or croak 'I only support set 0';
 
-    return $self->_content->{$args{name}};
+    my $val = $self->_content->{$args{name}};
+    return undef unless defined $val;
+    return ($args{set} eq '*') ? { 0 => $val } : $val;
 } #_find_here()
 
 1;

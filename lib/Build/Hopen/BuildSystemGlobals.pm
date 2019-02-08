@@ -3,11 +3,11 @@ package Build::Hopen::BuildSystemGlobals;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Exporter';
 our @EXPORT;
-BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase); }
+BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir); }
         # export with `*` => `local` will work.
 
 =head1 NAME
@@ -41,9 +41,17 @@ generated C<Makefile>.
 
 Which phase we're in (string).
 
+=head2 $ProjDir
+
+A L<Path::Class::Dir> instance representing the project directory.
+
+=head2 $DestDir
+
+A L<Path::Class::Dir> instance representing the destination directory.
+
 =cut
 
-our ($Generator, $Toolset, $Build, $Phase);
+our ($Generator, $Toolset, $Build, $Phase, $ProjDir, $DestDir);
 
 1;
 __END__

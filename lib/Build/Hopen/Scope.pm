@@ -3,7 +3,7 @@ package Build::Hopen::Scope;
 use Build::Hopen::Base;
 use Exporter 'import';
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 # Class definition
 use Class::Tiny {
@@ -27,7 +27,7 @@ use constant _LOCAL => 'local';
 use Config;
 use Build::Hopen::Arrrgs;
 use POSIX ();
-use Build::Hopen::Util::Data qw(forward_opts);
+use Build::Hopen::Util::Data qw(clone forward_opts);
 use Set::Scalar;
 use Sub::ScopeFinalizer qw(scope_finalizer);
 
@@ -191,6 +191,7 @@ sub find {
         # Therefore, '0' is not a valid name
     my $levels = $args{levels};
 
+    $DB::single=1;
     my $here = $self->_find_here($args{name}, $args{set});
     return $here if defined $here;
 
@@ -207,6 +208,9 @@ and example:
 
     my $set = $scope->names([$levels]);
     say "Name $_ is available" foreach @$set;   # Set::Scalar supports @$set
+
+If no names are available in the given C<$levels>, returns an empty
+C<Set::Scalar>.
 
 TODO?  Support a C<$set> parameter?
 
@@ -316,7 +320,7 @@ chain.  Example usage:
 C<add> is responsible for handling any conflicts that may occur.  In this
 particular implementation, the last-added value for a particular key wins.
 
-TODO add $set option.
+TODO add C<$set> option.  TODO? add -deep option?
 
 =cut
 

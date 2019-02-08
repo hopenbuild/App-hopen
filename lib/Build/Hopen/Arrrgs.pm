@@ -12,7 +12,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw( parameters );
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 =head1 NAME
 
@@ -20,7 +20,7 @@ Build::Hopen::Arrrgs - Perl extension allowing subs to handle mixed parameter li
 
 =head1 SYNOPSIS
 
-This is a tweaked version of L<Build::Hopen::Arrrgs>.  See
+This is a tweaked version of L<Getargs::Mixed>.  See
 L<https://rt.cpan.org/Ticket/Display.html?id=128428>.
 
   use Build::Hopen::Arrrgs;

@@ -3,7 +3,7 @@ package Build::Hopen::Gen;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use Class::Tiny qw(proj_dir dest_dir), {
     architecture => '',

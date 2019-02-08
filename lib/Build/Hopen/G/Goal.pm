@@ -3,10 +3,13 @@ package Build::Hopen::G::Goal;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
-use Class::Tiny qw(_passthrough);
+#use Class::Tiny qw(_passthrough);
+
+use Build::Hopen::Arrrgs;
+use Build::Hopen::Util::Data qw(forward_opts);
 
 # Docs {{{1
 
@@ -25,32 +28,29 @@ graph.
 
 =head2 run
 
-Wraps a L<Build::Hopen::G::PassthroughOp>'s run function.
+Wraps a L<Build::Hopen::G::CollectOp>'s run function.
 
 =cut
 
 # }}}1
 
-sub run {
-    my $self = shift or croak 'Need an instance';   # Don't need Build::Hopen::Arrrgs
-    return $self->_passthrough->run(@_);            # since this is straight forwarding
-}
+sub _run {
+    my ($self, %args) = parameters('self', [qw(; phase generator)], @_);
+    hlog { Goal => $self->name };
+    return $self->passthrough(-nocontext=>1, -levels => 'local',
+            forward_opts(\%args, {'-'=>1}, qw[phase generator]));
+} #_run()
 
 =head2 BUILD
+
+Enforce the requirement for a user-specified name.
 
 =cut
 
 sub BUILD {
     my ($self, $args) = @_;
     croak 'Goals must have names' unless $args->{name};
-    # TODO refactor out the common code between Goal and PassthroughOp
-    # rather than wrapping.
-    my $p = hnew(PassthroughOp => ($args->{name} . '_inner'));
-    $self->_passthrough($p);
-    $self->want($p->want);
-    $self->need($p->need);
 } #BUILD()
-
 
 1;
 __END__

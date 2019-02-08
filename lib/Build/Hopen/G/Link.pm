@@ -3,7 +3,7 @@ package Build::Hopen::G::Link;
 use Build::Hopen qw(:default UNSPECIFIED);
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::G::Runnable';
 use Class::Tiny {
@@ -35,10 +35,9 @@ The output is C<{}> if no inputs are provided.
 
 =cut
 
-sub run {
-    my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
-    hlog { Running => __PACKAGE__ , $self->name };
-    return $self->passthrough(-scope => $args{scope});
+sub _run {
+    my ($self, %args) = parameters('self', [qw(; phase generator)], @_);
+    return $self->passthrough(-nocontext => 1);
 } #run()
 
 

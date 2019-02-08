@@ -12,7 +12,10 @@ requires its components to follow the conventions described in this document.
 These conventions are generally implemented/enforced in L<Build::Hopen::App>
 and L<Build::Hopen::AppUtil>.
 
-=head2 Components used by the build system
+Note: everything in this document is subject to change since Build::Hopen
+is currently under active development.
+
+=head1 COMPONENTS USED BY THE BUILD SYSTEM
 
 =over
 
@@ -83,9 +86,9 @@ After C<MY.hopen.pl> runs, the generator and toolset are loaded.
 
 The last-sorting C<.hopen.pl> or C<*.hopen.pl> file in the project directory.
 You can name your project file whatever you want --- only the extension
-has to match.  That way you can call your build file C<.hopen> if
-you want it hidden, or C<z.hopen> if you want it to sort below all your other
-files.  Sort order is Perl's default, which is by byte value.
+has to match.  That way you can call your build file C<.hopen.pl> if
+you want it hidden, or C<z.hopen.pl> if you want it to sort below all your
+other files.  Sort order is Perl's default, which is by byte value.
 
 =item * Context file
 
@@ -128,13 +131,13 @@ packages loaded (via L<Build::Hopen::HopenFileKit>):
 
 =over
 
-=item L<Build::Hopen>
+=item * L<Build::Hopen>
 
-=item L<Build::Hopen::Base>
+=item * L<Build::Hopen::Base>
 
-=item L<Build::Hopen::Phases>
+=item * L<Build::Hopen::Phases>
 
-=item L<Path::Class>
+=item * L<Path::Class>
 
 =back
 
@@ -194,8 +197,8 @@ You can do this by running C<hopen --build>, if you wish.
 
 =head2 The build graph
 
-Each operation (L<Build::Hopen::G::Op> subclass) returns or adds to a C<work>
-arrayref.  For example:
+Each operation (L<Build::Hopen::G::Op> subclass) returns, or adds to
+the beginning of, a C<work> arrayref.  For example:
 
     {
         work => [

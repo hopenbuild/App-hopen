@@ -3,7 +3,7 @@ package Build::Hopen::T::Gnu;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 #use parent 'Build::Hopen::TODO';
 #use Class::Tiny qw(TODO);

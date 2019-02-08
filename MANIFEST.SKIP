@@ -1,8 +1,6 @@
+# MIscellaneous
 ^\.editorconfig
 ^\.[^\\\/]*\.yml
-\.swp$
-~$
-^~
 \bfoo\b.*
 t/.*\.out$
 lua$
@@ -12,8 +10,15 @@ TODO
 \brunhopen$
 \.stackdump$
 
+# Backup files
+\.swp$
+~$
+^~
+
 # Things we generate
 \bbuilt[\\/]
+\.o(bj)?$
+\.exe$
 
 #modified included
 # Avoid version control files.

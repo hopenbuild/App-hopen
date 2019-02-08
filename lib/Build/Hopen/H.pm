@@ -1,8 +1,9 @@
 # Build::Hopen::H - H:: namespace for use in hopen files
 package Build::Hopen::H;
 use Build::Hopen::Base;
+use Build::Hopen qw(hlog);
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
@@ -19,6 +20,7 @@ use Build::Hopen::G::FilesOp;
 use Build::Hopen::G::GraphBuilder;
 use Build::Hopen::Util::Data qw(forward_opts);
 use Build::Hopen::Arrrgs;
+use Path::Class;
 
 # Docs {{{1
 
@@ -48,10 +50,10 @@ The node is a L<Build::Hopen::G::FilesOp>.
 =cut
 
 sub files {
-    my $self = shift or croak 'Need an instance';
     my ($builder, %args) = parameters('self', ['*'], @_);
+    hlog { __PACKAGE__, 'files:', Dumper(\%args) } 3;
     return Build::Hopen::G::FilesOp->new(
-        files=>$args{'*'} // [],
+        files=> [map { file($_)->absolute } @{$args{'*'} // []}],
         forward_opts(\%args, 'name')
     );
 } #files()

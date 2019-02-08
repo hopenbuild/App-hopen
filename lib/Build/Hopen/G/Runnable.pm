@@ -1,10 +1,12 @@
 # Build::Hopen::G::Runnable - parent class for anything runnable in a hopen graph
 package Build::Hopen::G::Runnable;
 use Build::Hopen::Base;
+use Build::Hopen;
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use Build::Hopen::Scope::Hash;
+use Build::Hopen::Util::Data qw(forward_opts);
 use Build::Hopen::Util::NameSet;
 use Build::Hopen::Arrrgs;
 use Hash::Merge;
@@ -56,8 +58,8 @@ use Class::Tiny {
 
 =head2 run
 
-Run the operation, whatever that means.  B<Must> return a new hashref.
-Must be implemented by subclasses.  Usage:
+Run the operation, whatever that means.  Returns a new hashref.
+Usage:
 
     my $hrOutputs = $op->run([options])
 
@@ -65,12 +67,11 @@ Options are:
 
 =over
 
-=item -scope
+=item -context
 
 A L<Build::Hopen::Scope> or subclass including the inputs the caller wants to
-pass to the Runnable.  The Runnable itself should use its own L</scope>,
-usually by setting C<< $self->scope->outer($outer_scope) >> within its
-C<run()> call.
+pass to the Runnable.  The L</scope> of the Runnable itself may override
+values in the C<context>.
 
 =item -phase
 
@@ -81,6 +82,11 @@ If given, the phase that is currently under way in a build-system run.
 If given, the L<Build::Hopen::Gen> instance in use for the current
 build-system run.
 
+=item -nocontext
+
+If C<< -nocontext=>1 >> is specified, don't link a context scope into
+this one.  May not be specified together with C<-context>.
+
 =back
 
 See the source for this function, which contains as an example of setting the
@@ -89,39 +95,66 @@ scope.
 =cut
 
 sub run {
-    my ($self, %args) = parameters('self', [qw(; scope phase generator)], @_);
-    my $outer_scope = $args{scope};     # which may be undef - that's OK
+    my ($self, %args) = parameters('self', [qw(; context phase generator nocontext)], @_);
+    my $context_scope = $args{context};     # which may be undef - that's OK
+    croak "Can't combine -context and -nocontext" if $args{context} && $args{nocontext};
 
     # Link the outer scope to our scope
-    my $saver = $self->scope->outerize($outer_scope);
-    ...     # Subclasses have to do the work.  TODO provide _run_inner for
-            # use by subclasses?
+    my $saver = $args{nocontext} ? undef : $self->scope->outerize($context_scope);
+
+    hlog { ref($self), $self->name, 'input', Dumper($self->scope->as_hashref) } 3;
+
+    my $retval = $self->_run(forward_opts(\%args, {'-'=>1}, qw[phase generator]));
+
+    hlog { ref $self, $self->name, 'output', Dumper($retval) } 3;
+
+    return $retval;
 } #run()
+
+=head2 _run
+
+The internal method that implements L</run>.  Must be implemented by
+subclasses.  When C<_run> is called, C<< $self->scope >> has been hooked
+to the context scope, if any.
+
+Parameters are C<-phase> and C<-generator>.  C<_run> is always called in scalar
+context, and must return a new hashref.
+
+=cut
+
+sub _run {
+    my ($self, %args) = parameters('self', [qw(; phase generator)], @_);
+    ...
+}
 
 =head2 passthrough
 
 Returns a new hashref of this Runnable's local values, as defined
 by L<Build::Hopen::Scope/local>.  Usage:
 
-    my $hashref = $runnable->passthrough([-scope => $outer_scope])
+    my $hashref = $runnable->passthrough([-context => $outer_scope]);
+        # To use $outer_scope as the context
+    my $hashref = $runnable->passthrough(-nocontext => 1);
+        # To leave the context untouched
+
+Other valid options include L<-levels|Build::Hopen::Scope/$levels>.
 
 =cut
 
-# TODO RESUME HERE - update this to handle $scope->inputs() correctly.
-# Maybe just pass the inputs(), not anything else?
 sub passthrough {
-    my ($self, %args) = parameters('self', [qw(; scope)], @_);
-    my $outer_scope = $args{scope};     # which may be undef - that's OK
+    my ($self, %args) = parameters('self', ['*'], @_);
+    my $outer_scope = $args{context};     # which may be undef - that's OK
+    croak "Can't combine -context and -nocontext" if $args{context} && $args{nocontext};
 
     # Link the outer scope to our scope
-    my $saver = $self->scope->outerize($outer_scope);
+    my $saver = $args{nocontext} ? undef : $self->scope->outerize($outer_scope);
 
-    my $names = $self->scope->names('local');
-
+    # Copy the names
+    my $levels = $args{levels} // 'local';
+    my @names = @{$self->scope->names(-levels=>$levels)};
     my $retval = {};
-    foreach my $input (@{$names}) {
-        $retval->{$input} = $self->scope->find($input, -levels=>'local');
-    }
+    $retval->{$_} = $self->scope->find($_, -levels=>$levels) foreach @names;
+
     return $retval;
 } #passthrough()
 

@@ -3,7 +3,7 @@ package Build::Hopen::G::DAG;
 use Build::Hopen::Base;
 use Build::Hopen qw(hlog $QUIET);
 
-our $VERSION = '0.000006'; # TRIAL
+our $VERSION = '0.000007'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {
@@ -16,7 +16,7 @@ use Class::Tiny {
 
     # Private attributes - initialized by BUILD()
     _graph  => undef,   # L<Graph> instance
-    _final   => undef,  # The graph root - all goals have edges to this
+    _final   => undef,  # The graph sink - all goals have edges to this
 
     #Initialization operations
     _init_graph => undef,   # L<Graph> for initializations
@@ -29,7 +29,7 @@ use Class::Tiny {
 use Build::Hopen::G::Goal;
 use Build::Hopen::G::Link;
 use Build::Hopen::G::Node;
-use Build::Hopen::G::PassthroughOp;
+use Build::Hopen::G::CollectOp;
 use Build::Hopen::Util::Data qw(forward_opts);
 use Build::Hopen::Arrrgs;
 use Graph;
@@ -92,7 +92,7 @@ The first node to be run in _init_graph.
 
 # }}}1
 
-=head2 run
+=head2 _run
 
 Traverses the graph.  The DAG is similar to a subroutine in this respect.
 The outputs from all the goals
@@ -100,29 +100,23 @@ of the DAG are aggregated and provided as the outputs of the DAG.
 The output is a hash keyed by the name of each goal, with each goal's outputs
 as the values under that name.  Usage:
 
-    my $hrOutputs = $dag->run(-scope=>$scope[, other options])
+    my $hrOutputs = $dag->run([-context=>$scope][, other options])
 
-C<$scope> is required, and must be a L<Build::Hopen::Scope> or subclass.
+C<$scope> must be a L<Build::Hopen::Scope> or subclass if provided.
 Other options are as L<Build::Hopen::Runnable/run>.
 
 =cut
 
-#    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');  # TODO
-
-sub run {
-    my ($self, %args) = parameters('self', [qw(scope; phase generator)], @_);
-    my $outer_scope = $args{scope};     # From the caller
+# The implementation of run().  $self->scope has already been linked to the context.
+sub _run {
+    my ($self, %args) = parameters('self', [qw(; phase generator)], @_);
     my $retval = {};
-
-    # The scope attached to the DAG takes precedence over the provided Scope.
-    # This is realized by making $outer_scope the outer of our scope for
-    # the duration of this call.
-    my $dag_scope_saver = $self->scope->outerize($outer_scope);
 
     # --- Get the initialization ops ---
 
     my @init_order = eval { $self->_init_graph->toposort };
     die "Initializations contain a cycle!" if $@;
+    @init_order = () if $self->_init_graph->vertices == 1;  # no init nodes => skip
 
     # --- Get the runtime ops ---
 
@@ -133,7 +127,7 @@ sub run {
 
     # Remove _final from the order for now - I don't yet know what it means
     # to traverse _final.
-    die "Last item in order isn't _final!"
+    die "Last item in order isn't _final!  This might indicate a bug in hopen."
         unless $order[$#order] == $self->_final;
     pop @order;
 
@@ -142,7 +136,7 @@ sub run {
     # Note: while hacking, please make sure Goal nodes can appear
     # anywhere in the graph.
 
-    hlog { 'Traversing DAG ' . $self->name };
+    hlog { my $x = 'Traversing DAG ' . $self->name; $x, '*' x (78-length($x)) };
     my $graph = $self->_init_graph;
     foreach my $node (@init_order, undef, @order) {
 
@@ -151,14 +145,16 @@ sub run {
             next;
         }
 
-        # Inputs to this node.  TODO should the provided inputs be given
-        # to each node?  Any node with no predecessors?  Currently each
-        # node has the option.
-        my $node_scope = Build::Hopen::Scope::Hash->new;
+        # Inputs to this node.  These are different from the DAG's inputs.
+        # The scope stack is (outer to inner) DAG's inputs, DAG's overrides,
+        # then $node_inputs, then the individual node's overrides.
+        my $node_inputs = Build::Hopen::Scope::Hash->new;
             # TODO make this a BH::Scope::Inputs once it's implemented
-        $node_scope->outer($self->scope);
+        $node_inputs->outer($self->scope);
             # Data specifically being provided to the current node, e.g.,
             # on input edges, beats the scope of the DAG as a whole.
+        $node_inputs->local(true);
+            # A CollectOp won't reach above the node's inputs by default.
 
         # Iterate over each node's edges and process any Links
         foreach my $pred ($graph->predecessors($node)) {
@@ -167,42 +163,47 @@ sub run {
             # Goals do not feed outputs to other Goals.  This is so you can
             # add edges between Goals to set their order while keeping the
             # data for each Goal separate.
-            # TODO add tests for this
+            # TODO add tests for this.  Also TODO decide whether this is
+            # actually the Right Thing!
             next if eval { $pred->DOES('Build::Hopen::G::Goal') };
 
             my $links = $graph->get_edge_attribute($pred, $node, LINKS);
 
             unless($links) {    # Simple case: predecessor's outputs become our inputs
-                push @{$node_scope->inputs}, $pred->outputs;
+                $node_inputs->add(%{$pred->outputs});
                 next;
             }
 
             # More complex case: Process all the links
-            my $hrPredOutputs = $pred->outputs; # In one test, outputs was undef if not on its own line.
-            my $link_scope = Build::Hopen::Scope::Hash->new->add(%{$hrPredOutputs});
+            my $hrPredOutputs = $pred->outputs;
+                # In one test, outputs was undef if not on its own line.
+            my $link_inputs = Build::Hopen::Scope::Hash->new->add(%{$hrPredOutputs});
                 # All links get the same outer scope --- they are parallel,
                 # not in series.
-            $link_scope->outer($self->scope);
+            $link_inputs->outer($self->scope);
                 # The links run at the same scope level as the node.
+            $link_inputs->local(true);
 
+            # Run the links in series - not parallel!
+            my $link_outputs = $link_inputs->as_hashref(-levels=>'local');
             foreach my $link (@$links) {
                 hlog { ('From', $pred->name, 'via', $link->name, 'to', $node->name) };
-                my $link_outputs = $link->run(
-                    -scope=>$link_scope,
+
+                $link_outputs = $link->run(
+                    -context=>$link_inputs,
                     forward_opts(\%args, {'-'=>1}, 'phase')
                     # Generator not passed to links.
                 );
-                $node_scope->add($_, $link_outputs->{$_}) foreach keys %{$link_outputs};
-                #say 'Link ', $link->name, ' outputs: ', Dumper($link_outputs);   # DEBUG
             } #foreach incoming link
+
+            $node_inputs->add(%{$link_outputs});
+                # TODO specify which set these are.
         } #foreach predecessor node
 
-        hlog { 'Node', $node->name, 'input', Dumper($node_scope->as_hashref) } 3;
-        my $step_output = $node->run(-scope=>$node_scope,
+        my $step_output = $node->run(-context=>$node_inputs,
             forward_opts(\%args, {'-'=>1}, 'phase', 'generator')
         );
         $node->outputs($step_output);
-        hlog { 'Node', $node->name, 'output', Dumper($step_output) } 3;
 
         # Give the Generator a chance, and stash the results if necessary.
         if(eval { $node->DOES('Build::Hopen::G::Goal') }) {
@@ -216,7 +217,7 @@ sub run {
             $args{generator}->visit_node($node) if $args{generator};
         }
 
-    } #foreach node
+    } #foreach node in topo-sort order
 
     return $retval;
 } #run()
@@ -232,10 +233,6 @@ akin to top-level Makefile targets.  Usage:
 
 Returns a passthrough operation representing the goal.  Any inputs passed into
 that operation are provided as outputs of the DAG under the corresponding name.
-
-     TODO integrate
-     A C<hopen> file with no C<main:goal()> calls will result in nothing
-     happening when C<hopen> is run.
 
 The first call to C<goal()> also sets L</default_goal>.
 
@@ -266,7 +263,7 @@ sub goal {
    - C<DAG:connect(<op1>, <Link>, <op2>)>: Connects C<< op1 >> to
      C<< op2 >> via L<Build::Hopen::G::Link> C<< Link >>.
 
-Returns the name of the edge?  The edge instance itself?  Maybe a
+TODO return the name of the edge?  The edge instance itself?  Maybe a
 fluent interface to the DAG for chaining C<connect> calls?
 
 =cut
@@ -287,16 +284,17 @@ sub connect {
         $in_edge = false;       # No inputs TODO
     }
 
-    # Create the link
-    unless($link) {
-        $link = Build::Hopen::G::Link->new(
-            name => 'link_' . $op1->name . '_' . $op2->name,
-            in => [$out_edge],      # Output of op1
-            out => [$in_edge],      # Input to op2
-        );
-    }
+#    # Create the link
+#    unless($link) {
+#        $link = Build::Hopen::G::Link->new(
+#            name => 'link_' . $op1->name . '_' . $op2->name,
+#            in => [$out_edge],      # Output of op1
+#            out => [$in_edge],      # Input to op2
+#        );
+#    }
 
-    hlog { 'DAG::connect(): Edge from', $op1->name, 'via', $link->name,
+    hlog { 'DAG::connect(): Edge from', $op1->name,
+            'via', $link ? $link->name : '(no link)',
             'to', $op2->name };
 
     # Add it to the graph (idempotent)
@@ -305,10 +303,10 @@ sub connect {
 
     # Save the BHG::Link as an edge attribute (not idempotent!)
     my $attrs = $self->_graph->get_edge_attribute($op1, $op2, LINKS) || [];
-    push @$attrs, $link;
+    push @$attrs, $link if $link;
     $self->_graph->set_edge_attribute($op1, $op2, LINKS, $attrs);
 
-    return $link;
+    return undef;   # TODO decide what to return
 } #connect()
 
 =head2 add
@@ -418,7 +416,7 @@ sub BUILD {
     # Graph of initialization operations
     my $init_graph = Graph->new( directed => true,
                             refvertexed => true);
-    my $init = Build::Hopen::G::PassthroughOp->new(
+    my $init = Build::Hopen::G::CollectOp->new(
                                     name => '__R_DAG_INIT' . $_id_counter++);
     $init_graph->add_vertex($init);
 
