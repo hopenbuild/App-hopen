@@ -3,7 +3,7 @@ package Build::Hopen::G::DAG;
 use Build::Hopen::Base;
 use Build::Hopen qw(hlog $QUIET);
 
-our $VERSION = '0.000007'; # TRIAL
+our $VERSION = '0.000008'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {

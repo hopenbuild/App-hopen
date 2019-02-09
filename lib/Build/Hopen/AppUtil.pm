@@ -4,7 +4,7 @@ use Build::Hopen qw(:default isMYH MYH);
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000007'; # TRIAL
+our $VERSION = '0.000008'; # TRIAL
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
@@ -17,7 +17,9 @@ BEGIN {
 }
 
 use Cwd qw(getcwd abs_path);
-use File::Glob ':bsd_glob';
+use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
+    # Thanks to haukex, https://www.perlmonks.org/?node_id=1207115 -
+    # 5.14 doesn't support the ':bsd_glob' tag.
 use Path::Class;
 
 # Docs {{{1

@@ -3,7 +3,7 @@ package Build::Hopen::G::Link;
 use Build::Hopen qw(:default UNSPECIFIED);
 use Build::Hopen::Base;
 
-our $VERSION = '0.000007'; # TRIAL
+our $VERSION = '0.000008'; # TRIAL
 
 use parent 'Build::Hopen::G::Runnable';
 use Class::Tiny {

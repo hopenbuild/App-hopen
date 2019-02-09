@@ -1,5 +1,8 @@
 Revision history for Build-Hopen
 
+0.000007    2019-02-08
+        First version that can generate a Makefile
+
 0.000006    2019-02-06
         Substantially expanded
 

@@ -3,7 +3,7 @@ package Build::Hopen::Util::Filename;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000007'; # TRIAL
+our $VERSION = '0.000008'; # TRIAL
 
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
