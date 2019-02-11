@@ -7,7 +7,7 @@ use Config;
 use ExtUtils::MakeMaker;
 use File::Spec;
 
-my $VERSION_FROM = File::Spec->catfile(qw(lib Build Hopen.pm));
+my $VERSION_FROM = File::Spec->catfile(qw(lib App hopen.pm));
 my $IS_TRIAL = check_trial();
 
 # Check if this is a TRIAL version {{{1
@@ -137,10 +137,11 @@ EOT
 
 # Main options for EUMM
 my %opts = (
-    NAME             => 'Build::Hopen',
+    NAME             => 'App::hopen',
     AUTHOR           => q{Christopher White <cxwembedded@gmail.com>},
     VERSION_FROM     => $VERSION_FROM,
     ABSTRACT_FROM    => $VERSION_FROM,
+    #ABSTRACT         => 'The hopen build system, command-line interface',
     LICENSE          => 'lgpl_2_1',
     PL_FILES         => {},
     MIN_PERL_VERSION => '5.014',
@@ -177,6 +178,10 @@ my %opts = (
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
     },
     PREREQ_PM => {
+        # Other hopen packages -------------------
+        'Build::Hopen' => '0.000008',
+
+        # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',
             # - Probably don't need this; we can use Graph::topological_sort().
 

@@ -1,7 +1,13 @@
-# Build::Hopen - A build generator with first-class edges and explicit dependencies
+# App::hopen - hopen build system command-line interface
 
-[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)
 
+# USAGE
+
+    hopen [options] [--] [destination dir [project dir]]
+
+If no project directory is specified, the current directory is used.
+
+If no destination directory is specified, `<project dir>/built` is used.
 
 
 hopen is a cross-platform software build generator.  It makes files you can
@@ -19,62 +25,168 @@ See [Build::Hopen::Conventions](https://metacpan.org/pod/release/CXW/Build-Hopen
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
 
-# INSTALLATION
+# INTERNALS
 
-Easiest: install `cpanminus` if you don't have it - see
-[https://metacpan.org/pod/App::cpanminus#INSTALLATION](https://metacpan.org/pod/App::cpanminus#INSTALLATION).  Then run
-`cpanm Build::Hopen`.
+## %CMDLINE\_OPTS
 
-Manually: clone or untar into a working directory.  Then, in that directory,
+A hash from internal name to array reference of
+\[getopt-name, getopt-options, optional default-value\].
 
-    perl Makefile.PL
-    make
-    make test
+If default-value is a reference, it will be the destination for that value.
 
-(you may need to install dependencies as well -
-see [https://www.cpan.org/modules/INSTALL.html](https://www.cpan.org/modules/INSTALL.html) for resources).
-If all the tests pass,
+## \_parse\_command\_line
 
-    make install
+Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
+values from the command line, keyed by the keys in ["%CMDLINE\_OPTS"](#cmdline_opts).
 
-If some of the tests fail, please check the issues and file a new one if
-no one else has reported the problem yet.
+## $\_hrData
 
+The hashref of the current data we have built up by processing hopen files.
+
+## $\_did\_set\_phase
+
+Set to truthy if MY.hopen.pl sets the phase.
+
+## \_execute\_hopen\_file
+
+Execute a single hopen file, but **do not** run the DAG.  Usage:
+
+    _execute_hopen_file($filename[, options...])
+
+This function takes input from ["$\_hrData"](#_hrdata) unless a `DATA=>{...}` option
+is given.  This function updates ["$\_hrData"](#_hrdata) based on the results.
+
+Options are:
+
+- phase
+
+    If given, force the phase to be the one specified.
+
+- quiet
+
+    If truthy, suppress extra output.
+
+- libs
+
+    If given, it must be an arrayref of directories.  Each of those will be
+    turned into a `use lib` statement (see [lib](https://metacpan.org/pod/lib)) in the generated source.
+
+## \_run\_phase
+
+Run a phase by executing the hopen files and running the DAG.
+Reads from and writes to ["$\_hrData"](#_hrdata), which must be initialized by
+the caller.  Usage:
+
+    my $hrDagOutput = _run_phase(files=>[...][, options...])
+
+Options `phase`, `quiet`, and `libs` are as ["\_execute\_hopen\_file"](#_execute_hopen_file).
+Other options are:
+
+- files
+
+    (Required) An arrayref of filenames to run
+
+- norun
+
+    (Optional) if truthy, do not run the DAG.  Note that the DAG will also not
+    be run if it is empty.
+
+## \_inner
+
+Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
+translates the die() into a print and error return.
+
+## Main
+
+Command-line runner.  Call as `Build::hopen::Main(\@ARGV)`.
+
+# OPTIONS
+
+- -a `architecture`
+
+    Specify the architecture.  This is an arbitrary string interpreted by the
+    generator or toolset.
+
+- -e `Perl code`
+
+    Add the `Perl code` as if it were a hopen file.  `-e` files are processed
+    after all other hopen files, so can modify anything that has been set up
+    by those files.  Can be specified more than once.
+
+- --fresh
+
+    Start a fresh build --- ignore any `MY.hopen.pl` file that may exist in
+    the destination directory.
+
+- --from `project dir`
+
+    Specify the project directory.  Overrides a project directory given as a
+    positional argument.
+
+- -g `generator`
+
+    Specify the generator.  The given `generator` should be either a full package
+    name or the part after `Build::Hopen::Gen::`.
+
+- -t `toolset`
+
+    Specify the toolset.  The given `toolset` should be either a full package
+    name or the part after `Build::Hopen::T::`.
+
+- --to `destination dir`
+
+    Specify the destination directory.  Overrides a destination directory given
+    as a positional argument.
+
+- --phase
+
+    Specify which phase of the process to run.  Note that this overrides whatever
+    is specified in any MY.hopen.pl file, so may cause unexpected results!
+
+    If `--phase` is given, no other hopen file can set the phase, and hopen will
+    terminate if a file attempts to do so.
+
+- -q
+
+    Produce no output (quiet).  Overrides `-v`.
+
+- -v, --verbose=n
+
+    Verbose.  Specify more `v`'s for more verbosity.  At present, `-vv`
+    (equivalently, `--verbose=2`) gives
+    you detailed traces of the data, and `-vvv` gives you more detailed
+    code tracebacks on error.
+
+- --version
+
+    Print the version of hopen and exit
+
+# AUTHOR
+
+Christopher White, `cxwembedded at gmail.com`
+
+# SUPPORT
 # SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Build::Hopen
-    perldoc hopen
+    perldoc App::hopen               For command-line options
+    perldoc Build::Hopen                    For the README
+    perldoc Build::Hopen::Conventions       For terminology and workflow
 
 You can also look for information at:
 
-- GitHub (report bugs here)
+- GitHub: The project's main repository and issue tracker
 
     [https://github.com/cxw42/hopen](https://github.com/cxw42/hopen)
 
 - MetaCPAN
 
-    [https://metacpan.org/release/Build-Hopen](https://metacpan.org/release/Build-Hopen)
-
-- AnnoCPAN: Annotated CPAN documentation
-
-    [http://annocpan.org/dist/Build-Hopen](http://annocpan.org/dist/Build-Hopen)
-
-- CPAN Ratings
-
-    [https://cpanratings.perl.org/d/Build-Hopen](https://cpanratings.perl.org/d/Build-Hopen)
-
-# INSPIRED BY
-
-- [Luke](https://github.com/gvvaughan/luke)
-- a bit of [Ant](https://ant.apache.org/)
-- a tiny bit of [Buck](https://buckbuild.com/concept/what_makes_buck_so_fast.html)
-- my own frustrations working with CMake.
+    [https://metacpan.org/pod/App::hopen](https://metacpan.org/pod/App::hopen)
 
 # LICENSE AND COPYRIGHT
 
-Copyright (C) 2018--2019 Christopher White, `<cxwembedded at gmail.com>`
+Copyright (c) 2018--2019 Christopher White.  All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

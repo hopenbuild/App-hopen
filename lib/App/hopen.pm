@@ -1,12 +1,12 @@
-# Build::Hopen::App: hopen(1) program
-package Build::Hopen::App;
+# Build::hopen: Implementation of the hopen(1) program
+package App::hopen;
 our $VERSION = '0.000009'; # TRIAL
 
 # Imports {{{1
 use Build::Hopen::Base;
 
 use Build::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
-use Build::Hopen::AppUtil ':all';
+use Build::hopenUtil ':all';
 use Build::Hopen::BuildSystemGlobals;
 use Build::Hopen::Phases qw(:default phase_idx next_phase);
 use Build::Hopen::Scope::Hash;
@@ -39,7 +39,7 @@ use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
 =head1 NAME
 
-Build::Hopen::App - hopen build system command-line interface
+App::hopen - hopen build system command-line interface
 
 =head1 USAGE
 
@@ -48,6 +48,36 @@ Build::Hopen::App - hopen build system command-line interface
 If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, C<< <project dir>/built >> is used.
+
+=head1 SYNOPSIS
+
+hopen is a cross-platform software build generator.  It makes files you can
+pass to Make, Ninja, Visual Studio, or other build tools, to compile and
+link your software.  hopen gives you:
+
+=over
+
+=item *
+
+A full, Turing-complete, robust programming language to write your
+build scripts (specifically, Perl 5.14+)
+
+=item *
+
+No hidden magic!  All your data is visible and accessible in a build graph.
+
+=item *
+
+Context-sensitivity.  Your users can tweak their own builds for their own
+platforms without affecting your project.
+
+=back
+
+See L<Build::Hopen::Conventions> for details of the input format.
+
+Why Perl?  Because (1) you probably already have it installed, and
+(2) it is the original write-once, run-everywhere language!
+
 
 =head1 INTERNALS
 
@@ -271,7 +301,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
             $Build::Hopen::BuildSystemGlobals::Phase = $new_phase;
-            $Build::Hopen::App::_did_set_phase = true;
+            $Build::hopen::_did_set_phase = true;
     ) .
     ($opts{quiet} ? '' : 'say "Running $new_phase phase";') . "}\n";
 
@@ -396,7 +426,7 @@ EOT
         return \$__R_retval;
     } #__Rsub_$pkg_name
 
-    our \$hrNewData = __Rsub_$pkg_name(\$Build::Hopen::App::_hrData);
+    our \$hrNewData = __Rsub_$pkg_name(\$Build::hopen::_hrData);
 } #package
 EOT
         # Put the result in a package variable because that way I don't have
@@ -686,7 +716,7 @@ sub Main {
 
 =head2 Main
 
-Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
+Command-line runner.  Call as C<< Build::hopen::Main(\@ARGV) >>.
 
 =cut
 
@@ -735,7 +765,7 @@ Command-line runner.  Call as C<< Build::Hopen::App::Main(\@ARGV) >>.
 
 # no import() --- call Main() directly with its fully-qualified name
 
-1; # End of Build::Hopen::App
+1;
 __END__
 # === Command-line usage documentation ================================== {{{1
 
@@ -812,7 +842,7 @@ Christopher White, C<cxwembedded at gmail.com>
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Build::Hopen::App               For command-line options
+    perldoc App::hopen               For command-line options
     perldoc Build::Hopen                    For the README
     perldoc Build::Hopen::Conventions       For terminology and workflow
 
@@ -826,7 +856,7 @@ L<https://github.com/cxw42/hopen>
 
 =item * MetaCPAN
 
-L<https://metacpan.org/pod/Build::Hopen::App>
+L<https://metacpan.org/pod/App::hopen>
 
 =back
 

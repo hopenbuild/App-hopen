@@ -2,6 +2,6 @@
 # Copyright (c) 2018 cxw42.  All rights reserved.  See LICENSE file.
 # To run this manually from the source tree, do
 #     perl -Ilib bin/hopen
-use Build::Hopen::App;
-exit(Build::Hopen::App::Main(\@ARGV));
+use App::hopen;
+exit(App::hopen::Main(\@ARGV));
 # vi: set ts=4 sts=4 sw=4 et ai ft=perl: #
