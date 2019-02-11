@@ -6,15 +6,18 @@ use Getopt::Long qw(:config gnu_getopt);
 use Path::Class;
 
 # Parse command-line options
-my ($source_fn, $dest_fn);
+my ($source_fn, $dest_fn, $appveyor);
 my $format = 'md';
 GetOptions( "i|input=s" => \$source_fn,
             "o|output=s" => \$dest_fn,
-            "f|format=s" => \$format)
+            "f|format=s" => \$format,
+            "appveyor=s" => \$appveyor)     # username/repo
     or die "Error in arguments.  Usage:\nreadme_md.pl -i input -o output [-f format]\nFormat = md (default) or text.";
 
 die "Need an input file" unless $source_fn;
 die "Need an output file" unless $dest_fn;
+
+$appveyor =~ m{^[A-Za-z0-9-]+/[A-Za-z0-9-]+} or die '--appveyor <GH username>/<GH repo>' if $appveyor;
 
 # Load the right parser
 my $parser;
@@ -51,7 +54,7 @@ while(my $line = <$fh>) {
         next;
     } elsif($tweak_name && $saw_name && $line =~ m{\H\h*$/}) {
         $output .= ($format eq 'md' ? '# ' : '') . "$line\n";
-        $output .= "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/cxw42/hopen?svg=true)](https://ci.appveyor.com/project/cxw42/hopen)\n\n";
+        $output .= "[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/${appveyor}?svg=true)](https://ci.appveyor.com/project/${appveyor})\n\n" if $appveyor;
         $saw_name = 0;
         next;
     } elsif($tweak_name && $saw_name) {
