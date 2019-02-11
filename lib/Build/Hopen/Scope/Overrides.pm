@@ -3,7 +3,7 @@ package Build::Hopen::Scope::Overrides;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 # TODO if using exporter
 use parent 'Exporter';

@@ -4,7 +4,7 @@ package Build::Hopen::T::Gnu::C;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 use parent 'Build::Hopen::Tool';
 use Class::Tiny qw(op files _cc);

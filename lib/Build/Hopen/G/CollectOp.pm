@@ -3,7 +3,7 @@ package Build::Hopen::G::CollectOp;
 use Build::Hopen qw(:default UNSPECIFIED);
 use Build::Hopen::Base;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 use parent 'Build::Hopen::G::Op';
 use Class::Tiny {

@@ -2,7 +2,7 @@
 package Build::Hopen::Scope::Hash;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 use parent 'Build::Hopen::Scope';
 use Class::Tiny {

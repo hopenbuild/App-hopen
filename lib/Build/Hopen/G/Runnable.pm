@@ -3,7 +3,7 @@ package Build::Hopen::G::Runnable;
 use Build::Hopen::Base;
 use Build::Hopen;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 use Build::Hopen::Scope::Hash;
 use Build::Hopen::Util::Data qw(forward_opts);

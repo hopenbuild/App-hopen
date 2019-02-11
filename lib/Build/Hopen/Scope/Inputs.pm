@@ -3,7 +3,7 @@ package Build::Hopen::Scope::Inputs;
 use Build::Hopen;
 use Build::Hopen::Base;
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 # TODO if a class
 use parent 'Build::Hopen::Scope';

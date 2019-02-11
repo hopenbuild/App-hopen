@@ -1,5 +1,8 @@
 Revision history for Build-Hopen
 
+0.000008    2019-02-09
+        Tweak File::Glob usage to support Perl 5.14
+
 0.000007    2019-02-08
         First version that can generate a Makefile
 

@@ -261,10 +261,13 @@ my %opts = (
         'meta-spec' => { version => 2 },
 
         resources => {
+            bugtracker => {
+                web  => 'https://github.com/hopenbuild/Build-Hopen/issues',
+            },
             repository => {
                 type => 'git',
-                url  => 'https://github.com/cxw42/hopen.git',
-                web  => 'https://github.com/cxw42/hopen',
+                url  => 'https://github.com/hopenbuild/Build-Hopen.git',
+                web  => 'https://github.com/hopenbuild/Build-Hopen',
             },
         },
 

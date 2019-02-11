@@ -4,7 +4,7 @@ use Build::Hopen qw(:default isMYH MYH);
 use Build::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000008'; # TRIAL
+our $VERSION = '0.000009'; # TRIAL
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
