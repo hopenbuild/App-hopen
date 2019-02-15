@@ -1,20 +1,20 @@
 =head1 NAME
 
-Build::Hopen::Phase - Namespace for hopen phases.
+Data::Hopen::Phase - Namespace for hopen phases.
 
 =head1 SYNOPSIS
 
-The specific phases in hopen live under C<Build::Hopen::Phase>.  The
+The specific phases in hopen live under C<Data::Hopen::Phase>.  The
 current phases are:
 
 =over
 
-=item L<Build::Hopen::Phase::Probe>
+=item L<Data::Hopen::Phase::Probe>
 
 Read a foundations file and one or more context files; output a capability
 file and an options file.  The user may edit the options file.
 
-=item L<Build::Hopen::Phase::Gen>
+=item L<Data::Hopen::Phase::Gen>
 
 Read the capability, option, and context files, plus a recipes file identifying
 the build graph.  Output one or more blueprint files.

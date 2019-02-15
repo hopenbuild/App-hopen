@@ -1,26 +1,23 @@
-# Build::Hopen::Gen::Make - generator for a generic make(1).
-package Build::Hopen::Gen::Make;
-use Build::Hopen qw(:default $QUIET);
-use Build::Hopen::Base;
-use parent 'Exporter';
+# App::hopen::Gen::Make - generator for a generic make(1).
+package App::hopen::Gen::Make;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
-use Hash::Ordered;
-
-use parent 'Build::Hopen::Gen';
+use parent 'App::hopen::Gen';
 use Class::Tiny {
     targets => sub { Hash::Ordered->new() }
 };
 
-use Build::Hopen::Phases qw(is_last_phase);
-use Build::Hopen::Arrrgs;
+use App::hopen::Phases qw(is_last_phase);
+use Data::Hopen qw(:default getparameters $QUIET);
+use Hash::Ordered;
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Gen::Make - hopen generator for simple Makefiles
+Data::Hopen::Gen::Make - hopen generator for simple Makefiles
 
 =head1 SYNOPSIS
 
@@ -68,7 +65,7 @@ Write out the Makefile.
 =cut
 
 sub finalize {
-    my ($self, %args) = parameters('self', [qw(phase dag data)], @_);
+    my ($self, %args) = getparameters('self', [qw(phase dag data)], @_);
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
     return unless is_last_phase $args{phase};
 
@@ -110,7 +107,7 @@ EOT
 =head2 default_toolset
 
 Returns the package name of the default toolset for this generator,
-which is C<Gnu> (i.e., L<Build::Hopen::T::Gnu>).
+which is C<Gnu> (i.e., L<Data::Hopen::T::Gnu>).
 
 =cut
 

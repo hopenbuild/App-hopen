@@ -1,7 +1,7 @@
-# Build::Hopen::AppUtil - utility routines used by Build::Hopen::App
-package Build::Hopen::AppUtil;
-use Build::Hopen qw(:default isMYH MYH);
-use Build::Hopen::Base;
+# App::hopen::AppUtil - utility routines used by App::hopen::App
+package App::hopen::AppUtil;
+use Data::Hopen qw(:default isMYH MYH);
+use Data::Hopen::Base;
 use parent 'Exporter';
 
 our $VERSION = '0.000009'; # TRIAL
@@ -26,7 +26,7 @@ use Path::Class;
 
 =head1 NAME
 
-Build::Hopen::AppUtil - utility routines used by Build::Hopen::App
+Data::Hopen::AppUtil - utility routines used by Data::Hopen::App
 
 =head1 FUNCTIONS
 

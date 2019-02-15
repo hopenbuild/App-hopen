@@ -64,12 +64,12 @@ for:
     install:
       # First, manually do what local::lib does: set up Perl to
       # install and use modules in ~/perl5.
+      - echo Home is ~
       - export PERL_MB_OPT="$(printf -- '--install_base %s' ~/perl5)"
-      - export PERL_MM_OPT="$(printf 'INSTALL_BASE=%s' ~/perl5)"
+      - export PERL_MM_OPT="$(printf -- 'INSTALL_BASE=%s' ~/perl5)"
       - export PERL5LIB=~/perl5/lib/perl5
       - export PATH=~/perl5/bin:$PATH
       - export PERL_LOCAL_LIB_ROOT=~/perl5:$PERL_LOCAL_LIB_ROOT
 
       # Then, install cpanminus locally so it will be cached.
       - which cpanm || (curl -L https://cpanmin.us | perl - App::cpanminus)
-

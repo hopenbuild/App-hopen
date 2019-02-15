@@ -1,18 +1,18 @@
 #!perl
-# t/021-dag-single-goal.t: basic tests of Build::Hopen::G::DAG with one goal
+# t/021-dag-single-goal.t: basic tests of Data::Hopen::G::DAG with one goal
 use rlib 'lib';
 use HopenTest;
 use Test::Deep;
 
-use Build::Hopen;
-use Build::Hopen::Scope::Hash;
-use Build::Hopen::Scope::Environment;
-use Build::Hopen::G::Link;
+use Data::Hopen;
+use Data::Hopen::Scope::Hash;
+use Data::Hopen::Scope::Environment;
+use Data::Hopen::G::Link;
 
-$Build::Hopen::VERBOSE = @ARGV;
+$Data::Hopen::VERBOSE = @ARGV;
 
 sub run {
-    my $outermost_scope = Build::Hopen::Scope::Hash->new()->add(foo => 42);
+    my $outermost_scope = Data::Hopen::Scope::Hash->new()->add(foo => 42);
 
     my $dag = hnew DAG => 'dag';
 
@@ -29,7 +29,7 @@ sub run {
         # levels = 2 => also the DAG's overrides ($dag->scope)
         # levels = 3 => also the DAG's inputs (inputs to $dag->run)
         # TODO make a helper function for determining these?
-    isa_ok($op,'Build::Hopen::G::CollectOp');
+    isa_ok($op,'Data::Hopen::G::CollectOp');
     $dag->connect($op, $link, $goal);
     ok($dag->_graph->has_edge($op, $goal), 'DAG::connect() adds edge');
 

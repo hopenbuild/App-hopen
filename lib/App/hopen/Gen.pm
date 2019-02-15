@@ -1,7 +1,7 @@
-# Build::Hopen::Gen - base class for hopen generators
-package Build::Hopen::Gen;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::Gen - base class for hopen generators
+package App::hopen::Gen;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -15,13 +15,13 @@ use Path::Class ();
 
 =head1 NAME
 
-Build::Hopen::Gen - Base class for hopen generators
+Data::Hopen::Gen - Base class for hopen generators
 
 =head1 SYNOPSIS
 
 The code that generates blueprints for specific build systems
-lives under C<Build::Hopen::Gen>.  L<Build::Hopen::Phase::Gen> calls modules
-under C<Build::Hopen::Gen> to create the blueprints.  Those modules must
+lives under C<Data::Hopen::Gen>.  L<Data::Hopen::Phase::Gen> calls modules
+under C<Data::Hopen::Gen> to create the blueprints.  Those modules must
 implement the interface defined here.
 
 =head1 ATTRIBUTES
@@ -38,10 +38,10 @@ the project.
 
 =head1 FUNCTIONS
 
-A generator (C<Build::Hopen::Gen> subclass) is a Visitor.
+A generator (C<Data::Hopen::Gen> subclass) is a Visitor.
 
 B<Note>:
-The generator does not have access to L<Build::Hopen::G::Link> instances.
+The generator does not have access to L<Data::Hopen::G::Link> instances.
 That lack of access is the primary distinction between Ops and Links.
 
 =cut
@@ -50,7 +50,7 @@ That lack of access is the primary distinction between Ops and Links.
 
 =head2 visit_goal
 
-Do whatever the generator wants to do with a L<Build::Hopen::G::Goal>.
+Do whatever the generator wants to do with a L<Data::Hopen::G::Goal>.
 For example, the generator may change the goal's C<outputs>.
 By default, no-op.  Usage:
 
@@ -62,7 +62,7 @@ sub visit_goal { }
 
 =head2 visit_node
 
-Do whatever the generator wants to do with a L<Build::Hopen::G::Node> that
+Do whatever the generator wants to do with a L<Data::Hopen::G::Node> that
 is not a Goal (see L</visit_goal>).  By default, no-op.  Usage:
 
     $generator->visit_node($node)
@@ -74,7 +74,7 @@ sub visit_node { }
 =head2 finalize
 
 Do whatever the generator wants to do to finish up.  By default, no-op.
-Is provided the L<Build::Hopen::G::DAG> instance as a parameter.  Usage:
+Is provided the L<Data::Hopen::G::DAG> instance as a parameter.  Usage:
 
     $generator->finalize(-phase=>$Phase, -graph=>$dag)
 
@@ -88,10 +88,10 @@ Returns the package stem of the default toolset for this generator.
 Must be implemented by subclasses.
 
 When a hopen file invokes C<use language "Foo">, hopen will load
-C<< Build::Hopen::T::<stem>::Foo >>, where C<< <stem> >> is the return
+C<< Data::Hopen::T::<stem>::Foo >>, where C<< <stem> >> is the return
 value of this function.
 
-As a sanity check, hopen will first try to load C<< Build::Hopen::T::<stem> >>,
+As a sanity check, hopen will first try to load C<< Data::Hopen::T::<stem> >>,
 so make sure that is a valid package.
 
 =cut

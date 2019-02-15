@@ -1,13 +1,6 @@
 NAME
     App::hopen - hopen build system command-line interface
 
-USAGE
-        hopen [options] [--] [destination dir [project dir]]
-
-    If no project directory is specified, the current directory is used.
-
-    If no destination directory is specified, "<project dir>/built" is used.
-
     hopen is a cross-platform software build generator.  It makes files you
     can pass to Make, Ninja, Visual Studio, or other build tools, to compile
     and link your software.  hopen gives you:
@@ -21,73 +14,17 @@ USAGE
     *   Context-sensitivity.  Your users can tweak their own builds for their
         own platforms without affecting your project.
 
-    See Build::Hopen::Conventions for details of the input format.
+    See App::hopen::Conventions for details of the input format.
 
     Why Perl?  Because (1) you probably already have it installed, and (2) it
     is the original write-once, run-everywhere language!
 
-INTERNALS
-  %CMDLINE_OPTS
-    A hash from internal name to array reference of [getopt-name,
-    getopt-options, optional default-value].
+USAGE
+        hopen [options] [--] [destination dir [project dir]]
 
-    If default-value is a reference, it will be the destination for that
-    value.
+    If no project directory is specified, the current directory is used.
 
-  _parse_command_line
-    Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
-    values from the command line, keyed by the keys in "%CMDLINE_OPTS".
-
-  $_hrData
-    The hashref of the current data we have built up by processing hopen
-    files.
-
-  $_did_set_phase
-    Set to truthy if MY.hopen.pl sets the phase.
-
-  _execute_hopen_file
-    Execute a single hopen file, but do not run the DAG.  Usage:
-
-        _execute_hopen_file($filename[, options...])
-
-    This function takes input from "$_hrData" unless a "DATA=>{...}" option is
-    given.  This function updates "$_hrData" based on the results.
-
-    Options are:
-
-    phase
-        If given, force the phase to be the one specified.
-
-    quiet
-        If truthy, suppress extra output.
-
-    libs
-        If given, it must be an arrayref of directories.  Each of those will
-        be turned into a "use lib" statement (see lib) in the generated
-        source.
-
-  _run_phase
-    Run a phase by executing the hopen files and running the DAG.  Reads from
-    and writes to "$_hrData", which must be initialized by the caller.  Usage:
-
-        my $hrDagOutput = _run_phase(files=>[...][, options...])
-
-    Options "phase", "quiet", and "libs" are as "_execute_hopen_file".  Other
-    options are:
-
-    files
-        (Required) An arrayref of filenames to run
-
-    norun
-        (Optional) if truthy, do not run the DAG.  Note that the DAG will also
-        not be run if it is empty.
-
-  _inner
-    Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
-    translates the die() into a print and error return.
-
-  Main
-    Command-line runner.  Call as "Build::hopen::Main(\@ARGV)".
+    If no destination directory is specified, "<project dir>/built" is used.
 
 OPTIONS
     -a "architecture"
@@ -109,11 +46,11 @@ OPTIONS
 
     -g "generator"
         Specify the generator.  The given "generator" should be either a full
-        package name or the part after "Build::Hopen::Gen::".
+        package name or the part after "App::hopen::Gen::".
 
     -t "toolset"
         Specify the toolset.  The given "toolset" should be either a full
-        package name or the part after "Build::Hopen::T::".
+        package name or the part after "App::hopen::T::".
 
     --to "destination dir"
         Specify the destination directory.  Overrides a destination directory
@@ -141,18 +78,17 @@ AUTHOR
     Christopher White, "cxwembedded at gmail.com"
 
 SUPPORT
-SUPPORT
     You can find documentation for this module with the perldoc command.
 
-        perldoc App::hopen               For command-line options
-        perldoc Build::Hopen                    For the README
-        perldoc Build::Hopen::Conventions       For terminology and workflow
+        perldoc App::hopen                      For command-line options
+        perldoc App::hopen::Conventions         For terminology and workflow
+        perldoc Data::Hopen                     For internals
 
     You can also look for information at:
 
     *   GitHub: The project's main repository and issue tracker
 
-        <https://github.com/cxw42/hopen>
+        <https://github.com/hopenbuild/App-hopen>
 
     *   MetaCPAN
 

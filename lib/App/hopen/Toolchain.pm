@@ -1,7 +1,7 @@
-# Build::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
-package Build::Hopen::Toolchain;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::Toolchain - SUPERSEDED base class for hopen toolchains
+package Data::Hopen::Toolchain;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -13,7 +13,7 @@ use Class::Tiny qw(proj_dir dest_dir), {
 
 =head1 NAME
 
-Build::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
+Data::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
 
 =head1 SYNOPSIS
 
@@ -36,7 +36,7 @@ Maybe TODO:
         hopen command line.
 
 The code that generates command lines to invoke specific toolchains lives under
-C<Build::Hopen::Toolchain>.  Those modules must implement the interface defined
+C<Data::Hopen::Toolchain>.  Those modules must implement the interface defined
 here.
 
 =head1 ATTRIBUTES
@@ -52,9 +52,9 @@ should be written.
 
 =head1 FUNCTIONS
 
-A toolchain (C<Build::Hopen::Toolchain> subclass) is a Visitor.
+A toolchain (C<Data::Hopen::Toolchain> subclass) is a Visitor.
 
-TODO Figure out if the toolchain has access to L<Build::Hopen::G::Link>
+TODO Figure out if the toolchain has access to L<Data::Hopen::G::Link>
 instances.
 
 =cut
@@ -63,7 +63,7 @@ instances.
 
 =head2 visit_goal
 
-Do whatever the toolchain wants to do with a L<Build::Hopen::G::Goal>.
+Do whatever the toolchain wants to do with a L<Data::Hopen::G::Goal>.
 By default, no-op.
 
 =cut
@@ -72,7 +72,7 @@ sub visit_goal { }
 
 =head2 visit_op
 
-Do whatever the toolchain wants to do with a L<Build::Hopen::G::Op> that
+Do whatever the toolchain wants to do with a L<Data::Hopen::G::Op> that
 is not a Goal (see L</visit_goal>).  By default, no-op.
 
 =cut

@@ -1,7 +1,7 @@
-# Build::Hopen::BuildSystemGlobals - global data for build-system use cases.
-package Build::Hopen::BuildSystemGlobals;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::BuildSystemGlobals - global data for build-system use cases.
+package App::hopen::BuildSystemGlobals;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -12,19 +12,19 @@ BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir); }
 
 =head1 NAME
 
-Build::Hopen::BuildSystemGlobals - global data for hopen build-system use cases
+App::hopen::BuildSystemGlobals - global data for hopen build-system use cases
 
 =head1 SYNOPSIS
 
 This module exports variables used when employing hopen(1) as a build system.
 They are in a separate module so that it's easy to tell which parts of
-L<Build::Hopen> I<don't> need them.
+L<Data::Hopen> I<don't> need them.
 
 =head1 VARIABLES
 
 =head2 $Generator
 
-The current L<Build::Hopen::Gen> instance.
+The current L<Data::Hopen::Gen> instance.
 
 =head2 $Toolset
 
@@ -33,7 +33,7 @@ package C<${Toolset}::Foo>.
 
 =head2 $Build
 
-The L<Build::Hopen::G::DAG> instance representing the current build.
+The L<Data::Hopen::G::DAG> instance representing the current build.
 Goals in C<$Build> will become, e.g., top-level targets of a
 generated C<Makefile>.
 

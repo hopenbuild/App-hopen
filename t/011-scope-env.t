@@ -1,17 +1,17 @@
 #!perl
-# t/011-scope-env.t: test Build::Hopen::Scope::Environment
+# t/011-scope-env.t: test Data::Hopen::Scope::Environment
 use rlib 'lib';
 use HopenTest;
-use Build::Hopen::Scope::Hash;
+use Data::Hopen::Scope::Hash;
 
-$Build::Hopen::VERBOSE=@ARGV;
+$Data::Hopen::VERBOSE=@ARGV;
     # say `perl -Ilib t/011-scope-env.t -- foo` to turn on verbose output
 
-use Build::Hopen::Scope::Environment;
+use Data::Hopen::Scope::Environment;
 
-my $s = Build::Hopen::Scope::Environment->new();
-isa_ok($s, 'Build::Hopen::Scope::Environment');
-ok($s->DOES('Build::Hopen::Scope'), 'Scope::Environment DOES Scope');
+my $s = Data::Hopen::Scope::Environment->new();
+isa_ok($s, 'Data::Hopen::Scope::Environment');
+ok($s->DOES('Data::Hopen::Scope'), 'Scope::Environment DOES Scope');
 
 $s->add(foo_hopen => 42);
 cmp_ok($ENV{foo_hopen}, '==', 42, 'add() updates %ENV');
@@ -29,8 +29,8 @@ local *varname_outer = \'+;!@#$%^&*() Another crazy variable name that is not a 
 local *varname_env = \'__ENV_VAR_FOR_TESTING_HOPEN_';
     # On Win32, ENV variable names are all uppercase.
 
-my $inner = Build::Hopen::Scope::Hash->new()->add($varname_inner => 42);
-my $outer = Build::Hopen::Scope::Hash->new()->add($varname_outer => 1337);
+my $inner = Data::Hopen::Scope::Hash->new()->add($varname_inner => 42);
+my $outer = Data::Hopen::Scope::Hash->new()->add($varname_outer => 1337);
 
 $inner->outer($s);
 $s->outer($outer);

@@ -1,18 +1,18 @@
-# Build::Hopen::T::Gnu - GNU toolset
-package Build::Hopen::T::Gnu;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::T::Gnu - GNU toolset
+package App::hopen::T::Gnu;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
-#use parent 'Build::Hopen::TODO';
+#use parent 'Data::Hopen::TODO';
 #use Class::Tiny qw(TODO);
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::T::Gnu - GNU toolset for hopen
+Data::Hopen::T::Gnu - GNU toolset for hopen
 
 =head1 SYNOPSIS
 

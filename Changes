@@ -1,4 +1,7 @@
-Revision history for Build-Hopen
+Revision history for App-hopen
+
+0.000009    2019-??-??
+        Split former Build-Hopen into App-hopen and Data-Hopen
 
 0.000008    2019-02-09
         Tweak File::Glob usage to support Perl 5.14

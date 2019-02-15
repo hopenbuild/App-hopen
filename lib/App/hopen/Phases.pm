@@ -1,7 +1,7 @@
-# Build::Hopen::Phases - definitions of phases
-package Build::Hopen::Phases;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::Phases - definitions of phases
+package App::hopen::Phases;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -20,14 +20,14 @@ BEGIN {
     );
 }
 
-use Build::Hopen::BuildSystemGlobals;
+use App::hopen::BuildSystemGlobals;
 use List::MoreUtils qw(first_index);
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::Phases - Definitions and routines for hopen phases
+Data::Hopen::Phases - Definitions and routines for hopen phases
 
 =head1 SYNOPSIS
 
@@ -39,7 +39,7 @@ character of a phase may not be a digit.  This is so they can be used as
 identifiers if necessary.
 
 This package also defines a special export tag, C<:hopenfile>, for use when
-running hopen files.  The wrapper code in L<Build::Hopen::App> uses this
+running hopen files.  The wrapper code in L<Data::Hopen::App> uses this
 tag.  Hopen files themselves do not need to use this tag.
 
 =head1 VARIABLES
@@ -120,7 +120,7 @@ Take a given action only in a specified phase.  Usage examples:
         # Call the given sub and return its return value.
 
 This is designed for use within a hopen file.
-See L<Build::Hopen::App/_run_phase> for the execution environment C<on()> is
+See L<Data::Hopen::App/_run_phase> for the execution environment C<on()> is
 designed to run in.
 
 When run as part of a hopen file, C<on()> will skip the rest of the file if it

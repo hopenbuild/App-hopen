@@ -1,16 +1,16 @@
-# Build::Hopen::HopenFileKit - set up a hopen file
-package Build::Hopen::HopenFileKit;
+# App::hopen::HopenFileKit - set up a hopen file
+package App::hopen::HopenFileKit;
 
 # What we use
-use Build::Hopen qw(:default loadfrom);
-use Build::Hopen::Base;
-use Build::Hopen::BuildSystemGlobals;
+use Data::Hopen qw(:default loadfrom);
+use Data::Hopen::Base;
+use App::hopen::BuildSystemGlobals;
 use Import::Into;
 use Package::Alias ();
 
 # What we export to the caller
-use Build::Hopen ();
-use Build::Hopen::Phases ();
+use Data::Hopen ();
+use App::hopen::Phases ();
 use Path::Class ();
 
 our $VERSION = '0.000009'; # TRIAL
@@ -32,14 +32,14 @@ BEGIN {
 
 =head1 NAME
 
-Build::Hopen::HopenFileKit - Kit to be used by a hopen file
+Data::Hopen::HopenFileKit - Kit to be used by a hopen file
 
 =head1 SYNOPSIS
 
 This is a special-purpose test kit used for interpreting hopen files.
-See L<Build::Hopen::App/_run_phase>.  Usage:
+See L<Data::Hopen::App/_run_phase>.  Usage:
 
-    use Build::Hopen::HopenFileKit "<filename>"[, other args]
+    use Data::Hopen::HopenFileKit "<filename>"[, other args]
 
 C<< <filename> >> is the name you want to use for the package using
 this module, and will be loaded into constant C<$FILENAME> in that
@@ -131,10 +131,10 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
     __PACKAGE__->export_to_level(1, @args);
 
     # Re-export packages
-    $_->import::into($target) foreach qw(Build::Hopen::Base Path::Class
-                                            Build::Hopen::BuildSystemGlobals);
-    Build::Hopen->import::into($target, ':all');
-    Build::Hopen::Phases->import::into($target, qw(:all :hopenfile));
+    $_->import::into($target) foreach qw(Data::Hopen::Base Path::Class
+                                            App::hopen::BuildSystemGlobals);
+    Data::Hopen->import::into($target, ':all');
+    App::hopen::Phases->import::into($target, qw(:all :hopenfile));
 
     # Initialize data in the caller
     {
@@ -145,9 +145,11 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
 
     # Create packages at the top level
     _create_language();
-    Package::Alias->import::into($target, 'H' => 'Build::Hopen::H')
+    Package::Alias->import::into($target, 'H' => 'App::hopen::H')
         unless eval { scalar keys %H:: };
         # Don't import twice, but without the need to set Package::Alias::BRAVE
+        # TODO permit handling the situation in which an actual package H is
+        # loaded, and the hopenfile needs to use something else.
 } #import()     # }}}1
 
 1;

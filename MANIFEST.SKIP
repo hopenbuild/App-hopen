@@ -1,11 +1,11 @@
-# MIscellaneous
+# Miscellaneous
 ^\.editorconfig
 ^\.[^\\\/]*\.yml
 \bfoo\b.*
 t/.*\.out$
 lua$
 TEMPLATE
-Build-Hopen-*
+App-hopen-.*
 TODO
 \brunhopen$
 \.stackdump$

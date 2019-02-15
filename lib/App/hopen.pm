@@ -1,17 +1,17 @@
-# Build::hopen: Implementation of the hopen(1) program
+# App::hopen: Implementation of the hopen(1) program
 package App::hopen;
 our $VERSION = '0.000009'; # TRIAL
 
 # Imports {{{1
-use Build::Hopen::Base;
+use Data::Hopen::Base;
 
-use Build::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
-use Build::hopenUtil ':all';
-use Build::Hopen::BuildSystemGlobals;
-use Build::Hopen::Phases qw(:default phase_idx next_phase);
-use Build::Hopen::Scope::Hash;
-use Build::Hopen::Scope::Environment;
-use Build::Hopen::Util::Data qw(dedent forward_opts);
+use App::hopen::AppUtil ':all';
+use App::hopen::BuildSystemGlobals;
+use App::hopen::Phases qw(:default phase_idx next_phase);
+use Data::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
+use Data::Hopen::Scope::Hash;
+use Data::Hopen::Scope::Environment;
+use Data::Hopen::Util::Data qw(dedent forward_opts);
 use Data::Dumper;
 use File::Path::Tiny;
 use File::stat ();
@@ -41,14 +41,6 @@ use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
 App::hopen - hopen build system command-line interface
 
-=head1 USAGE
-
-    hopen [options] [--] [destination dir [project dir]]
-
-If no project directory is specified, the current directory is used.
-
-If no destination directory is specified, C<< <project dir>/built >> is used.
-
 =head1 SYNOPSIS
 
 hopen is a cross-platform software build generator.  It makes files you can
@@ -73,11 +65,18 @@ platforms without affecting your project.
 
 =back
 
-See L<Build::Hopen::Conventions> for details of the input format.
+See L<App::hopen::Conventions> for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
 
+=head1 USAGE
+
+    hopen [options] [--] [destination dir [project dir]]
+
+If no project directory is specified, the current directory is used.
+
+If no destination directory is specified, C<< <project dir>/built >> is used.
 
 =head1 INTERNALS
 
@@ -300,8 +299,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
             croak "Phase $new_phase is not one of the ones I know about (" .
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
-            $Build::Hopen::BuildSystemGlobals::Phase = $new_phase;
-            $Build::hopen::_did_set_phase = true;
+            $App::hopen::BuildSystemGlobals::Phase = $new_phase;
+            $App::hopen::_did_set_phase = true;
     ) .
     ($opts{quiet} ? '' : 'say "Running $new_phase phase";') . "}\n";
 
@@ -333,7 +332,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my ($friendly_name, $pkg_name, $file_text, $phase_text);
 
     $phase_text = q(
-        use Build::Hopen::Phases ':all';
+        use App::hopen::Phases ':all';
     );
 
     # -- Load the file
@@ -373,7 +372,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $src = <<EOT;
 {
     package __Rpkg_$pkg_name;
-    use Build::Hopen::HopenFileKit "$friendly_name";
+    use App::hopen::HopenFileKit "$friendly_name";
 
     # Other lib dirs
     $lib_dirs
@@ -418,15 +417,15 @@ EOT
 
         if(defined(\$__R_retval) && ref(\$__R_retval)) {
             die 'Hopen files may not return graphs'
-                if eval { \$__R_retval->DOES('Build::Hopen::G::DAG') };
+                if eval { \$__R_retval->DOES('Data::Hopen::G::DAG') };
             die 'Hopen files may not return graph builders (is a ->goal or ->default_goal missing?)'
-                if eval { \$__R_retval->DOES('Build::Hopen::G::GraphBuilder') };
+                if eval { \$__R_retval->DOES('Data::Hopen::G::GraphBuilder') };
         }
 
         return \$__R_retval;
     } #__Rsub_$pkg_name
 
-    our \$hrNewData = __Rsub_$pkg_name(\$Build::hopen::_hrData);
+    our \$hrNewData = __Rsub_$pkg_name(\$App::hopen::_hrData);
 } #package
 EOT
         # Put the result in a package variable because that way I don't have
@@ -510,8 +509,8 @@ be run if it is empty.
     # = Execute the resulting build graph ======================
 
     # Wrap the final data in a Scope
-    my $env = Build::Hopen::Scope::Environment->new(name => 'outermost');
-    my $scope = Build::Hopen::Scope::Hash->new(name => 'from hopen files');
+    my $env = Data::Hopen::Scope::Environment->new(name => 'outermost');
+    my $scope = Data::Hopen::Scope::Hash->new(name => 'from hopen files');
     $scope->adopt_hash($_hrData);
 
     # Run the DAG
@@ -534,14 +533,12 @@ translates the die() into a print and error return.
     local $_hrData = {};
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
-        if($Build::Hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
-            printf "hopen version %d.%d.%d ($Build::Hopen::VERSION)\n", $1, $2, $3;
+        if($App::hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
+            printf "hopen version %d.%d.%d ($App::hopen::VERSION)\n", $1, $2, $3;
         } else {
             say "hopen $VERSION";
         }
-        if($opts{VERBOSE} >= 1) {
-            say "Build::Hopen: $INC{'Build/Hopen.pm'}";
-        }
+        say "App::hopen in: $INC{'App/hopen.pm'}" if $opts{VERBOSE} >= 1;
         return EXIT_OK;
     }
 
@@ -642,7 +639,7 @@ EOT
 
     # Load generator
     my ($gen, $gen_class);
-    $gen_class = loadfrom($opts{GENERATOR}, 'Build::Hopen::Gen::', '');
+    $gen_class = loadfrom($opts{GENERATOR}, 'App::hopen::Gen::', '');
     die "Can't find generator $opts{GENERATOR}" unless $gen_class;
     hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
 
@@ -655,7 +652,7 @@ EOT
     my $toolset_class;
     $opts{TOOLSET} //= $gen->default_toolset;
     $toolset_class = loadfrom($opts{TOOLSET},
-                                    'Build::Hopen::T::', '');
+                                    'App::hopen::T::', '');
     die "Can't find toolset $opts{TOOLSET}" unless $toolset_class;
 
     hlog { "Toolset spec ``$opts{TOOLSET}'' -> using toolset $toolset_class" };
@@ -688,12 +685,19 @@ EOT
     # written at the top of MY.hopen.pl.  This way, the user may only
     # need to edit right at the top of the file, and not also at the
 
-    my $dumper = Data::Dumper->new([$new_data], ['__R_new_data']);
+    my $VAR = '__R_new_data';
+    my $dumper = Data::Dumper->new([$new_data], [$VAR]);
+    $dumper->Pad(' ' x 12);     # To line up with the do{}
+    $dumper->Indent(1);         # fixed indent size
     $dumper->Quotekeys(0);
     $dumper->Purity(1);
     $dumper->Maxrecurse(0);     # no limit
     $dumper->Sortkeys(true);    # For consistency between runs
     $dumper->Sparseseen(true);  # We don't use Seen()
+
+    # Four-space indent instead of two-space.  This is using an undocumented
+    # feature of Data::Dumper, whence the eval{}.
+    eval { $dumper->{xpad} = ' ' x 4 };
 
     my $new_text = dedent [], qq(
         # @{[MYH]} generated at @{[scalar gmtime]} GMT
@@ -701,9 +705,18 @@ EOT
 
         set_phase '$new_phase';
         do {
-            my @{[$dumper->Dump]}
+            my \$$VAR;
+@{[$dumper->Dump]}
+            \$$VAR
         }
     );
+
+    # Notes on the above $new_text:
+    # - No semi after the Dump line --- Dump adds it automatically.
+    # - Dump() may produce multiple statements, so add the
+    #   express $__R_new_data at the end so the do{} will have a
+    #   consistent return value.
+    # - The Dump() line is not indented because it does its own indentation.
 
     $dest_dir->file(MYH)->spew($new_text);
 
@@ -716,7 +729,7 @@ sub Main {
 
 =head2 Main
 
-Command-line runner.  Call as C<< Build::hopen::Main(\@ARGV) >>.
+Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
 =cut
 
@@ -797,12 +810,12 @@ positional argument.
 =item -g C<generator>
 
 Specify the generator.  The given C<generator> should be either a full package
-name or the part after C<Build::Hopen::Gen::>.
+name or the part after C<App::hopen::Gen::>.
 
 =item -t C<toolset>
 
 Specify the toolset.  The given C<toolset> should be either a full package
-name or the part after C<Build::Hopen::T::>.
+name or the part after C<App::hopen::T::>.
 
 =item --to C<destination dir>
 
@@ -842,9 +855,9 @@ Christopher White, C<cxwembedded at gmail.com>
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc App::hopen               For command-line options
-    perldoc Build::Hopen                    For the README
-    perldoc Build::Hopen::Conventions       For terminology and workflow
+    perldoc App::hopen                      For command-line options
+    perldoc App::hopen::Conventions         For terminology and workflow
+    perldoc Data::Hopen                     For internals
 
 You can also look for information at:
 
@@ -852,7 +865,7 @@ You can also look for information at:
 
 =item * GitHub: The project's main repository and issue tracker
 
-L<https://github.com/cxw42/hopen>
+L<https://github.com/hopenbuild/App-hopen>
 
 =item * MetaCPAN
 

@@ -1,14 +1,14 @@
 #!perl
-# 002-link.t: test Build::Hopen::G::Link
+# 002-link.t: test Data::Hopen::G::Link
 use rlib 'lib';
 use HopenTest;
 
 BEGIN {
-    use_ok 'Build::Hopen::G::Link';
+    use_ok 'Data::Hopen::G::Link';
 }
 
-my $e = Build::Hopen::G::Link->new(name=>'foo');
-isa_ok($e, 'Build::Hopen::G::Link');
+my $e = Data::Hopen::G::Link->new(name=>'foo');
+isa_ok($e, 'Data::Hopen::G::Link');
 is($e->name, 'foo', 'Name was set by constructor');
 $e->name('bar');
 is($e->name, 'bar', 'Name was set by accessor');

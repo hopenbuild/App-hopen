@@ -1,11 +1,11 @@
 #!perl
-# t/012-scope-nested.t: test nested Build::Hopen::Scope instances
+# t/012-scope-nested.t: test nested Data::Hopen::Scope instances
 use rlib 'lib';
 use HopenTest;
 use Set::Scalar;
 
-use Build::Hopen::Scope::Hash;
-use Build::Hopen::Scope::Environment;
+use Data::Hopen::Scope::Hash;
+use Data::Hopen::Scope::Environment;
 
 sub makeset {
     my $set = Set::Scalar->new;
@@ -15,12 +15,12 @@ sub makeset {
 
 # Make scopes
 
-my $innermost = Build::Hopen::Scope::Hash->new();
-isa_ok($innermost, 'Build::Hopen::Scope::Hash');
-my $middle = Build::Hopen::Scope::Hash->new();
-isa_ok($middle, 'Build::Hopen::Scope::Hash');
-my $outermost_env = Build::Hopen::Scope::Environment->new();
-isa_ok($outermost_env, 'Build::Hopen::Scope::Environment');
+my $innermost = Data::Hopen::Scope::Hash->new();
+isa_ok($innermost, 'Data::Hopen::Scope::Hash');
+my $middle = Data::Hopen::Scope::Hash->new();
+isa_ok($middle, 'Data::Hopen::Scope::Hash');
+my $outermost_env = Data::Hopen::Scope::Environment->new();
+isa_ok($outermost_env, 'Data::Hopen::Scope::Environment');
 
 $middle->outer($outermost_env);
 $innermost->outer($middle);

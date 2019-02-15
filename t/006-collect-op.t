@@ -1,31 +1,31 @@
 #!perl
-# 006-passthrough-op.t: test Build::Hopen::G::CollectOp
+# 006-passthrough-op.t: test Data::Hopen::G::CollectOp
 use rlib 'lib';
 use HopenTest;
 
-use Build::Hopen qw(hnew);
+use Data::Hopen qw(hnew);
 use Scalar::Util qw(refaddr);
 
 sub not_identical($$;$) {
     cmp_ok(refaddr($_[0]), '!=', refaddr($_[1]), $_[2]);
 }
 
-$Build::Hopen::VERBOSE=@ARGV;
+$Data::Hopen::VERBOSE=@ARGV;
     # say `perl -Ilib t/011-scope-env.t -- foo` to turn on verbose output
 
-use Build::Hopen::Scope::Hash;
+use Data::Hopen::Scope::Hash;
 
-use Build::Hopen::G::CollectOp;
+use Data::Hopen::G::CollectOp;
 
-my $e = Build::Hopen::G::CollectOp->new(name=>'foo');
-isa_ok($e, 'Build::Hopen::G::CollectOp');
+my $e = Data::Hopen::G::CollectOp->new(name=>'foo');
+isa_ok($e, 'Data::Hopen::G::CollectOp');
 is($e->name, 'foo', 'Name was set by constructor');
 $e->name('bar');
 is($e->name, 'bar', 'Name was set by accessor');
 
-is_deeply($e->run(-context => Build::Hopen::Scope::Hash->new), {}, 'run() returns {} when inputs are empty');
+is_deeply($e->run(-context => Data::Hopen::Scope::Hash->new), {}, 'run() returns {} when inputs are empty');
 
-my $scope = Build::Hopen::Scope::Hash->new;
+my $scope = Data::Hopen::Scope::Hash->new;
 $scope->add(foo=>1, bar=>2, baz=>{quux=>1337}, quuux=>[1,2,3,[42,43,44]]);
 my $newhr = $e->run(-context => $scope);
 is_deeply($newhr, $scope->_content, 'run() clones its inputs');
@@ -41,7 +41,7 @@ is_deeply($newhr, {inner => 'yes'}, 'run() 2 stops at local');
 not_identical($scope->_content, $newhr, 'run() 2 returns a clone, not its input');
 
 # Test different -levels values
-$e = Build::Hopen::G::CollectOp->new(name=>'foo', levels => 2);
+$e = Data::Hopen::G::CollectOp->new(name=>'foo', levels => 2);
     # levels = 0 => just the node's overrides
     # levels = 1 => also the node's context ($inner_scope)
     # levels = 2 => also the context's outer ($scope)
@@ -50,7 +50,7 @@ is_deeply($newhr, {%{$inner_scope->_content}, %{$scope->_content}}, 'levels=1 ru
 not_identical($inner_scope->_content, $newhr, 'levels=1 run() does not clone inner scope');
 not_identical($scope->_content, $newhr, 'levels=1 run() does not clone outer scope');
 
-my $outer_scope = Build::Hopen::Scope::Hash->new;
+my $outer_scope = Data::Hopen::Scope::Hash->new;
 $outer_scope->add(outer=>'yep');
 $scope->outer($outer_scope);
 $newhr = $e->run(-context=>$inner_scope);

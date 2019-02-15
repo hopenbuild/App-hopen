@@ -1,7 +1,7 @@
-# Build::Hopen::Phase::Check - checking-phase operations
-package Build::Hopen::Phase::Check;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::Phase::Check - checking-phase operations
+package App::hopen::Phase::Check;
+use Data::Hopen;
+use Data::Hopen::Base;
 use parent 'Exporter';
 
 our $VERSION = '0.000009'; # TRIAL
@@ -20,7 +20,7 @@ BEGIN {
 
 =head1 NAME
 
-Build::Hopen::Phase::Check - Check the build system
+Data::Hopen::Phase::Check - Check the build system
 
 =head1 SYNOPSIS
 

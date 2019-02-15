@@ -4,11 +4,11 @@ use rlib 'lib';
 use HopenTest;
 
 BEGIN {
-    use_ok 'Build::Hopen::G::Entity';
+    use_ok 'Data::Hopen::G::Entity';
 }
 
-my $e = Build::Hopen::G::Entity->new(name=>'foo');
-isa_ok($e, 'Build::Hopen::G::Entity');
+my $e = Data::Hopen::G::Entity->new(name=>'foo');
+isa_ok($e, 'Data::Hopen::G::Entity');
 is($e->name, 'foo', 'Name was set by constructor');
 $e->name('bar');
 is($e->name, 'bar', 'Name was set by accessor');

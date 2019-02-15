@@ -1,33 +1,33 @@
-# Build::Hopen::T::Gnu::C - support GNU toolset, C language
+# App::hopen::T::Gnu::C - support GNU toolset, C language
 # TODO RESUME HERE - put .o files in the dest dir
-package Build::Hopen::T::Gnu::C;
-use Build::Hopen;
-use Build::Hopen::Base;
+package App::hopen::T::Gnu::C;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
-use parent 'Build::Hopen::Tool';
+use parent 'App::hopen::Tool';
 use Class::Tiny qw(op files _cc);
 
-use Build::Hopen::Arrrgs;
-use Build::Hopen::BuildSystemGlobals;   # For $DestDir.
+use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
-use Build::Hopen::G::GraphBuilder;
-use Build::Hopen::Util::Data qw(forward_opts);
-use Build::Hopen::Util::Filename;
 use Config;
+use Data::Hopen qw(getparameters);
+use Data::Hopen::G::GraphBuilder;
+use Data::Hopen::Util::Data qw(forward_opts);
+use Data::Hopen::Util::Filename;
 use Deep::Hash::Utils qw(deepvalue);
 use File::Which ();
 use Path::Class;
 
-my $FN = Build::Hopen::Util::Filename->new;     # for brevity
+my $FN = Data::Hopen::Util::Filename->new;     # for brevity
 our $_CC;   # Cached compiler name
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::T::Gnu::C - support for the GNU toolset, C language
+Data::Hopen::T::Gnu::C - support for the GNU toolset, C language
 
 =head1 SYNOPSIS
 
@@ -37,7 +37,7 @@ In a hopen file:
     my $op = C->new(op=>'compile');
         # Create instances manually
 
-    # Or use via Build::Hopen::G::GraphBuilder:
+    # Or use via Data::Hopen::G::GraphBuilder:
     $Build->H::files(...)->C::compile->default_goal;
 
 The inputs come from earlier in the build graph.
@@ -60,7 +60,8 @@ destination file names.  Extensions may be added.
 
 =head1 STATIC FUNCTIONS
 
-Arguments to the static functions are parsed using L<Build::Hopen::Arrrgs>.
+Arguments to the static functions are parsed using L<Getargs::Mixed>
+(via L<Data::Hopen/getparameters>).
 Therefore, named arguments start with a hyphen (e.g., C<< -name=>'foo' >>,
 not C<< name=>'foo' >>).
 
@@ -76,7 +77,7 @@ compilation options or object-file names).  Usage:
 =cut
 
 sub compile {
-    my ($builder, %args) = parameters('self', [qw(; name)], @_);
+    my ($builder, %args) = getparameters('self', [qw(; name)], @_);
     my $node = __PACKAGE__->new(op=>'compile',
         forward_opts(\%args, 'name')
     );
@@ -98,7 +99,7 @@ executable.  Usage:
 =cut
 
 sub link {
-    my ($builder, %args) = parameters('self', [qw(exe; name)], @_);
+    my ($builder, %args) = getparameters('self', [qw(exe; name)], @_);
     croak 'Need the name of the executable' unless $args{exe};
 
     my $node = __PACKAGE__->new(
@@ -120,7 +121,7 @@ Create the compile or link command lines.
 =cut
 
 sub _run {
-    my ($self, %args) = parameters('self', [qw(phase ; generator *)], @_);
+    my ($self, %args) = getparameters('self', [qw(phase ; generator *)], @_);
 
     # Currently we only do things at gen time.
     return $self->passthrough(-nocontext=>1) if $args{phase} ne 'Gen';

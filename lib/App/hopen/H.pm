@@ -1,7 +1,6 @@
-# Build::Hopen::H - H:: namespace for use in hopen files
-package Build::Hopen::H;
-use Build::Hopen::Base;
-use Build::Hopen qw(hlog);
+# App::hopen::H - H:: namespace for use in hopen files
+package App::hopen::H;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -16,22 +15,22 @@ BEGIN {
     );
 }
 
-use Build::Hopen::G::FilesOp;
-use Build::Hopen::G::GraphBuilder;
-use Build::Hopen::Util::Data qw(forward_opts);
-use Build::Hopen::Arrrgs;
+use App::hopen::G::FilesOp;
+use Data::Hopen qw(hlog getparameters);
+use Data::Hopen::G::GraphBuilder;
+use Data::Hopen::Util::Data qw(forward_opts);
 use Path::Class;
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::H - H:: namespace for use in hopen files
+Data::Hopen::H - H:: namespace for use in hopen files
 
 =head1 SYNOPSIS
 
 This module is loaded as C<H::*> into hopen files by
-L<Build::Hopen::HopenFileKit>.
+L<Data::Hopen::HopenFileKit>.
 
 =head1 FUNCTIONS
 
@@ -45,15 +44,15 @@ Creates a DAG node representing a set of input files.  Example usage:
 
     $Build->H::files('foo.c')->C::compile->C::link('foo')->default_goal;
 
-The node is a L<Build::Hopen::G::FilesOp>.
+The node is a L<Data::Hopen::G::FilesOp>.
 
 =cut
 
 sub files {
-    my ($builder, %args) = parameters('self', ['*'], @_);
+    my ($builder, %args) = getparameters('self', ['*'], @_);
     hlog { __PACKAGE__, 'files:', Dumper(\%args) } 3;
-    return Build::Hopen::G::FilesOp->new(
-        files=> [map { file($_)->absolute } @{$args{'*'} // []}],
+    return App::hopen::G::FilesOp->new(
+        files => [ map { file($_)->absolute } @{$args{'*'} // []} ],
         forward_opts(\%args, 'name')
     );
 } #files()

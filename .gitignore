@@ -55,8 +55,8 @@ inc/
 nytprof.out
 pod2htm*.tmp
 pm_to_blib
-Build-Hopen-*
-Build-Hopen-*.tar.gz
+App-hopen-*
+App-hopen-*.tar.gz
 *.bak
 
 # Other

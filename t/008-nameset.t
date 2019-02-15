@@ -1,10 +1,10 @@
 #!perl
-# t/007-nameset.t: test Build::Hopen::Util::NameSet
+# t/007-nameset.t: test Data::Hopen::Util::NameSet
 use rlib 'lib';
 use HopenTest;
 
 BEGIN {
-    use_ok 'Build::Hopen::Util::NameSet';
+    use_ok 'Data::Hopen::Util::NameSet';
 }
 
 # NOTE: Even though `$s ~~ 'x'` (object first) is supported for now, we don't
@@ -18,18 +18,18 @@ for(my $iter=0; $iter<2; ++$iter) {
 
     # Set up this iter's test object
     if($iter == 0) {
-        $s = Build::Hopen::Util::NameSet->new();
-        isa_ok($s, 'Build::Hopen::Util::NameSet');
+        $s = Data::Hopen::Util::NameSet->new();
+        isa_ok($s, 'Data::Hopen::Util::NameSet');
         ok(!$s->contains('x'), "Empty nameset rejects 'x'");
         ok(!('x' ~~ $s), "Empty nameset rejects 'x'");
         $s->add('foo', 'bar', qr/bat/, [qr/qu+x/i, 'array', ['inner array']],
                 {key=>'value'}, 'русский', 'язык');
 
     } elsif($iter == 1) {
-        $s = Build::Hopen::Util::NameSet->new(
+        $s = Data::Hopen::Util::NameSet->new(
             'foo', 'bar', qr/bat/, [qr/qu+x/i, 'array', ['inner array']],
             {key=>'value'}, 'русский', 'язык');
-        isa_ok($s, 'Build::Hopen::Util::NameSet');
+        isa_ok($s, 'Data::Hopen::Util::NameSet');
     }
 
     # Accessors
@@ -59,16 +59,16 @@ for(my $iter=0; $iter<2; ++$iter) {
 } #foreach test
 
 # Complex
-$s = Build::Hopen::Util::NameSet->new(qw(foo bar), qr/./);
+$s = Data::Hopen::Util::NameSet->new(qw(foo bar), qr/./);
 ok($s->complex, 'set with regexps is complex');
-$s = Build::Hopen::Util::NameSet->new(qw(foo bar));
+$s = Data::Hopen::Util::NameSet->new(qw(foo bar));
 ok(!$s->complex, 'set without regexps is not complex');
 
 # Complex
-$s = Build::Hopen::Util::NameSet->new;
+$s = Data::Hopen::Util::NameSet->new;
 $s->add(qw(foo bar), qr/./);
 ok($s->complex, 'set with regexps is complex');
-$s = Build::Hopen::Util::NameSet->new;
+$s = Data::Hopen::Util::NameSet->new;
 $s->add(qw(foo bar));
 ok(!$s->complex, 'set without regexps is not complex');
 

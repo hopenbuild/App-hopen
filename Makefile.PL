@@ -102,10 +102,10 @@ authortest:
 testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
-README.md: @{[$VERSION_FROM]} Makefile.PL
+README.md: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
 
-README: @{[$VERSION_FROM]} Makefile.PL
+README: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
 
 all :: README.md README
@@ -179,7 +179,7 @@ my %opts = (
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Build::Hopen' => '0.000008',
+        'Data::Hopen' => '0.000009',
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',
@@ -219,7 +219,7 @@ my %opts = (
         'Hash::Ordered' => '0.011',
         'Import::Into' => '0',
         'IO::Handle' => '0',
-        'Getargs::Mixed' => '1.03', # no Changes file - take the latest
+        'Getargs::Mixed' => '1.04', # For -undef_ok option
         'Getopt::Long' => '2.5',    # For long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
         'List::MoreUtils' => '0.428',

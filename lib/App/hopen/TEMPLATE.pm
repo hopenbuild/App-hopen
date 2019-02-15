@@ -1,7 +1,7 @@
-# Build::Hopen::TEMPLATE - template for a hopen module
-package Build::Hopen::TEMPLATE;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::TEMPLATE - template for a hopen module
+package Data::Hopen::TEMPLATE;
+use Data::Hopen;
+use Data::Hopen::Base;
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -18,14 +18,14 @@ BEGIN {
 }
 
 # TODO if a class
-use parent 'TODO';
+use parent 'Graph';     # TODO change "Graph" to your own parent class
 use Class::Tiny qw(TODO);
 
 # Docs {{{1
 
 =head1 NAME
 
-Build::Hopen::TEMPLATE - The great new Build::Hopen::TEMPLATE
+Data::Hopen::TEMPLATE - The great new Data::Hopen::TEMPLATE
 
 =head1 SYNOPSIS
 

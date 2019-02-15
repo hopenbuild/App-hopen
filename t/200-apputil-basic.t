@@ -1,11 +1,11 @@
 #!perl
-# t/200-apputil-basic.t - basic tests of Build::Hopen::AppUtil
+# t/200-apputil-basic.t - basic tests of Data::Hopen::AppUtil
 use rlib 'lib';
 use HopenTest;
 use Test::Deep;
 use Path::Class;
 
-use Build::Hopen::AppUtil qw(find_hopen_files);
+use App::hopen::AppUtil qw(find_hopen_files);
 
 sub cf { File::Spec->catfile(@_) }
 

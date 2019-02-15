@@ -1,7 +1,7 @@
-# Build::Hopen::Phase::Gen - generation-phase operations
-package Build::Hopen::Phase::Gen;
-use Build::Hopen;
-use Build::Hopen::Base;
+# App::hopen::Phase::Gen - generation-phase operations
+package App::hopen::Phase::Gen;
+use Data::Hopen;
+use Data::Hopen::Base;
 #use parent 'Exporter';
 
 our $VERSION = '0.000009'; # TRIAL
@@ -12,7 +12,7 @@ our $VERSION = '0.000009'; # TRIAL
 
 =head1 NAME
 
-Build::Hopen::Phase::Gen - Generate build files
+Data::Hopen::Phase::Gen - Generate build files
 
 =head1 SYNOPSIS
 

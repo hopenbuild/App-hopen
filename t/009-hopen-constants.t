@@ -1,9 +1,9 @@
 #!perl
-# 009-hopen-constants.t: test Build::Hopen constants
+# 009-hopen-constants.t: test Data::Hopen constants
 use rlib 'lib';
 use HopenTest;
 
-use Build::Hopen ':all';
+use Data::Hopen ':all';
 
 ok $_ ~~ UNSPECIFIED, "UNSPECIFIED accepts $_"
     foreach qw(a 0 - ab a0 0a a- -a русский язык 日本語 ひらがな);
