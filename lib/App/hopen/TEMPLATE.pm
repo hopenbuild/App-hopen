@@ -1,5 +1,5 @@
 # App::hopen::TEMPLATE - template for a hopen module
-package Data::Hopen::TEMPLATE;
+package App::hopen::TEMPLATE;
 use Data::Hopen;
 use Data::Hopen::Base;
 
@@ -25,7 +25,7 @@ use Class::Tiny qw(TODO);
 
 =head1 NAME
 
-Data::Hopen::TEMPLATE - The great new Data::Hopen::TEMPLATE
+App::hopen::TEMPLATE - The great new App::hopen::TEMPLATE
 
 =head1 SYNOPSIS
 
