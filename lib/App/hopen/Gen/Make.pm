@@ -2,9 +2,7 @@
 package App::hopen::Gen::Make;
 use Data::Hopen::Base;
 
-BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
-
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 use parent 'App::hopen::Gen';
 use Class::Tiny {
@@ -103,16 +101,12 @@ EOT
             foreach(@{$item->{from}}) {
                 hlog { 'Work item', Dumper($_) } 3;
                 next unless $_;
-                push @sources, $_->path_on($ProjDir)->relative($DestDir);
-                    # TODO FIXME this isn't right --- sources may be in the
-                    # project dir or the destination dir.
-                    # Move this logic to the toolchain?
+                push @sources, $_->orig->relative($DestDir);
             }
 
             my $dest = $item->{to}->[0];
-            $dest = $dest->path_on($DestDir)->relative($DestDir)
+            $dest = $dest->orig->relative($DestDir)
                 if $dest->DOES('App::hopen::Util::BasedPath');
-                    # TODO is this right?
 
             say $fh $dest, ': ', join(' ', @sources);
             say $fh (_expand($item) =~ s/^/\t/gmr);
@@ -147,13 +141,12 @@ sub _expand {
     my $retval = $item->{how} or return '';    # no `how` => no output; not an error
     $retval = $retval->[0] if ref $retval eq 'ARRAY';
 
-    # TODO FIXME HACK --- this isn't right, but it's a start.
     my $first = $item->{from}->[0];
-    $first = $first->path_on($DestDir)->relative($DestDir)
+    $first = $first->orig->relative($DestDir)
         if $first->DOES('App::hopen::Util::BasedPath');
 
     my $out = $item->{to}->[0];
-    $out = $out->path_on($DestDir)->relative($DestDir)
+    $out = $out->orig->relative($DestDir)
         if $out->DOES('App::hopen::Util::BasedPath');
 
     $retval =~ s{#first\b}{$first // ''}ge;          # first input

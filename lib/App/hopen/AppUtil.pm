@@ -4,7 +4,7 @@ use Data::Hopen qw(:default isMYH MYH);
 use Data::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {

@@ -112,13 +112,19 @@ option is executed as if it were its own hopen file on disk, and any
 hopen file referenced by a C<-f> option is executed.  C<-e> and C<-f> options
 are processed in the order given on the command line.
 
+The hopen files are run in order to build up a hashref that will be the
+input to the build graph.  The hopen files, while they run, also
+populate the build graph.
+
 =head2 Execution environment of a hopen file
 
-Each hopen file is the body of a subroutine that may return a hashref (C<{}>).
-That hashref is provided as input to the build graph.  Each hopen file's output
-hashref, if any, is appended to the input hashref (using L<Hash::Merge> with
-retainment precedent).  Therefore, to leave the input unchanged, return
-C<{}>, not C<$_[0]>.
+Each hopen file is the body of a subroutine that receives a hashref from the
+last-run hopen file and may return a hashref (C<{...}>) or C<undef>.  Each
+hopen file's output hashref, if any, is appended to the input hashref (using
+L<Hash::Merge> with retainment precedent).  Therefore, to leave the input
+unchanged, return C<{}>, not C<$_[0]>.
+
+Any return value that is not a hashref will be ignored.
 
 Elements of the hashref starting with C<__R> are reserved.  Please don't read
 or write those elements if you want hopen to work! :)  Similarly, all variables
@@ -134,6 +140,9 @@ packages loaded (via L<App::hopen::HopenFileKit>):
 =item * L<App::hopen::BuildSystemGlobals>
 
 =item * L<App::hopen::Phases>
+
+With both C<:all> and C<:hopenfile> specified, so you get, e.g.,
+L<App::hopen::Phases/on>.
 
 =item * L<App::hopen::Util::BasedPath>
 

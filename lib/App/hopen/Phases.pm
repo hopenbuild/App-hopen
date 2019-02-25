@@ -3,12 +3,13 @@ package App::hopen::Phases;
 use Data::Hopen;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    my @normal_export_ok = qw(is_phase is_last_phase phase_idx next_phase);
+    my @normal_export_ok = qw(is_phase is_last_phase phase_idx
+        curr_phase_idx next_phase);
     my @hopenfile_export = qw(on);
 
     @EXPORT = qw(@PHASES);
@@ -16,11 +17,12 @@ BEGIN {
     %EXPORT_TAGS = (
         default => [@EXPORT],
         all => [@EXPORT, @normal_export_ok],
-        hopenfile => [@hopenfile_export],
+        hopenfile => [@hopenfile_export],   # Not included in :all!
     );
 }
 
 use App::hopen::BuildSystemGlobals;
+use Getargs::Mixed;
 use List::MoreUtils qw(first_index);
 
 # Docs {{{1
@@ -42,6 +44,8 @@ This package also defines a special export tag, C<:hopenfile>, for use when
 running hopen files.  The wrapper code in L<Data::Hopen::App> uses this
 tag.  Hopen files themselves do not need to use this tag.
 
+The names C<first>, C<start>, C<last>, and C<end> are reserved.
+
 =head1 VARIABLES
 
 =head2 @PHASES
@@ -59,6 +63,17 @@ our @PHASES; BEGIN { @PHASES = ('Check', 'Gen'); }
     # *** This is where the default phase ($PHASES[0]) is set ***
     # TODO? be more sophisticated about this :)
 
+# Internal function to regularize phase names.
+sub _clean {
+    my $test_phase = shift or croak 'Need a phase name';
+    $test_phase = lc $test_phase;
+    $test_phase = $PHASES[0]
+        if $test_phase eq 'first' or $test_phase eq 'start';
+    $test_phase = $PHASES[$#PHASES]
+        if $test_phase eq 'last' or $test_phase eq 'end';
+    return lc($test_phase);
+} #_clean()
+
 =head2 is_phase
 
 Return truthy if the given argument is the name of a phase we know about.
@@ -66,7 +81,8 @@ Return truthy if the given argument is the name of a phase we know about.
 =cut
 
 sub is_phase {
-    my $test_phase = lc(shift) or croak 'Need a phase name';
+    my $test_phase = shift or croak 'Need a phase name';
+    $test_phase = _clean($test_phase);
     my $curr_idx = first_index { lc($_) eq $test_phase } @PHASES;
     return $curr_idx+1;     # -1 => falsy; all others => truthy
 } #is_phase()
@@ -74,10 +90,12 @@ sub is_phase {
 =head2 is_last_phase
 
 Return truthy if the argument is the name of the last phase.
+If no argument is given, checks the current phase
+(L<App::hopen::BuildSystemGlobals/$Phase>).
 
 =cut
 
-sub is_last_phase { lc(shift) eq lc($PHASES[$#PHASES]) }
+sub is_last_phase { _clean(shift // $Phase) eq lc($PHASES[$#PHASES]) }
 
 =head2 phase_idx
 
@@ -87,10 +105,19 @@ Returns undef if none.  Phases are case-insensitive.
 =cut
 
 sub phase_idx {
-    my $test_phase = lc(shift) or croak "Need a phase";
+    my $test_phase = shift or croak 'Need a phase name';
+    $test_phase = _clean($test_phase);
     my $curr_idx = first_index { lc($_) eq $test_phase } @PHASES;
     return $curr_idx<0 ? undef : $curr_idx;
 } #phase_idx()
+
+=head2 curr_phase_idx
+
+Get the index of the current phase.
+
+=cut
+
+sub curr_phase_idx { phase_idx $Phase }
 
 =head2 next_phase
 
@@ -100,7 +127,8 @@ is the last phase.  Dies if the argument is not a phase.
 =cut
 
 sub next_phase {
-    my $test_phase = lc(shift) or croak "Need a phase";
+    my $test_phase = shift or croak 'Need a phase name';
+    $test_phase = _clean($test_phase);
     my $curr_idx = phase_idx $test_phase;
     die "$test_phase is not a phase I know about" unless defined($curr_idx);
     return undef if $curr_idx == $#PHASES;  # Last one
@@ -109,6 +137,8 @@ sub next_phase {
 } #next_phase()
 
 =head1 ROUTINES FOR USE IN HOPEN FILES
+
+These are exported if the tag C<:hopenfile> is given on the C<use> line.
 
 =head2 on
 
@@ -131,28 +161,40 @@ runs.  For example:
     on gen => { done => true };         # This runs during the Gen phase
     say "Phase was neither Check nor Gen";  # Doesn't run in Check or Gen
 
+TODO support C<< on '!last' => ... >> or similar to take action when not in
+the given phase.
+
 =cut
 
 sub on {
     my $caller = caller;
+    my (%args) = parameters([qw(phase value)], @_);
 
-    my $which_phase = shift or croak "I need to know which phase this applies to";
-    croak "I need a single value or subroutine" unless @_ == 1;
-    my $val = shift;
+    my $which_phase = _clean($args{phase});
+    my $val = $args{value};
 
     my $which_idx = phase_idx($which_phase);
-    return if $which_idx != phase_idx;
+    return if $which_idx != curr_phase_idx;
 
-    # We are in the correct phase.  Take appropriate action and stash the
-    # result for the caller.  However, don't change our own return value.
-    my $result = (ref($val) ne 'CODE') ? $val : &$val;
-    $result = { $PHASES[$which_idx] => $result } unless ref $result eq 'HASH';
+    # We are in the correct phase.  Take appropriate action.
+    # However, don't change our own return value.
+    my $result;
+    if(ref $val eq 'CODE') {
+        $result = &$val;
+    } elsif(ref $val eq 'HASH') {
+        $result = $val;     # TODO? clone?
+    } else {
+        $result = {$PHASES[$which_idx] => $val};
+    }
+
+    # Stash the value for the caller.
     {
         no strict 'refs';
         ${ $caller . "::__R_on_result" } = $result;
     }
 
     # Done --- skip the rest of the hopen file if we're in one.
+    hlog { 'Done with script for phase ``' . $args{phase} . "''" } 3;
     eval {
         no warnings 'exiting';
         last __R_DO;

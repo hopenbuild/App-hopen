@@ -3,7 +3,7 @@ package App::hopen::BuildSystemGlobals;
 use Data::Hopen;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 use parent 'Exporter';
 our @EXPORT;

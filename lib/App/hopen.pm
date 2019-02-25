@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 # Imports {{{1
 use Data::Hopen::Base;
@@ -19,6 +19,8 @@ use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
 use Path::Class;
 use Scalar::Util qw(looks_like_number);
+
+BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
 
 # }}}1
 # Constants {{{1
@@ -406,15 +408,20 @@ EOT
 EOT
     }
 
+    # Run the code given in the hopen file.  Wrap it in a named BLOCK so that
+    # Phases::on() will work, but don't rely on the return value of that
+    # BLOCK (per perlsyn).
+
     $src .= <<EOT;
 
     sub __Rsub_$pkg_name {
-        my \$__R_retval = do {   # return statements in here will exit the Rsub
-            __R_DO: {
+        my \$__R_retval;
+        __R_DO: {
+            \$__R_retval = do {   # return statements in here will exit the Rsub
 #line 1 "$friendly_name"
 $file_text
-            } #__R_DO
-        }; # do{}
+            }; # do{}
+        } #__R_DO
 EOT
 
     # If the file_text did not expressly return(), control will reach the
@@ -423,15 +430,27 @@ EOT
     # via Phases::on(), we have a defined __R_on_result.  If either of those
     # is defined, make sure it's not a DAG or GraphBuilder.  Those should not
     # be put into the return data.
+    #
+    # Also, any defined, non-hash
 
     $src .= <<EOT;
         \$__R_retval //= \$__R_on_result;
+
+        ## hlog { '__Rpkg_$pkg_name retval before checks',
+        ##        ref \$__R_retval, Dumper \$__R_retval} 3;
 
         if(defined(\$__R_retval) && ref(\$__R_retval)) {
             die 'Hopen files may not return graphs'
                 if eval { \$__R_retval->DOES('Data::Hopen::G::DAG') };
             die 'Hopen files may not return graph builders (is a ->goal or ->default_goal missing?)'
                 if eval { \$__R_retval->DOES('Data::Hopen::G::GraphBuilder') };
+
+        }
+
+        if(defined(\$__R_retval) and ref \$__R_retval ne 'HASH') {
+            warn ('Hopen files must return hashrefs; ignoring ' .
+                    lc(ref(\$__R_retval) || 'scalar')) unless \$QUIET;
+            \$__R_retval = undef;
         }
 
         return \$__R_retval;
@@ -451,7 +470,7 @@ EOT
     die "Error in $friendly_name: $@" if $@;
 
     # Get the data from the package we just ran
-    my $hrAddlData = eval ("\$__Rpkg_${pkg_name}" . '::hrNewData');
+    my $hrAddlData = eval ("\$__Rpkg_$pkg_name" . '::hrNewData');
 
     hlog { 'old data', Dumper($_hrData) } 3;
     hlog { 'new data', Dumper($hrAddlData) } 2;

@@ -4,7 +4,7 @@ package App::hopen::T::Gnu::C;
 use Data::Hopen;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000009'; # TRIAL
+our $VERSION = '0.000010'; # TRIAL
 
 use parent 'App::hopen::Tool';
 use Class::Tiny qw(op files _cc);
@@ -157,7 +157,7 @@ sub _run {
                             base => $DestDir);
             $how = $self->_cc . " -c #first -o #out";
         } else {    # op eq 'link'
-            $to = $self->files->[0];
+            $to = $self->files->[0];    # created by C::link()
             $how = $self->_cc . " #first -o #out";
         }
 
