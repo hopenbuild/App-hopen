@@ -56,7 +56,7 @@ OPTIONS
         Specify the destination directory.  Overrides a destination directory
         given as a positional argument.
 
-    --phase
+    --phase "phase"
         Specify which phase of the process to run.  Note that this overrides
         whatever is specified in any MY.hopen.pl file, so may cause unexpected
         results!

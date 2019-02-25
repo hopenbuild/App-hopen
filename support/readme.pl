@@ -74,7 +74,7 @@ while(my $line = <$fh>) {
     $output .= $line if $line =~ /OPTIONS/;
     next if ($line =~ /INTERNALS/)..($line =~ /OPTIONS/);
 
-    $line =~ s{https://metacpan.org/pod/Data::Hopen::Conventions}{https://metacpan.org/pod/release/CXW/Build-Hopen-0.000006-TRIAL/lib/Build/Hopen/Conventions.pod} if $force_conventions;
+    $line =~ s{https://metacpan.org/pod/App::hopen::Conventions}{https://github.com/hopenbuild/App-hopen/blob/master/lib/App/hopen/Conventions.pod} if $force_conventions;
 
     $output .= $line;   # Copy everything that's left.
 }

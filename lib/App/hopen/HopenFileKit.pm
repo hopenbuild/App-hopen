@@ -1,17 +1,19 @@
 # App::hopen::HopenFileKit - set up a hopen file
 package App::hopen::HopenFileKit;
-
-# What we use
-use Data::Hopen qw(:default loadfrom);
 use Data::Hopen::Base;
-use App::hopen::BuildSystemGlobals;
+
 use Import::Into;
 use Package::Alias ();
 
-# What we export to the caller
-use Data::Hopen ();
-use App::hopen::Phases ();
+# Imports.  Note: `()` marks packages we export to the caller but
+# don't use ourselves.  These are in the same order as in import().
+use App::hopen::BuildSystemGlobals;
+use App::hopen::Util::BasedPath ();
 use Path::Class ();
+
+use App::hopen::Phases ();
+use Data::Hopen qw(:default loadfrom);
+
 
 our $VERSION = '0.000009'; # TRIAL
 
@@ -131,10 +133,15 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
     __PACKAGE__->export_to_level(1, @args);
 
     # Re-export packages
-    $_->import::into($target) foreach qw(Data::Hopen::Base Path::Class
-                                            App::hopen::BuildSystemGlobals);
-    Data::Hopen->import::into($target, ':all');
+    $_->import::into($target) foreach qw(
+        Data::Hopen::Base
+        App::hopen::BuildSystemGlobals
+        App::hopen::Util::BasedPath
+        Path::Class
+    );
+
     App::hopen::Phases->import::into($target, qw(:all :hopenfile));
+    Data::Hopen->import::into($target, ':all');
 
     # Initialize data in the caller
     {

@@ -12,7 +12,7 @@ build scripts (specifically, Perl 5.14+)
 - Context-sensitivity.  Your users can tweak their own builds for their own
 platforms without affecting your project.
 
-See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for details of the input format.
+See [App::hopen::Conventions](https://github.com/hopenbuild/App-hopen/blob/master/lib/App/hopen/Conventions.pod) for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
@@ -63,7 +63,7 @@ If no destination directory is specified, `<project dir>/built` is used.
     Specify the destination directory.  Overrides a destination directory given
     as a positional argument.
 
-- --phase
+- --phase `phase`
 
     Specify which phase of the process to run.  Note that this overrides whatever
     is specified in any MY.hopen.pl file, so may cause unexpected results!

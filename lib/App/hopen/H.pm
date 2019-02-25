@@ -15,7 +15,9 @@ BEGIN {
     );
 }
 
+use App::hopen::BuildSystemGlobals;
 use App::hopen::G::FilesOp;
+use App::hopen::Util::BasedPath;
 use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
 use Data::Hopen::Util::Data qw(forward_opts);
@@ -46,13 +48,19 @@ Creates a DAG node representing a set of input files.  Example usage:
 
 The node is a L<Data::Hopen::G::FilesOp>.
 
+The file path is assumed to be relative to the current project directory.
+TODO handle subdirectories.
+
 =cut
 
 sub files {
     my ($builder, %args) = getparameters('self', ['*'], @_);
     hlog { __PACKAGE__, 'files:', Dumper(\%args) } 3;
+    my @files = @{$args{'*'} // []};
+    @files = map { based_path(path => file($_), base => $ProjDir) } @files;
+    hlog { __PACKAGE__, 'file objects:', @files } 3;
     return App::hopen::G::FilesOp->new(
-        files => [ map { file($_)->absolute } @{$args{'*'} // []} ],
+        files => [ @files ],
         forward_opts(\%args, 'name')
     );
 } #files()

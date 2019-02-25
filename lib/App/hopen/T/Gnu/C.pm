@@ -11,6 +11,7 @@ use Class::Tiny qw(op files _cc);
 
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
+use App::hopen::Util::BasedPath;
 use Config;
 use Data::Hopen qw(getparameters);
 use Data::Hopen::G::GraphBuilder;
@@ -102,8 +103,9 @@ sub link {
     my ($builder, %args) = getparameters('self', [qw(exe; name)], @_);
     croak 'Need the name of the executable' unless $args{exe};
 
+    my $dest = based_path(path => file($FN->exe($args{exe})), base => $DestDir);
     my $node = __PACKAGE__->new(
-        op=>'link', files => [$DestDir->file($FN->exe($args{exe}))->absolute],
+        op=>'link', files => [$dest],
         forward_opts(\%args, 'name')
     );
     hlog { __PACKAGE__, 'Built link node', Dumper($node) } 2;
@@ -140,7 +142,7 @@ sub _run {
     my ($lrFrom, @work);
 
     $lrFrom = deepvalue($lrOldWork, qw(0 to)) // [];     # don't autovivify
-    if($self->op eq 'compile' && $#$lrFrom != 0) {
+    if($self->op eq 'compile' && @$lrFrom != 1) {
         die "C::compile nodes can only take one input filename at present";
         # TODO relax this requirement
     }
@@ -148,12 +150,20 @@ sub _run {
     # Add the new work
     foreach my $file (@{$lrFrom}) {
         my $hr = { from => [ $file ] };
-        $hr->{to} = [ $self->op eq 'compile' ?
-            $FN->obj($file) :
-            $self->files->[0] ];
-        $hr->{how} = $self->op eq 'compile' ?
-            $self->_cc . " -c #first -o #out" :
-            $self->_cc . " #first -o #out";
+        my ($to, $how);
+
+        if($self->op eq 'compile') {
+            $to = based_path(path => file($FN->obj($file->path)),
+                            base => $DestDir);
+            $how = $self->_cc . " -c #first -o #out";
+        } else {    # op eq 'link'
+            $to = $self->files->[0];
+            $how = $self->_cc . " #first -o #out";
+        }
+
+        $hr->{to} = [ $to ];
+        $hr->{how} = [ $how ];
+
         push @work, $hr;
         $lrFrom = [$file];
     }

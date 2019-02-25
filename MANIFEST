@@ -17,6 +17,7 @@ lib/App/hopen/T/Gnu.pm
 lib/App/hopen/T/Gnu/C.pm
 lib/App/hopen/Tool.pm
 lib/App/hopen/Toolchain.pm
+lib/App/hopen/Util/BasedPath.pm
 LICENSE.md
 Makefile.PL
 MANIFEST			This list of files
@@ -39,6 +40,7 @@ t/011-scope-env.t
 t/012-scope-nested.t
 t/020-dag.t
 t/021-dag-single-goal.t
+t/030-util-basedpath.t
 t/200-apputil-basic.t
 t/dir200/inner.hopen.pl
 t/dir200/inner/.hopen.pl

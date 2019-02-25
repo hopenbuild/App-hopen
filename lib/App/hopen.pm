@@ -292,10 +292,14 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my ($set_phase, $cannot_set_phase, $cannot_set_phase_warn);
     my $setting_phase_allowed = false;
 
+    # Note: all phase-setting functions succeed if there was nothing
+    # for them to do!
+
     $set_phase = q(
         sub can_set_phase { true }
         sub set_phase {
             my $new_phase = shift or croak 'Need a phase';
+            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
             croak "Phase $new_phase is not one of the ones I know about (" .
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
@@ -307,6 +311,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     $cannot_set_phase = q(
         sub can_set_phase { false }
         sub set_phase {
+            my $new_phase = shift // '';
+            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
             croak "I'm sorry, but this file (``$FILENAME'') is not allowed to set the phase"
         }
     );
@@ -314,6 +320,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     $cannot_set_phase_warn = q(
         sub can_set_phase { false }
         sub set_phase {
+            my $new_phase = shift // '';
+            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
     ) .
     ($opts{quiet} ? '' :
         q(
@@ -361,6 +369,10 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
             # If this were not the case, every second or subsequent run
             # of hopen(1) would croak if --phase were specified!
             $phase_text .= isMYH($fn) ? $cannot_set_phase_warn : $cannot_set_phase;
+            # TODO? permit regular hopen files to set the the phase if
+            # neither MYH nor the command line did, and we're at the first
+            # phase.  This is so the hopen file can say `set_phase 'Gen';`
+            # if there's nothing to do during Check.
         }
     } #endif -e else
 
@@ -822,7 +834,7 @@ name or the part after C<App::hopen::T::>.
 Specify the destination directory.  Overrides a destination directory given
 as a positional argument.
 
-=item --phase
+=item --phase C<phase>
 
 Specify which phase of the process to run.  Note that this overrides whatever
 is specified in any MY.hopen.pl file, so may cause unexpected results!

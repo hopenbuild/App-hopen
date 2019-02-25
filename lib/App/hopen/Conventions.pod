@@ -1,18 +1,18 @@
 =head1 NAME
 
-Data::Hopen::Conventions - conventions for using hopen(1) as a build system
+App::hopen::Conventions - conventions for using hopen(1) as a build system
 
 =head1 SYNOPSIS
 
-L<Data::Hopen> is a flexible dataflow processor and task runner.  However, its
+L<App::hopen> is a flexible dataflow processor and task runner.  However, its
 main use case is as a build system (e.g., a Makefile generator).  To keep
 the core of hopen as flexible as possible, hopen(1) (build-system use cases)
 requires its components to follow the conventions described in this document.
 
-These conventions are generally implemented/enforced in L<Data::Hopen::App>
-and L<Data::Hopen::AppUtil>.
+These conventions are generally implemented/enforced in L<App::hopen>
+and L<App::hopen::AppUtil>.
 
-Note: everything in this document is subject to change since Data::Hopen
+Note: everything in this document is subject to change since C<App::hopen>
 is currently under active development.
 
 =head1 COMPONENTS USED BY THE BUILD SYSTEM
@@ -30,7 +30,7 @@ The default directory is C<< <project dir>/built >>.
 
 =item Generator
 
-A subclass of L<Data::Hopen::Gen> that creates the build-system files.
+A subclass of L<App::hopen::Gen> that creates the build-system files.
 The generator's job is to arrange for coordinating work that needs to be done.
 
 =item Toolset
@@ -127,15 +127,22 @@ starting with C<__R> are reserved.
 The hopen file is executed in scalar context.
 
 Each hopen file runs in an environment with everything from the following
-packages loaded (via L<Data::Hopen::HopenFileKit>):
+packages loaded (via L<App::hopen::HopenFileKit>):
 
 =over
+
+=item * L<App::hopen::BuildSystemGlobals>
+
+=item * L<App::hopen::Phases>
+
+=item * L<App::hopen::Util::BasedPath>
 
 =item * L<Data::Hopen>
 
 =item * L<Data::Hopen::Base>
 
-=item * L<Data::Hopen::Phases>
+This also gives you L<Carp>, L<Data::Dumper>, L<strict>, and L<warnings>,
+and requires Perl 5.14+.
 
 =item * L<Path::Class>
 
@@ -143,17 +150,17 @@ packages loaded (via L<Data::Hopen::HopenFileKit>):
 
 =head2 Variables usable in hopen files
 
-These are defined in L<Data::Hopen>.
+These are defined in L<App::hopen::BuildSystemGlobals>.
 
 =over
 
 =item $Generator
 
-The current L<Data::Hopen::Gen> instance.
+The current L<App::hopen::Gen> instance.
 
 =item $Toolset
 
-The name of the current C<< Data::Hopen::T::<stem> >> package root.
+The name of the current C<< App::hopen::T::<stem> >> package root.
 
 =item $Build
 
