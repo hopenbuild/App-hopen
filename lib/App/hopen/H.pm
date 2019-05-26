@@ -2,21 +2,18 @@
 package App::hopen::H;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 use parent 'Exporter';
-our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
-BEGIN {
-    @EXPORT = qw();
-    @EXPORT_OK = qw(files);
-    %EXPORT_TAGS = (
+use vars::i '@EXPORT' => [];
+use vars::i '@EXPORT_OK' => qw(files);
+use vars::i '%EXPORT_TAGS' => (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
     );
-}
 
 use App::hopen::BuildSystemGlobals;
-use App::hopen::G::FilesOp;
+use App::hopen::G::FilesCmd;
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
@@ -42,27 +39,32 @@ L<Data::Hopen::HopenFileKit>.
 
 =head2 files
 
-Creates a DAG node representing a set of input files.  Example usage:
+Creates a command-graph node representing a set of input files.
+Example usage:
 
     $Build->H::files('foo.c')->C::compile->C::link('foo')->default_goal;
 
-The node is a L<Data::Hopen::G::FilesOp>.
+The node is an L<App::hopen::G::FilesCmd>.
 
 The file path is assumed to be relative to the current project directory.
 TODO handle subdirectories.
+
+Adds each specified file as a separate node in the asset graph.
 
 =cut
 
 sub files {
     my ($builder, %args) = getparameters('self', ['*'], @_);
     hlog { __PACKAGE__, 'files:', Dumper(\%args) } 3;
-    my @files = @{$args{'*'} // []};
-    @files = map { based_path(path => file($_), base => $ProjDir) } @files;
+    my $lrFiles = $args{'*'} // [];
+    my @files = map { based_path(path => file($_), base => $ProjDir) } @$lrFiles;
     hlog { __PACKAGE__, 'file objects:', @files } 3;
-    return App::hopen::G::FilesOp->new(
+    my $files_op = App::hopen::G::FilesCmd->new(
         files => [ @files ],
         forward_opts(\%args, 'name')
     );
+
+    return $files_op;
 } #files()
 
 make_GraphBuilder 'files';

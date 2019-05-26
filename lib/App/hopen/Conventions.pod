@@ -4,9 +4,9 @@ App::hopen::Conventions - conventions for using hopen(1) as a build system
 
 =head1 SYNOPSIS
 
-L<App::hopen> is a flexible dataflow processor and task runner.  However, its
+L<Data::Hopen> is a flexible dataflow processor and task runner.  However, its
 main use case is as a build system (e.g., a Makefile generator).  To keep
-the core of hopen as flexible as possible, hopen(1) (build-system use cases)
+the core of hopen as flexible as possible, L<App::hopen> (build system)
 requires its components to follow the conventions described in this document.
 
 These conventions are generally implemented/enforced in L<App::hopen>
@@ -35,7 +35,7 @@ The generator's job is to arrange for coordinating work that needs to be done.
 
 =item Toolset
 
-A collection of operations (L<Data::Hopen::G::Op> subclasses) that know
+A collection of operations (L<App::hopen::G::Op> subclasses) that know
 how to process specific types of files.  Toolsets are responsible for
 defining the work that the generator will coordinate.
 
@@ -211,17 +211,28 @@ You can do this by running C<hopen --build>, if you wish.
 
 =head1 INTERNALS
 
-=head2 The build graph
+=head2 Overall data flow
 
-Each operation (L<Data::Hopen::G::Op> subclass) returns, or adds to
-the beginning of, a C<work> arrayref.  For example:
+=over
 
-    {
-        work => [
-            { from => ['hello.c'], to => ['hello.o'],
-                how => ['gcc -c #first -o #out'] },
-            { from => ['hello.o'], to => ['hello'],
-                how => ['gcc #first -o #out'] }
-        ]
-    }
+=item 1.
 
+The hopen files run, and generate a command graph.  The command graph includes
+nodes that implement L<App::hopen::G::Cmd>.  The idea is that the hopen
+files specify the I<commands> you would run to build your software by hand.
+
+Each command node, when run, outputs a C<made> arrayref of
+L<App::hopen::Asset> instances.
+
+=item 2.
+
+The command graph is run, with a generator made available to it.  Command nodes
+provide asset nodes to the generator and to later command nodes.  The asset
+nodes implement L<App::hopen::G::AssetNode>.  The specific subclass they
+implement is determined by the generator.
+
+=item 3.
+
+The generator runs the asset graph to output the blueprint files.
+
+=back

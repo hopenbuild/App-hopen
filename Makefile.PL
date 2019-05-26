@@ -1,5 +1,5 @@
 #!perl
-# Makefile.PL for Build::Hopen
+# Makefile.PL for App::hopen
 use 5.014;
 use strict;
 use warnings;
@@ -9,6 +9,8 @@ use File::Spec;
 
 my $VERSION_FROM = File::Spec->catfile(qw(lib App hopen.pm));
 my $IS_TRIAL = check_trial();
+my $secure_perl_path = get_perl_filename();
+my @provides = ();
 
 # Check if this is a TRIAL version {{{1
 sub check_trial {
@@ -26,16 +28,18 @@ sub check_trial {
     }
     return 0;
 } #check_trial()
+
 # }}}1
 # Module metadata {{{1
-my $provides;
 eval {
     require Module::Metadata;
-    $provides = Module::Metadata->provides(version => '2', dir => 'lib');
+    @provides =
+        (provides => Module::Metadata->provides(version => '2', dir => 'lib'));
         # Thanks to https://stackoverflow.com/a/28928985/2877364 by LEONT
+        # for suggesting Module::Metadata.
 };
-# }}}1
 
+# }}}1
 # Get the filename of the Perl interpreter running this. {{{1
 # Modified from perlvar.
 # The -x test is for cygwin or other systems where $Config{perlpath} has no
@@ -49,10 +53,9 @@ sub get_perl_filename {
                             ($secure_perl_path =~ m/$Config{_exe}$/i);
     }
     return $secure_perl_path;
-} # get_perl_filename() }}}1
+} # get_perl_filename()
 
-my $secure_perl_path = get_perl_filename();
-
+# }}}1
 # Makefile customization (MY) {{{1
 {   package MY;
 
@@ -103,7 +106,7 @@ testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
 README.md: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
-\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md
+\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md --appveyor cxw42/app-hopen --avbadge hopenbuild/app-hopen
 
 README: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
@@ -133,7 +136,9 @@ actually_uninstall_from_vendordirs ::
 EOT
 
     } #postamble()
-} #package MY }}}1
+} #package MY
+
+# }}}1
 
 # Main options for EUMM
 my %opts = (
@@ -152,13 +157,19 @@ my %opts = (
         #   - backtracking control verbs (5.010)
         #   - working smartmatch (5.010001)
         #   - stringifying regexes with modifiers (5.014)
+        #   - FH->autoflush without needing IO::Handle (see
+        #     perldoc -f select) (5.014)
 
     # In the following, if a specific version is listed, but no explanation
     # is given, that means we want that version for bugfixes it includes.
+    # Prereqs commented out with "##" were used at one time but no longer
+    # appear to be.
     CONFIGURE_REQUIRES => {
         'Config' => '0',
         'ExtUtils::MakeMaker' => '0',
         'File::Spec' => '0',
+        'strict' => '0',
+        'warnings' => '0',
     },
     BUILD_REQUIRES => {
         'Getopt::Long' => '0',
@@ -173,13 +184,15 @@ my %opts = (
         'rlib' => '0',
         'Scalar::Util' => '0',
         'Test::Deep' => '0.084',        # for superhashof
-        'Test::Directory' => '0.02',    # for subdirs
+        ## 'Test::Directory' => '0.02',    # for subdirs
+        'Test::Exception' => '0',
         'Test::More' => '0',
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
+        'Test::Warn' => '0.35',     # for metadata
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Data::Hopen' => '0.000009',
+        'Data::Hopen' => '0.000013',
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',
@@ -195,30 +208,29 @@ my %opts = (
             # - Looks like it might be handy.
             # 0.002+ because that has only core dependencies.
 
-        #'Class::Method::Modifiers' => '1.05',  # version nums from Antlers
-        #'Role::Tiny' => '1.000000',
+        'Class::Tiny::ConstrainedAccessor' => '0.000010',   # custom constraints
 
-        'Class::XPath' => '1.4',
+        ## 'Class::XPath' => '1.4',
         'Config' => '0',
         'Cwd' => '0',
 
         'constant' => '0',
         'Data::Dumper' => '0',
         'Deep::Hash::Utils' => '0.03',  # For correct metadata
-        'experimental' => '0.009',      # For support on perl < 5.15.7
+        ## 'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',
         'feature' => '0',
         # 'File::Find::Rule' => '0',    # - might be nice for finding files
         'File::Glob' => '0',
         #'File::Globstar' => '0.5',      # Fewer dependencies
         'File::Path::Tiny' => '0.9',
+        'File::pushd' => '1.013',
         'File::Spec' => '0',
         'File::stat' => '0',
         'File::Which' => '1.22',    # for msys2 support
         'Hash::Merge' => '0.299',
         'Hash::Ordered' => '0.011',
         'Import::Into' => '0',
-        'IO::Handle' => '0',
         'Getargs::Mixed' => '1.04', # For -undef_ok option
         'Getopt::Long' => '2.5',    # For long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
@@ -250,15 +262,22 @@ my %opts = (
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
                                 # Alternative: Padre::Perl
 
+        'Quote::Code' => '1.01',
+        #'Role::Tiny' => '1.000000',
+
         'Scalar::Util' => '0',
         'Set::Scalar' => '1.27',    # For correct metadata
-        'Storable' => '3.06',
+        ## 'Storable' => '3.06',
             # So it can handle REGEXP -
             # https://rt.perl.org/Public/Bug/Display.html?id=50608
 
-        'Sub::ScopeFinalizer' => '0.02',        # For correct META.yml
+        'String::Print' => '0.92',
+        ## 'Sub::ScopeFinalizer' => '0.02',        # For correct META.yml
 
         'strict' => '0',
+        'Type::Tiny' => '1.004004',
+
+        'vars::i' => '1.06',
         'warnings' => '0',
     },
 
@@ -267,12 +286,12 @@ my %opts = (
 
         resources => {
             bugtracker => {
-                web  => 'https://github.com/hopenbuild/Build-Hopen/issues',
+                web  => 'https://github.com/hopenbuild/App-hopen/issues',
             },
             repository => {
                 type => 'git',
-                url  => 'https://github.com/hopenbuild/Build-Hopen.git',
-                web  => 'https://github.com/hopenbuild/Build-Hopen',
+                url  => 'https://github.com/hopenbuild/App-hopen.git',
+                web  => 'https://github.com/hopenbuild/App-hopen',
             },
         },
 
@@ -285,15 +304,27 @@ my %opts = (
             },
         },
 
-        $provides ? (provides => $provides) : (),
+        @provides,
 
     }, #META_MERGE
 
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'Build-Hopen-*' },
+    clean => { FILES => 'App-hopen-*' },
 ); # %opts
 
 $opts{META_MERGE}->{release_status} = 'testing' if $IS_TRIAL;
+
+# Some tests run on older versions of EUMM that do not support TEST_REQUIRES.
+# This is a workaround, modified from
+# https://metacpan.org/source/RJBS/JSON-Typist-0.005/Makefile.PL ,
+# linked from http://blogs.perl.org/users/neilb/2017/05/specifying-dependencies-for-your-cpan-distribution.html .
+# If we are on a version of EUMM that doesn't support TEST_REQUIRES,
+# move those dependencies to PREREQ_PM.
+unless( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+    $opts{PREREQ_PM}->{$_} = $opts{TEST_REQUIRES}->{$_}
+        foreach keys %{$opts{TEST_REQUIRES}};
+    delete $opts{TEST_REQUIRES};
+}
 
 WriteMakefile(%opts);
 # vi: set fdm=marker fdl=0: #

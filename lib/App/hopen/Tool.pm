@@ -1,11 +1,11 @@
-# App::hopen::Tool - base class for a hopen tool.
+# App::hopen::Tool - base class for a hopen tool.  DEPRECATED.
 package App::hopen::Tool;
 #use Data::Hopen;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
-use parent 'Data::Hopen::G::Op';
+use parent 'App::hopen::G::Cmd';
 #use Class::Tiny;
 
 # Docs {{{1
@@ -20,8 +20,8 @@ A tool knows how to generate a command or other text that will cause
 a build system to perform a particular action on a file belonging to a
 particular language.
 
-A tool is a L<Data::Hopen::G::Op>, so may interact with the current
-generator (L<Data::Hopen/$Generator>).  Moreover, the generator will
+A tool is an L<App::hopen::G::Cmd>, so may interact with the current generator
+(L<App::hopen::BuildSystemGlobals/$Generator>).  Moreover, the generator will
 get a chance to visit the op after it is processed.
 
 Maybe TODO:

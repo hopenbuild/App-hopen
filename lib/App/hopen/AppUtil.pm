@@ -4,7 +4,7 @@ use Data::Hopen qw(:default isMYH MYH);
 use Data::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
@@ -26,7 +26,7 @@ use Path::Class;
 
 =head1 NAME
 
-Data::Hopen::AppUtil - utility routines used by Data::Hopen::App
+App::hopen::AppUtil - utility routines used by App::hopen
 
 =head1 FUNCTIONS
 

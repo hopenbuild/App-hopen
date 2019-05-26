@@ -4,13 +4,25 @@ use rlib 'lib';
 use HopenTest 'App::hopen::Util::BasedPath';
 use Path::Class;
 
-my $e2 = DUT->new(path=>dir(), base=>dir());
+my $e2;
+
+$e2 = $DUT->new(path=>dir(), base=>dir());
 isa_ok($e2, $DUT);
+is($e2->path, dir(), "path is set correctly");
+is($e2->base, dir(), "base is set correctly");
+ok($e2->orig_cwd->is_absolute, "orig_cwd is stored in absolute form");
+is($e2->orig_cwd, dir()->absolute, "orig_cwd is set correctly");
 
 $e2 = based_path(path=>dir(), base=>dir());
 isa_ok($e2, $DUT);
 
-eval { $e2 = DUT->new(path=>dir(), base=>""); };
+my $d = dir('','foo');
+ok($d->is_absolute, 'Sanity check (absolute dir)');
+eval { $e2 = $DUT->new(path=>dir('','foo'), base=>dir()); };
+ok($@, 'Constructor rejects absolute path=>(something absolute)');
+
+
+eval { $e2 = $DUT->new(path=>dir(), base=>""); };
 ok($@, 'Constructor rejects base=>""');
 
 $e2 = based_path(path=>dir(), base=>dir(''));

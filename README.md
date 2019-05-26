@@ -1,6 +1,11 @@
 # App::hopen - hopen build system command-line interface
 
+[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/hopenbuild/app-hopen?svg=true)](https://ci.appveyor.com/project/cxw42/app-hopen)
 
+
+
+(Note: most features are not yet implemented ;) .  However it will generate
+a Makefile for a basic `Hello, World` program at this point!)
 
 hopen is a cross-platform software build generator.  It makes files you can
 pass to Make, Ninja, Visual Studio, or other build tools, to compile and
@@ -24,6 +29,8 @@ Why Perl?  Because (1) you probably already have it installed, and
 If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, `<project dir>/built` is used.
+
+See [App::hopen::Conventions](https://github.com/hopenbuild/App-hopen/blob/master/lib/App/hopen/Conventions.pod) for more details.
 
 # OPTIONS
 

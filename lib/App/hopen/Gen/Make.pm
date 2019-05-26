@@ -2,17 +2,21 @@
 package App::hopen::Gen::Make;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 use parent 'App::hopen::Gen';
-use Class::Tiny {
-    targets => sub { Hash::Ordered->new() }
-};
+use Class::Tiny qw(targets);
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(is_last_phase);
 use Data::Hopen qw(:default getparameters $QUIET);
+use Data::Hopen::Scope::Hash;
+use Data::Hopen::Util::Data qw(forward_opts);
+use File::Which;
 use Hash::Ordered;
+
+use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
+use App::hopen::Gen::Make::AssetGraphVisitor;
 
 # Docs {{{1
 
@@ -38,14 +42,36 @@ A L<Hash::Ordered> of the targets, in the order encountered.
 
 =head2 visit_goal
 
-Add a target corresponding to the name of the goal.
+Add a target corresponding to the name of the goal.  Usage:
+
+    $Generator->visit_goal($node, $node_inputs);
+
+This happens while the command graph is being run.
 
 =cut
 
 sub visit_goal {
-    my $self = shift or croak 'Need an instance';
-    my $goal = shift or croak 'Need a goal';
-    $self->targets->set($goal->name, $goal);
+    my ($self, %args) = getparameters('self', [qw(goal node_inputs)], @_);
+    $self->targets->set($args{goal}->name, $args{goal});
+
+    # --- Add the goal to the asset graph ---
+
+    my $asset_goal = $self->_assets->goal($args{goal}->name);
+
+    # Pull the inputs.  TODO refactor out the code in common with
+    # AhG::Cmd::input_assets().
+    my $hrSourceFiles =
+        $args{node_inputs}->find(-name => 'made',
+                                    -set => '*', -levels => 'local') // {};
+    die 'No input files to goal ' . $args{goal}->name
+        unless scalar keys %$hrSourceFiles;
+
+    my $lrSourceFiles = %$hrSourceFiles{(keys %$hrSourceFiles)[0]};
+    hlog { 'found inputs to goal', $args{goal}->name, Dumper($lrSourceFiles) } 2;
+
+    # TODO? verify that all the assets are actually in the graph first?
+    $self->connect($_, $asset_goal) foreach @$lrSourceFiles;
+
 } #visit_goal()
 
 #=head2 visit_node
@@ -71,6 +97,8 @@ sub finalize {
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
     return unless is_last_phase $args{phase};
 
+    hlog { __PACKAGE__, 'Asset graph', '' . $self->_assets->_graph } 3;
+
     # During the Gen phase, create the Makefile
     open my $fh, '>', $self->dest_dir->file('Makefile') or die "Couldn't create Makefile";
     print $fh <<EOT;
@@ -78,42 +106,23 @@ sub finalize {
 # at @{[scalar gmtime]} GMT
 # From ``@{[$self->proj_dir->absolute]}'' into ``@{[$self->dest_dir->absolute]}''
 
+.PHONY: first__goal__
+
 EOT
 
-    my $iter = $self->targets->iterator;
-    # TODO make this more robust and flexible
-    while( my ($name, $goal) = $iter->() ) {
-        hlog { __PACKAGE__, 'goal', $name } 2;
-        say $fh "### Goal $name ###";
-        unless(eval { scalar @{$goal->outputs->{work}} }) {
-            warn "No work for goal $name" unless $QUIET;
-            next;
-        }
+    # Make sure the first goal is 'all' regardless of order.
+    print $fh 'first__goal__: ', $args{dag}->default_goal->name, "\n";
 
-        my @work = @{$goal->outputs->{work}};
-        unshift @work, { to => [$name], from => $work[0]->{to}, how => undef };
-            # Make a fake record for the goal.  TODO move this to visit_goal?
+    my $context = Data::Hopen::Scope::Hash->new;
+    $context->put(App::hopen::Gen::Make::AssetGraphNode::OUTPUT, $fh);
 
-        hlog { 'Work to do', Dumper(\@work) } 3;
-        foreach my $item (@work) {
-            next unless @{$item->{from}};   # no prerequisites => assume it's a file
-            my @sources;
-            foreach(@{$item->{from}}) {
-                hlog { 'Work item', Dumper($_) } 3;
-                next unless $_;
-                push @sources, $_->orig->relative($DestDir);
-            }
+    # Write the Makefile.  TODO flip the order.
 
-            my $dest = $item->{to}->[0];
-            $dest = $dest->orig->relative($DestDir)
-                if $dest->DOES('App::hopen::Util::BasedPath');
+    $self->_assets->run(-context => $context,
+        -visitor => App::hopen::Gen::Make::AssetGraphVisitor->new,
+        forward_opts(\%args, {'-'=>1}, qw(phase))
+    );
 
-            say $fh $dest, ': ', join(' ', @sources);
-            say $fh (_expand($item) =~ s/^/\t/gmr);
-            say $fh '';
-        }
-
-    } #foreach goal
     close $fh;
 } #finalize()
 
@@ -125,6 +134,36 @@ which is C<Gnu> (i.e., L<Data::Hopen::T::Gnu>).
 =cut
 
 sub default_toolset { 'Gnu' }
+
+=head2 _assetop_class
+
+The class of asset-graph operations, which in this case is
+L<App::hopen::Gen::Make::AssetGraphNode>.
+
+=cut
+
+sub _assetop_class { 'App::hopen::Gen::Make::AssetGraphNode' }
+
+=head2 _run_build
+
+Implementation of L</run_build>.
+
+=cut
+
+sub _run_build {
+    # Look for the make(1) executable.  Listing make before gmake since a
+    # system with both Cygwin and Strawberry Perl installed has cygwin's
+    # make(1) and Strawberry's gmake(1).
+    foreach my $candidate (qw[make gmake mingw32-make dmake]) {
+        my $path = File::Which::which($candidate);
+        next unless defined $path;
+        # TODO cd into dest dir
+        hlog { Running => $path };
+        system $path, ();
+        return;
+    }
+    warn "Could not find a 'make' program to run";
+} #_run_build()
 
 =head1 INTERNALS
 
@@ -155,6 +194,18 @@ sub _expand {
 
     return $retval;
 } #_expand()
+
+=head2 BUILD
+
+Constructor
+
+=cut
+
+sub BUILD {
+    my ($self, $hrArgs) = @_;
+    $self->targets(Hash::Ordered->new());
+} #BUILD()
+
 
 1;
 __END__

@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 # Imports {{{1
 use Data::Hopen::Base;
@@ -45,6 +45,9 @@ App::hopen - hopen build system command-line interface
 
 =head1 SYNOPSIS
 
+(Note: most features are not yet implemented ;) .  However it will generate
+a Makefile for a basic C<Hello, World> program at this point!)
+
 hopen is a cross-platform software build generator.  It makes files you can
 pass to Make, Ninja, Visual Studio, or other build tools, to compile and
 link your software.  hopen gives you:
@@ -80,7 +83,14 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, C<< <project dir>/built >> is used.
 
+See L<App::hopen::Conventions> for more details.
+
 =head1 INTERNALS
+
+After the C<hopen> file is processed, cycles are detected and reported as
+errors.  *(TODO change this to support LaTeX multi-run files?)*  Then the DAG
+is traversed, and each operation writes the necessary information to the
+file being generated.
 
 =cut
 
@@ -102,7 +112,7 @@ my %CMDLINE_OPTS = (
     ARCHITECTURE => ['a','|A|architecture|platform=s'],
         # -A and --platform are for the comfort of folks migrating from CMake
 
-    #BUILD => ['build'],    # TODO implement this --- if specified, do not
+    BUILD => ['build'],     # If specified, do not
                             # run any phases.  Instead, run the
                             # build tool indicated by the generator.
 
@@ -117,6 +127,9 @@ my %CMDLINE_OPTS = (
 
     GENERATOR => ['g', '|G|generator=s', 'Make'],     # -G is from CMake
         # *** This is where the default generator is set ***
+        # TODO? add an option to pass parameters to the generator?
+        # E.g., which make(1) to use?  Or maybe that should be part of the
+        # ARCHITECTURE string.
 
     #GO => ['go'],  # TODO implement this --- if specified, run all phases
                     # and invoke the build tool without requiring the user to
@@ -250,6 +263,9 @@ Set to truthy if MY.hopen.pl sets the phase.
 =cut
 
 our $_did_set_phase = false;
+    # Whether the current hopen file called set_phase()
+
+my $_hf_pkg_idx = 0;    # unique ID for the packages of hopen files
 
 sub _execute_hopen_file {       # Load and run a single hopen file {{{2
 
@@ -351,14 +367,14 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         hlog { 'Processing', $fn->{name} };
         $file_text = $fn->{text};
         $friendly_name = $fn->{name};
-        $pkg_name = 'CmdLineE' . $fn->{num};
+        $pkg_name = 'CmdLineE' . $fn->{num} . '_' . $_hf_pkg_idx++;
         $phase_text .= defined($opts{phase}) ? $cannot_set_phase : $set_phase;
             # -e's can set phase unless --phase was specified
 
     } else {
         hlog { 'Processing', $fn };
         $file_text = file($fn)->slurp;
-        $pkg_name = ($fn =~ s/[^a-zA-Z0-9]/_/gr);
+        $pkg_name = ($fn =~ s/[^a-zA-Z0-9]/_/gr) . '_' . $_hf_pkg_idx++;
         $friendly_name = $fn;
 
         if( isMYH($fn) and !defined($opts{phase}) ) {
@@ -431,7 +447,11 @@ EOT
     # is defined, make sure it's not a DAG or GraphBuilder.  Those should not
     # be put into the return data.
     #
-    # Also, any defined, non-hash
+    # Also, any defined, non-hash value is ignored, so that we don't
+    # wind up with lots of hashes like { 1 => 1 }.
+    #
+    # If the file_text did expressly return(), whatever it returned will
+    # be used as-is.  Like perlref says, we are not totalitarians.
 
     $src .= <<EOT;
         \$__R_retval //= \$__R_on_result;
@@ -530,7 +550,8 @@ be run if it is empty.
     hlog { 'Graph is', ($Build->empty ? 'empty.' : 'not empty.'),
             ' Final data is', Dumper($_hrData) } 2;
 
-    hlog { Data::Dumper->new([$Build], ['$Build'])->Indent(1)->Dump } 5;
+    hlog { 'Build graph', '' . $Build->_graph } 5;
+    hlog { Data::Dumper->new([$Build], ['$Build'])->Indent(1)->Dump } 9;
 
     # If there is no build graph, just return the data.  This is useful
     # enough for debugging that I am making it documented behaviour.
@@ -543,10 +564,12 @@ be run if it is empty.
     my $env = Data::Hopen::Scope::Environment->new(name => 'outermost');
     my $scope = Data::Hopen::Scope::Hash->new(name => 'from hopen files');
     $scope->adopt_hash($_hrData);
+    $scope->outer($env);    # make the environment accessible...
+    $scope->local(true);    # ... but not copied by local-scope calls.
 
     # Run the DAG
     my $result_data = $Build->run(-context => $scope, -phase => $Phase,
-                                    -generator => $Generator);
+                                    -visitor => $Generator);
     hlog { Data::Dumper->new([$result_data], ['Build graph result data'])->Indent(1)->Dump } 2;
     return $result_data;
 } #_run_phase() }}}2
@@ -557,6 +580,8 @@ sub _inner {    # Run a single invocation of hopen(1). {{{2
 
 Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
 translates the die() into a print and error return.
+
+The return value of _inner is unspecified and ignored.
 
 =cut
 
@@ -569,9 +594,11 @@ translates the die() into a print and error return.
         } else {
             say "hopen $VERSION";
         }
-        say "App::hopen in: $INC{'App/hopen.pm'}" if $opts{VERBOSE} >= 1;
-        return EXIT_OK;
+        say "App::hopen in: $INC{'App/hopen.pm'}" if $VERBOSE >= 1;
+        return;
     }
+
+    # = Initialize filesystem-related build-system globals ==================
 
     # Start with the default phase unless one was specified.
     $Phase = $opts{PHASE} // $PHASES[0];
@@ -620,7 +647,7 @@ EOT
             if( $stat->mtime > $myhstat->mtime ||
                 $stat->ctime > $myhstat->ctime)
             {
-                say "Skipping out-of-date ``$myhopen''" unless $opts{QUIET};
+                say "Skipping out-of-date ``$myhopen''" unless $QUIET;
                 $myhopen = undef;
                 last;
             }
@@ -646,10 +673,6 @@ I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
 project directory ``$proj_dir''.
 EOT
 
-    # = Initialize ==========================================================
-
-    say "From ``$proj_dir'' into ``$dest_dir''" unless $opts{QUIET};
-
     # Prepare the destination directory if it doesn't exist
     File::Path::Tiny::mk($dest_dir) or die "Couldn't create $dest_dir: $!";
 
@@ -657,39 +680,53 @@ EOT
     # generator and toolset can add initialization operations.
     $Build = hnew DAG => '__R_main';
 
+    # = Load generator and toolset (and run MYH) ============================
+
+    say "From ``$proj_dir'' into ``$dest_dir''" unless $QUIET;
+
     # Load MY.hopen.pl first so the results of the Probe phase are
     # available to the generator and toolset.
-    if($myhopen) {
+    if($myhopen && !$opts{BUILD}) {
         _execute_hopen_file($myhopen,
             forward_opts(\%opts, {lc=>1}, qw(PHASE QUIET)),
         );  # TODO support _e_h_f libs option
     }
 
     # Tell the user the initial phase if MY.hopen.pl didn't change it
-    say "Running $Phase phase" unless $_did_set_phase or $opts{QUIET};
+    say "Running $Phase phase" unless $opts{BUILD} or $_did_set_phase or $QUIET;
 
     # Load generator
-    my ($gen, $gen_class);
-    $gen_class = loadfrom($opts{GENERATOR}, 'App::hopen::Gen::', '');
-    die "Can't find generator $opts{GENERATOR}" unless $gen_class;
-    hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
+    {
+        my ($gen, $gen_class);
+        $gen_class = loadfrom($opts{GENERATOR}, 'App::hopen::Gen::', '');
+        die "Can't find generator $opts{GENERATOR}" unless $gen_class;
+        hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
 
-    $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
-        architecture => $opts{ARCHITECTURE})
-            or die "Can't initialize generator";
-    $Generator = $gen;
+        $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
+            architecture => $opts{ARCHITECTURE})
+                or die "Can't initialize generator";
+        $Generator = $gen;
+    }
 
     # Load toolset
-    my $toolset_class;
-    $opts{TOOLSET} //= $gen->default_toolset;
-    $toolset_class = loadfrom($opts{TOOLSET},
-                                    'App::hopen::T::', '');
-    die "Can't find toolset $opts{TOOLSET}" unless $toolset_class;
+    {
+        my $toolset_class;
+        $opts{TOOLSET} //= $Generator->default_toolset;
+        $toolset_class = loadfrom($opts{TOOLSET},
+                                        'App::hopen::T::', '');
+        die "Can't find toolset $opts{TOOLSET}" unless $toolset_class;
 
-    hlog { "Toolset spec ``$opts{TOOLSET}'' -> using toolset $toolset_class" };
-    $Toolset = $toolset_class;
+        hlog { "Toolset spec ``$opts{TOOLSET}'' -> using toolset $toolset_class" };
+        $Toolset = $toolset_class;
+    }
 
-    # = Run the hopen files =================================================
+    # Handle --build, now that everything's loaded --------------
+    if($opts{BUILD}) {
+        $Generator->run_build();
+        return;
+    }
+
+    # = Run the hopen files (except MYH, already run) =======================
 
     my $new_data;
     if(@$lrHopenFiles) {
@@ -714,7 +751,8 @@ EOT
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only
-    # need to edit right at the top of the file, and not also at the
+    # need to edit right at the top of the file, and not also throughout
+    # the hashref.
 
     my $VAR = '__R_new_data';
     my $dumper = Data::Dumper->new([$new_data], [$VAR]);
@@ -776,7 +814,9 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
     # Option overrides: -q beats -v
     $opts{VERBOSE} = 0 if $opts{QUIET};
-    $QUIET = $opts{QUIET} // false;
+    $QUIET = !!($opts{QUIET} // false);
+    delete $opts{QUIET};
+        # After this, code only refers to $QUIET for consistency.
 
     # Implement verbosity
     if(!$QUIET && $opts{VERBOSE}) {
@@ -784,10 +824,13 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
         #hlog { Verbosity => $VERBOSE };
 
         # Under -v, keep stdout and stderr lines in order.
-        use IO::Handle;
-        STDOUT->autoflush;
-        STDERR->autoflush;
+        STDOUT->autoflush(true);
+        STDERR->autoflush(true);
     }
+
+    delete @opts{qw(VERBOSE VERBOSE2)};
+        # After this, code only refers to $QUIET for consistency.
+    # After th
 
     # Don't print the source of an eval'ed hopen file unless -vvv or higher.
     # Need 3 for the "..." that Carp prints when truncating.

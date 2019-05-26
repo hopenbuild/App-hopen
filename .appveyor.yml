@@ -11,10 +11,17 @@ image:
 
 # === Basics ===
 
-# no install; it's platform-specific
+# no install here; it's platform-specific
 
 build_script:
+  # Grab the latest Data::Hopen
+  - svn export --force https://github.com/hopenbuild/Data-Hopen/trunk/lib
+      # Thanks to https://stackoverflow.com/a/39317180/2877364
+
+  # Grab the rest of the dependencies
   - cpanm --installdeps --notest --verbose .
+
+  # Build it
   - perl Makefile.PL
   - cmd: gmake
   - sh: make
@@ -73,3 +80,4 @@ for:
 
       # Then, install cpanminus locally so it will be cached.
       - which cpanm || (curl -L https://cpanmin.us | perl - App::cpanminus)
+

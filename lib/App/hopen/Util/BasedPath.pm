@@ -2,16 +2,21 @@
 package App::hopen::Util::BasedPath;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 use Exporter qw(import);
 our @EXPORT; BEGIN { @EXPORT = qw(based_path); }
 
-use Class::Tiny qw(path base);
+use Class::Tiny qw(path base),
+{
+    orig_cwd => undef,
+};
     # TODO add custom accessors for `path` and `base` to enforce the
     # type of object instances.
 
 # What we use
+use Cwd;
+use Getargs::Mixed;
 use Path::Class;
 
 # Docs {{{1
@@ -42,7 +47,8 @@ The path, as a L<Path::Class::File> or L<Path::Class::Dir> instance.
 May not be specified as a string when creating a new object, since there's
 no reliable way to tell whether a file or directory would be intended.
 
-This must be a relative path.
+This must be a relative path, since the whole point of this module is to
+combine partial paths!
 
 =head2 base
 
@@ -50,6 +56,11 @@ A L<Path::Class::Dir> to which the L</path> is relative.
 May be specified as a string for convenience; however, C<''> (the empty string)
 is forbidden (to avoid confusion).  Use C<dir()> for the current directory
 or C<dir('')> for the root directory.
+
+=head2 orig_cwd
+
+The working directory at the time the BasedPath instance was created.
+This is an absolute path.
 
 =head1 FUNCTIONS
 
@@ -84,6 +95,23 @@ sub orig {
             $self->path->components
         );
 } #orig()
+
+=head2 path_wrt
+
+Returns a C<Path::Class::*> representing the relative path from a given
+directory to the original location.  (C<wrt> = With Respect To)  Example:
+
+    # In directory "project"
+    my $based = based_path(path => file('foo'), base => dir('bar'));
+    $based->orig;                   # Path::Class::File for bar/foo
+    $based->path_wrt('..');         # Path::Class::File for project/bar/foo
+
+=cut
+
+sub path_wrt {
+    my ($self, %args) = parameters('self',['whence'], @_);
+    return $self->orig->relative($args{whence});
+} #path_wrt()
 
 =head2 path_on
 
@@ -147,16 +175,22 @@ sub BUILD {
     my ($self) = @_;
     die 'Need an instance' unless ref $self;
 
+    # --- path ---
     croak "path must be a Path::Class::*" unless $self->path &&
         ($self->path->DOES('Path::Class::Dir') ||
         $self->path->DOES('Path::Class::File'));
+    croak "path must be relative" unless $self->path->is_relative;
 
+    # --- base ---
     # Accept strings as base for convenience
     $self->base( dir($self->base) ) if !ref($self->base) && $self->base ne '';
 
     croak "base must be a Path::Class::Dir" unless $self->base &&
         $self->base->DOES('Path::Class::Dir');
+    # TODO? make base absolute??
 
+    # --- orig_cwd ---
+    $self->orig_cwd(dir()->absolute);
 
 } #BUILD()
 

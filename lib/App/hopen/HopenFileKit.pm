@@ -15,7 +15,7 @@ use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
 
 
-our $VERSION = '0.000010'; # TRIAL
+our $VERSION = '0.000010';
 
 use parent 'Exporter';  # Exporter-exported symbols {{{1
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
@@ -61,7 +61,7 @@ my %_loaded_languages;
 
 sub  _language_import { # {{{1
 
-=head2
+=head2 _language_import
 
 C<import()> routine for the fake "language" package
 

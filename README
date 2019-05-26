@@ -1,6 +1,9 @@
 NAME
     App::hopen - hopen build system command-line interface
 
+    (Note: most features are not yet implemented ;) .  However it will
+    generate a Makefile for a basic "Hello, World" program at this point!)
+
     hopen is a cross-platform software build generator.  It makes files you
     can pass to Make, Ninja, Visual Studio, or other build tools, to compile
     and link your software.  hopen gives you:
@@ -25,6 +28,8 @@ USAGE
     If no project directory is specified, the current directory is used.
 
     If no destination directory is specified, "<project dir>/built" is used.
+
+    See App::hopen::Conventions for more details.
 
 OPTIONS
     -a "architecture"

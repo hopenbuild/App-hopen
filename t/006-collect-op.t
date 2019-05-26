@@ -26,14 +26,14 @@ is($e->name, 'bar', 'Name was set by accessor');
 is_deeply($e->run(-context => Data::Hopen::Scope::Hash->new), {}, 'run() returns {} when inputs are empty');
 
 my $scope = Data::Hopen::Scope::Hash->new;
-$scope->add(foo=>1, bar=>2, baz=>{quux=>1337}, quuux=>[1,2,3,[42,43,44]]);
+$scope->put(foo=>1, bar=>2, baz=>{quux=>1337}, quuux=>[1,2,3,[42,43,44]]);
 my $newhr = $e->run(-context => $scope);
 is_deeply($newhr, $scope->_content, 'run() clones its inputs');
 not_identical($scope->_content, $newhr, 'run() returns a clone, not its input');
 
 # Nested scopes: stop at local
 my $inner_scope = hnew 'Scope::Hash' => 'inner';
-$inner_scope->add(inner=>'yes');
+$inner_scope->put(inner=>'yes');
 $inner_scope->local(true);
 $inner_scope->outer($scope);
 $newhr = $e->run(-context=>$inner_scope);
@@ -51,7 +51,7 @@ not_identical($inner_scope->_content, $newhr, 'levels=1 run() does not clone inn
 not_identical($scope->_content, $newhr, 'levels=1 run() does not clone outer scope');
 
 my $outer_scope = Data::Hopen::Scope::Hash->new;
-$outer_scope->add(outer=>'yep');
+$outer_scope->put(outer=>'yep');
 $scope->outer($outer_scope);
 $newhr = $e->run(-context=>$inner_scope);
 is_deeply($newhr, {%{$inner_scope->_content}, %{$scope->_content}}, 'levels=1 run() does not get outermost');
