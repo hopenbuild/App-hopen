@@ -15,8 +15,8 @@ image:
 
 build_script:
   # Grab the latest Data::Hopen
-  - svn export --force https://github.com/hopenbuild/Data-Hopen/trunk/lib
-      # Thanks to https://stackoverflow.com/a/39317180/2877364
+  - cpanm https://github.com/hopenbuild/Data-Hopen/tarball/master
+      # Thanks to https://gist.github.com/keisatou/7499464
 
   # Grab the rest of the dependencies
   - cpanm --installdeps --notest --verbose .

@@ -1,10 +1,11 @@
 # App::hopen::Phase::Gen - generation-phase operations
 package App::hopen::Phase::Gen;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 #use parent 'Exporter';
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 #use Class::Tiny ;#qw(TODO);
 

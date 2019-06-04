@@ -35,7 +35,7 @@ The generator's job is to arrange for coordinating work that needs to be done.
 
 =item Toolset
 
-A collection of operations (L<App::hopen::G::Op> subclasses) that know
+A collection of commands (L<App::hopen::G::Cmd> subclasses) that know
 how to process specific types of files.  Toolsets are responsible for
 defining the work that the generator will coordinate.
 

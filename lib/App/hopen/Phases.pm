@@ -1,9 +1,10 @@
 # App::hopen::Phases - definitions of phases
 package App::hopen::Phases;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);

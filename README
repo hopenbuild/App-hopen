@@ -22,14 +22,38 @@ NAME
     Why Perl?  Because (1) you probably already have it installed, and (2) it
     is the original write-once, run-everywhere language!
 
-USAGE
+  Example
+    Create a file ".hopen.pl" in your source tree.  Then:
+
+        $ hopen
+        From ``.'' into ``built''
+        Running Check phase
+
+    Now "built/MY.hopen.pl" has been created, and loaded with information
+    about your configuration.  You can edit that file if you want to change
+    what will happen next.
+
+        $ hopen
+        From ``.'' into ``built''
+        Running Gen phase
+
+    Now "built/Makefile" has been created.
+
+        $ hopen --build
+        Building in foo/built
+
+    And your software is ready to go!
+
+    See App::hopen::Conventions for information on writing ".hopen.pl" files.
+
+SYNOPSIS
         hopen [options] [--] [destination dir [project dir]]
 
     If no project directory is specified, the current directory is used.
 
     If no destination directory is specified, "<project dir>/built" is used.
 
-    See App::hopen::Conventions for more details.
+    See App::hopen and App::hopen::Conventions for more details.
 
 OPTIONS
     -a "architecture"
@@ -98,6 +122,10 @@ SUPPORT
     *   MetaCPAN
 
         <https://metacpan.org/pod/App::hopen>
+
+    *   This distribution
+
+        See the "eg/" directory distributed with this software for examples.
 
 LICENSE AND COPYRIGHT
     Copyright (c) 2018--2019 Christopher White.  All rights reserved.

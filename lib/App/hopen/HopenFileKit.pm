@@ -1,5 +1,6 @@
 # App::hopen::HopenFileKit - set up a hopen file
 package App::hopen::HopenFileKit;
+use strict;
 use Data::Hopen::Base;
 
 use Import::Into;
@@ -15,7 +16,7 @@ use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
 
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Exporter';  # Exporter-exported symbols {{{1
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);

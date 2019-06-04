@@ -1,11 +1,12 @@
 # App::hopen::Asset - record representing a file to be produced
 package App::hopen::Asset;
+use strict;
 use Data::Hopen::Base;
 
 use Path::Class;
 # and we use Class::Tiny below.
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 # Docs {{{1
 

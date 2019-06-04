@@ -1,9 +1,10 @@
 # App::hopen::T::Gnu - GNU toolset
 package App::hopen::T::Gnu;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 #use parent 'Data::Hopen::TODO';
 #use Class::Tiny qw(TODO);

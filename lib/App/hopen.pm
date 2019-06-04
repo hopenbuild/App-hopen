@@ -1,8 +1,9 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 # Imports {{{1
+use strict;
 use Data::Hopen::Base;
 
 use App::hopen::AppUtil ':all';
@@ -43,7 +44,7 @@ use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
 App::hopen - hopen build system command-line interface
 
-=head1 SYNOPSIS
+=head1 INTRODUCTION
 
 (Note: most features are not yet implemented ;) .  However it will generate
 a Makefile for a basic C<Hello, World> program at this point!)
@@ -75,7 +76,32 @@ See L<App::hopen::Conventions> for details of the input format.
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
 
-=head1 USAGE
+=head2 Example
+
+Create a file C<.hopen.pl> in your source tree.  Then:
+
+    $ hopen
+    From ``.'' into ``built''
+    Running Check phase
+
+Now C<built/MY.hopen.pl> has been created, and loaded with information about
+your configuration.  You can edit that file if you want to change what will
+happen next.
+
+    $ hopen
+    From ``.'' into ``built''
+    Running Gen phase
+
+Now C<built/Makefile> has been created.
+
+    $ hopen --build
+    Building in foo/built
+
+And your software is ready to go!
+
+See L<App::hopen::Conventions> for information on writing C<.hopen.pl> files.
+
+=head1 SYNOPSIS
 
     hopen [options] [--] [destination dir [project dir]]
 
@@ -83,7 +109,72 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, C<< <project dir>/built >> is used.
 
-See L<App::hopen::Conventions> for more details.
+See L<App::hopen> and L<App::hopen::Conventions> for more details.
+
+=head1 OPTIONS
+
+=over
+
+=item -a C<architecture>
+
+Specify the architecture.  This is an arbitrary string interpreted by the
+generator or toolset.
+
+=item -e C<Perl code>
+
+Add the C<Perl code> as if it were a hopen file.  C<-e> files are processed
+after all other hopen files, so can modify anything that has been set up
+by those files.  Can be specified more than once.
+
+=item --fresh
+
+Start a fresh build --- ignore any C<MY.hopen.pl> file that may exist in
+the destination directory.
+
+=item --from C<project dir>
+
+Specify the project directory.  Overrides a project directory given as a
+positional argument.
+
+=item -g C<generator>
+
+Specify the generator.  The given C<generator> should be either a full package
+name or the part after C<App::hopen::Gen::>.
+
+=item -t C<toolset>
+
+Specify the toolset.  The given C<toolset> should be either a full package
+name or the part after C<App::hopen::T::>.
+
+=item --to C<destination dir>
+
+Specify the destination directory.  Overrides a destination directory given
+as a positional argument.
+
+=item --phase C<phase>
+
+Specify which phase of the process to run.  Note that this overrides whatever
+is specified in any MY.hopen.pl file, so may cause unexpected results!
+
+If C<--phase> is given, no other hopen file can set the phase, and hopen will
+terminate if a file attempts to do so.
+
+=item -q
+
+Produce no output (quiet).  Overrides C<-v>.
+
+=item -v, --verbose=n
+
+Verbose.  Specify more C<v>'s for more verbosity.  At present, C<-vv>
+(equivalently, C<--verbose=2>) gives
+you detailed traces of the data, and C<-vvv> gives you more detailed
+code tracebacks on error.
+
+=item --version
+
+Print the version of hopen and exit
+
+=back
 
 =head1 INTERNALS
 
@@ -220,7 +311,7 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
 
         Pod::Usage::pod2usage(
             -exitval => EXIT_OK, @in,
-            -verbose => 99, -sections => '!INTERNALS'   # suppress
+            -verbose => 99, -sections => '!INTERNALS'   # suppress INTERNALS
         ) if have('man');
     }
 
@@ -581,12 +672,21 @@ sub _inner {    # Run a single invocation of hopen(1). {{{2
 Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
 translates the die() into a print and error return.
 
+Takes a hash of options.
+
 The return value of _inner is unspecified and ignored.
 
 =cut
 
     my %opts = @_;
     local $_hrData = {};
+
+    # TODO FIXME.  This is a bit of a hack: Reset global variables on --fresh.
+    # Instead, App::hopen should be a class, and each instance should have its
+    # own data (I think).
+    if($opts{FRESH}) {
+        $_did_set_phase = false;
+    }
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
         if($App::hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
@@ -627,7 +727,7 @@ EOT
 
     # Prohibit builds if there's a MY.hopen.pl file in the project directory,
     # since those are the marker of a destination directory.
-    die <<EOT if -e $proj_dir->file(MYH);
+    if(-e $proj_dir->file(MYH)) { die <<EOT; }
 I'm sorry, but project directory ``$proj_dir'' appears to actually be a
 build directory --- it has a @{[MYH]} file.  If you really want to build
 here, remove or rename @{[MYH]} and run me again.
@@ -854,72 +954,7 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
 1;
 __END__
-# === Command-line usage documentation ================================== {{{1
-
-=head1 OPTIONS
-
-=over
-
-=item -a C<architecture>
-
-Specify the architecture.  This is an arbitrary string interpreted by the
-generator or toolset.
-
-=item -e C<Perl code>
-
-Add the C<Perl code> as if it were a hopen file.  C<-e> files are processed
-after all other hopen files, so can modify anything that has been set up
-by those files.  Can be specified more than once.
-
-=item --fresh
-
-Start a fresh build --- ignore any C<MY.hopen.pl> file that may exist in
-the destination directory.
-
-=item --from C<project dir>
-
-Specify the project directory.  Overrides a project directory given as a
-positional argument.
-
-=item -g C<generator>
-
-Specify the generator.  The given C<generator> should be either a full package
-name or the part after C<App::hopen::Gen::>.
-
-=item -t C<toolset>
-
-Specify the toolset.  The given C<toolset> should be either a full package
-name or the part after C<App::hopen::T::>.
-
-=item --to C<destination dir>
-
-Specify the destination directory.  Overrides a destination directory given
-as a positional argument.
-
-=item --phase C<phase>
-
-Specify which phase of the process to run.  Note that this overrides whatever
-is specified in any MY.hopen.pl file, so may cause unexpected results!
-
-If C<--phase> is given, no other hopen file can set the phase, and hopen will
-terminate if a file attempts to do so.
-
-=item -q
-
-Produce no output (quiet).  Overrides C<-v>.
-
-=item -v, --verbose=n
-
-Verbose.  Specify more C<v>'s for more verbosity.  At present, C<-vv>
-(equivalently, C<--verbose=2>) gives
-you detailed traces of the data, and C<-vvv> gives you more detailed
-code tracebacks on error.
-
-=item --version
-
-Print the version of hopen and exit
-
-=back
+# === Rest of the documentation ========================================= {{{1
 
 =head1 AUTHOR
 
@@ -935,7 +970,7 @@ You can find documentation for this module with the perldoc command.
 
 You can also look for information at:
 
-=over 4
+=over
 
 =item * GitHub: The project's main repository and issue tracker
 
@@ -944,6 +979,10 @@ L<https://github.com/hopenbuild/App-hopen>
 =item * MetaCPAN
 
 L<https://metacpan.org/pod/App::hopen>
+
+=item * This distribution
+
+See the C<eg/> directory distributed with this software for examples.
 
 =back
 

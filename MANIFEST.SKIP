@@ -9,6 +9,7 @@ App-hopen-.*
 TODO
 \brunhopen$
 \.stackdump$
+\.mailmap$
 
 # Backup files
 \.swp$

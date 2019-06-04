@@ -1,9 +1,10 @@
 # App::hopen::G::FilesCmd - Cmd that outputs a list of files.
 package App::hopen::G::FilesCmd;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny {

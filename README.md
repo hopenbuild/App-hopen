@@ -1,6 +1,6 @@
 # App::hopen - hopen build system command-line interface
 
-[![Appveyor Badge](https://ci.appveyor.com/api/projects/status/github/hopenbuild/app-hopen?svg=true)](https://ci.appveyor.com/project/cxw42/app-hopen)
+[![Appveyor Status](https://img.shields.io/appveyor/ci/cxw42/app-hopen.svg?logo=appveyor)](https://ci.appveyor.com/project/cxw42/app-hopen) [![Travis Status](https://img.shields.io/travis/hopenbuild/app-hopen.svg?logo=travis)](https://travis-ci.org/hopenbuild/app-hopen) 
 
 
 
@@ -17,12 +17,37 @@ build scripts (specifically, Perl 5.14+)
 - Context-sensitivity.  Your users can tweak their own builds for their own
 platforms without affecting your project.
 
-See [App::hopen::Conventions](https://github.com/hopenbuild/App-hopen/blob/master/lib/App/hopen/Conventions.pod) for details of the input format.
+See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
 
-# USAGE
+## Example
+
+Create a file `.hopen.pl` in your source tree.  Then:
+
+    $ hopen
+    From ``.'' into ``built''
+    Running Check phase
+
+Now `built/MY.hopen.pl` has been created, and loaded with information about
+your configuration.  You can edit that file if you want to change what will
+happen next.
+
+    $ hopen
+    From ``.'' into ``built''
+    Running Gen phase
+
+Now `built/Makefile` has been created.
+
+    $ hopen --build
+    Building in foo/built
+
+And your software is ready to go!
+
+See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for information on writing `.hopen.pl` files.
+
+# SYNOPSIS
 
     hopen [options] [--] [destination dir [project dir]]
 
@@ -30,7 +55,7 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, `<project dir>/built` is used.
 
-See [App::hopen::Conventions](https://github.com/hopenbuild/App-hopen/blob/master/lib/App/hopen/Conventions.pod) for more details.
+See [App::hopen](https://metacpan.org/pod/App::hopen) and [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for more details.
 
 # OPTIONS
 
@@ -114,6 +139,10 @@ You can also look for information at:
 - MetaCPAN
 
     [https://metacpan.org/pod/App::hopen](https://metacpan.org/pod/App::hopen)
+
+- This distribution
+
+    See the `eg/` directory distributed with this software for examples.
 
 # LICENSE AND COPYRIGHT
 

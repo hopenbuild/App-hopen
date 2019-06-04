@@ -1,9 +1,10 @@
 # App::hopen::BuildSystemGlobals - global data for build-system use cases.
 package App::hopen::BuildSystemGlobals;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Exporter';
 our @EXPORT;

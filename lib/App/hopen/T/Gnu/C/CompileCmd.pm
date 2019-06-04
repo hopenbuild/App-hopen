@@ -2,9 +2,10 @@
 # TODO RESUME HERE - put .o files in the dest dir
 package App::hopen::T::Gnu::C::CompileCmd;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(compiler);
@@ -12,13 +13,13 @@ use Class::Tiny qw(compiler);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
-use Config;
+#use Config;
 use Data::Hopen qw(getparameters);
-use Data::Hopen::G::GraphBuilder;
+#use Data::Hopen::G::GraphBuilder;
 #use Data::Hopen::Util::Data qw(forward_opts);
 use Data::Hopen::Util::Filename;
-use Deep::Hash::Utils qw(deepvalue);
-use File::Which ();
+#use Deep::Hash::Utils qw(deepvalue);
+#use File::Which ();
 use Path::Class;
 
 my $_FN = Data::Hopen::Util::Filename->new;     # for brevity

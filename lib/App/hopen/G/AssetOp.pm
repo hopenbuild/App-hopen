@@ -1,10 +1,11 @@
 # App::hopen::G::AssetOp - parent class for operations used by a
 # generator to build an asset
 package App::hopen::G::AssetOp;
+use strict;
 use Data::Hopen::Base;
 use Quote::Code;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'App::hopen::G::Cmd';
 # we use Class::Tiny below

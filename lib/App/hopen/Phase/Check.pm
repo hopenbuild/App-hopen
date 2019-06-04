@@ -1,10 +1,11 @@
 # App::hopen::Phase::Check - checking-phase operations
 package App::hopen::Phase::Check;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {

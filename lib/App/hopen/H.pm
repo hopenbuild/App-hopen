@@ -1,8 +1,9 @@
 # App::hopen::H - H:: namespace for use in hopen files
 package App::hopen::H;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Exporter';
 use vars::i '@EXPORT' => [];

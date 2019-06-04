@@ -64,6 +64,7 @@ t/TEMPLATE-dot-t
 foo
 foo.*
 TODO
+TODO*
 
 # Things we generate
 built/

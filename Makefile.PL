@@ -106,7 +106,7 @@ testhere:   # Run the tests from lib rather than blib
 \tprove -lj4
 
 README.md: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
-\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md --appveyor cxw42/app-hopen --avbadge hopenbuild/app-hopen
+\t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f md --appveyor cxw42/app-hopen --travis hopenbuild/app-hopen
 
 README: @{[$VERSION_FROM]} Makefile.PL $make_readme_md
 \t"$secure_perl_path" "$make_readme_md" -i "\$<" -o "\$@" -f text
@@ -143,7 +143,7 @@ EOT
 # Main options for EUMM
 my %opts = (
     NAME             => 'App::hopen',
-    AUTHOR           => q{Christopher White <cxwembedded@gmail.com>},
+    AUTHOR           => q{Christopher White <cxw@cpan.org>},
     VERSION_FROM     => $VERSION_FROM,
     ABSTRACT_FROM    => $VERSION_FROM,
     #ABSTRACT         => 'The hopen build system, command-line interface',
@@ -184,7 +184,7 @@ my %opts = (
         'rlib' => '0',
         'Scalar::Util' => '0',
         'Test::Deep' => '0.084',        # for superhashof
-        ## 'Test::Directory' => '0.02',    # for subdirs
+        'Test::Directory' => '0.02',    # for subdirs
         'Test::Exception' => '0',
         'Test::More' => '0',
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
@@ -192,7 +192,7 @@ my %opts = (
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Data::Hopen' => '0.000013',
+        'Data::Hopen' => '0.000014',
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',
@@ -215,7 +215,7 @@ my %opts = (
         'Cwd' => '0',
 
         'constant' => '0',
-        'Data::Dumper' => '0',
+        'Data::Dumper' => '2.154',      # For Maxrecurse
         'Deep::Hash::Utils' => '0.03',  # For correct metadata
         ## 'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',
@@ -300,6 +300,7 @@ my %opts = (
                 requires => {
                     'App::RewriteVersion' => '0',   # for perl-bump-version
                     'Module::Metadata' => '1.000016',
+                    'Test::Kwalitee' => '0',
                 },
             },
         },

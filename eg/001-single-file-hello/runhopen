@@ -7,4 +7,4 @@ else
     dbg=""
 fi
 
-perl -I../../../lib $dbg ../../../bin/hopen "$@"
+perl -I../../lib $dbg ../../bin/hopen "$@"

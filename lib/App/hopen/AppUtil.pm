@@ -1,10 +1,11 @@
 # App::hopen::AppUtil - utility routines used by App::hopen::App
 package App::hopen::AppUtil;
 use Data::Hopen qw(:default isMYH MYH);
+use strict;
 use Data::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {

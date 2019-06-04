@@ -2,9 +2,10 @@
 # TODO RESUME HERE - put .o files in the dest dir
 package App::hopen::T::Gnu::C;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Exporter';
 

@@ -1,9 +1,10 @@
 # App::hopen::Toolchain - SUPERSEDED base class for hopen toolchains
-package Data::Hopen::Toolchain;
+package App::hopen::Toolchain;
 use Data::Hopen;
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use Class::Tiny qw(proj_dir dest_dir), {
     architecture => '',
@@ -13,7 +14,7 @@ use Class::Tiny qw(proj_dir dest_dir), {
 
 =head1 NAME
 
-Data::Hopen::Toolchain - SUPERSEDED base class for hopen toolchains
+App::hopen::Toolchain - SUPERSEDED base class for hopen toolchains
 
 =head1 SYNOPSIS
 
@@ -36,7 +37,7 @@ Maybe TODO:
         hopen command line.
 
 The code that generates command lines to invoke specific toolchains lives under
-C<Data::Hopen::Toolchain>.  Those modules must implement the interface defined
+C<App::hopen::Toolchain>.  Those modules must implement the interface defined
 here.
 
 =head1 ATTRIBUTES
@@ -52,7 +53,7 @@ should be written.
 
 =head1 FUNCTIONS
 
-A toolchain (C<Data::Hopen::Toolchain> subclass) is a Visitor.
+A toolchain (C<App::hopen::Toolchain> subclass) is a Visitor.
 
 TODO Figure out if the toolchain has access to L<Data::Hopen::G::Link>
 instances.

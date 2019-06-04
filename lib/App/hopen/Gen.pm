@@ -1,9 +1,10 @@
 # App::hopen::Gen - base class for hopen generators
 package App::hopen::Gen;
 use Data::Hopen qw(:default $QUIET);
+use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000010';
+our $VERSION = '0.000011';
 
 use parent 'Data::Hopen::Visitor';
 use Class::Tiny qw(proj_dir dest_dir), {

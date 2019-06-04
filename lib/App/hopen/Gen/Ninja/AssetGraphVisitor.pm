@@ -1,5 +1,5 @@
-# App::hopen::Gen::Make::AssetGraphVisitor - visitor to write goals
-package App::hopen::Gen::Make::AssetGraphVisitor;
+# App::hopen::Gen::Ninja::AssetGraphVisitor - visitor to write goals
+package App::hopen::Gen::Ninja::AssetGraphVisitor;
 use Data::Hopen qw(hlog getparameters $VERBOSE);
 use strict;
 use Data::Hopen::Base;
@@ -10,18 +10,18 @@ use parent 'Data::Hopen::Visitor';
 use Class::Tiny;
 
 use App::hopen::BuildSystemGlobals;     # for $DestDir
-use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
+use App::hopen::Gen::Ninja::AssetGraphNode;     # for OUTPUT
 use Quote::Code;
 
 # Docs {{{1
 
 =head1 NAME
 
-App::hopen::Gen::Make::AssetGraphVisitor - visitor to write goals
+App::hopen::Gen::Ninja::AssetGraphVisitor - visitor to write goals
 
 =head1 SYNOPSIS
 
-This is the visitor used when L<App::hopen::Gen::Make> traverses the
+This is the visitor used when L<App::hopen::Gen::Ninja> traverses the
 asset graph.  Its purpose is to tie the inputs to each goal into that goal.
 
 =head1 FUNCTIONS
@@ -32,14 +32,14 @@ asset graph.  Its purpose is to tie the inputs to each goal into that goal.
 
 =head2 visit_goal
 
-Write a goal entry to the Makefile being built.
+Write a goal entry to the Ninja file being built.
 This happens while the asset graph is being run.
 
 =cut
 
 sub visit_goal {
     my ($self, %args) = getparameters('self', [qw(goal node_inputs)], @_);
-    my $fh = $args{node_inputs}->find(App::hopen::Gen::Make::AssetGraphNode::OUTPUT);
+    my $fh = $args{node_inputs}->find(App::hopen::Gen::Ninja::AssetGraphNode::OUTPUT);
 
     # Pull the inputs.  TODO refactor out the code in common with
     # AhG::Cmd::input_assets().
@@ -53,9 +53,9 @@ sub visit_goal {
     hlog { __PACKAGE__, 'found inputs to goal', $args{goal}->name, Dumper($lrInputs) } 2;
 
     my @paths = map { $_->target->path_wrt($DestDir) } @$lrInputs;
-    print $fh qc'\n# === Makefile goal {$args{goal}->name}\n' if $VERBOSE;
-    print $fh qc'{$args{goal}->name}: ';
-    say $fh join ' ', @paths;
+    say $fh qc'\n# === Ninja file goal {$args{goal}->name}' if $VERBOSE;
+    say $fh qc'build {$args{goal}->name}: phony {join " ", @paths}';
+    say $fh qc'default {$args{goal}->name}';
 } #visit_goal()
 
 =head2 visit_node

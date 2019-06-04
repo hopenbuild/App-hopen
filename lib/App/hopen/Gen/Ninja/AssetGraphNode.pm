@@ -1,5 +1,5 @@
-# App::hopen::Gen::Make::AssetGraphNode - AssetOp for Gen::Make
-package App::hopen::Gen::Make::AssetGraphNode;
+# App::hopen::Gen::Ninja::AssetGraphNode - AssetOp for Gen::Ninja
+package App::hopen::Gen::Ninja::AssetGraphNode;
 use Data::Hopen qw(getparameters $VERBOSE);
 use strict;
 use Data::Hopen::Base;
@@ -7,7 +7,9 @@ use Data::Hopen::Base;
 our $VERSION = '0.000011';
 
 use parent 'App::hopen::G::AssetOp';
-use Class::Tiny;
+use Class::Tiny {
+    _rules => sub { +{} },
+};
 
 use App::hopen::BuildSystemGlobals;     # for $DestDir
 use Quote::Code;
@@ -17,11 +19,18 @@ use String::Print;
 
 =head1 NAME
 
-App::hopen::Gen::Make::AssetGraphNode - AssetOp for Gen::Make
+App::hopen::Gen::Ninja::AssetGraphNode - AssetOp for Gen::Ninja
 
 =head1 SYNOPSIS
 
 TODO
+
+=head1 ATTRIBUTES
+
+=head2 _rules
+
+TODO?  Store mapping from command lines to rules?  Don't want to generate
+a separate rule for every command if we can help it.
 
 =head1 FUNCTIONS
 
@@ -29,16 +38,18 @@ TODO
 
 # }}}1
 
-use vars::i '&OUTPUT' => sub { '__R_Makefile' };
+use vars::i '&OUTPUT' => sub { '__R_Ninjafile' };
 
 =head2 _run
 
-Generate a piece of a Makefile and write it to the filehandle in
-C<__R_Makefile>.
+Generate a piece of a Ninja file and write it to the filehandle in
+C<__R_Ninjafile>.
 
 =cut
 
 sub _run {
+    state $ruleidx=0;
+
     my ($self, %args) = getparameters('self', [qw(; phase visitor)], @_);
     my $fh = $self->scope->find(OUTPUT);
         # TODO deal with multiple inputs being merged in DAG::_run()
@@ -49,7 +60,7 @@ sub _run {
 
     # Debugging output
     if($VERBOSE) {
-        print $fh qc'\n# Makefile piece from node {$self->name}\n';
+        print $fh qc'\n# From node {$self->name}:\n';
         print $fh qc'    # {$self->how//"<nothing to be done>"}\n';
         print $fh qc'    # Depends on {$_->target}\n' foreach @inputs;
     }
@@ -58,12 +69,19 @@ sub _run {
         my @paths = map { $_->target->path_wrt($DestDir) } @inputs;
         my $recipe = $self->how;
         # TODO refactor this processing into a utility module/function
-        $recipe =~ s<#first\b><$paths[0] // ''>ge;      # first input
-        $recipe =~ s<#all\b><join(' ', @paths)>ge;      # all inputs
-        $recipe =~ s<#out\b><$output // ''>ge;
+        warn "I don't yet support #first very well (in ``$recipe'')" if $recipe =~ /#first/;
+        $recipe =~ s<#first\b><\$in>g;  # first input   # TODO FIXME
+        $recipe =~ s<#all\b><\$in>g;    # all inputs
+        $recipe =~ s<#out\b><\$out>g;
+
+        # TODO FIXME ugly hack: for now, each command gets its own rule.
+        my $rulename = 'rule_' . ++$ruleidx;
         print $fh qc_to <<"EOT"
-#{$output}: #{join(" ", @paths)}
-\t#{$recipe}
+rule #{$rulename}
+    command = #{$recipe}
+
+build #{$output}: #{$rulename} #{join(" ", @paths)}
+
 EOT
 
     }
