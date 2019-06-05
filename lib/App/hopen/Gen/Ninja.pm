@@ -7,7 +7,7 @@ use Data::Hopen::Base;
 # TODO here and in Gen::Make, remove the need for AssetGraphVisitor by
 # creating an extra AssetGraphNode to represent the goal.
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'App::hopen::Gen';
 use Class::Tiny;

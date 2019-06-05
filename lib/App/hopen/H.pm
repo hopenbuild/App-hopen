@@ -3,7 +3,7 @@ package App::hopen::H;
 use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'Exporter';
 use vars::i '@EXPORT' => [];

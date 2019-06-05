@@ -16,7 +16,7 @@ use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
 
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'Exporter';  # Exporter-exported symbols {{{1
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
@@ -147,8 +147,10 @@ Set up the calling package.  See L</SYNOPSIS> for usage.
     # Initialize data in the caller
     {
         no strict 'refs';
-        *{ $target . '::FILENAME' } = eval("\\\"$target_friendly_name\"");
-            # Need `eval` to make it read-only - even \"$target..." isn't RO
+        *{ $target . '::FILENAME' } = eval("\\\"\Q$target_friendly_name\E\"");
+            # Need `eval` to make it read-only - even \"$target..." isn't RO.
+            # \Q and \E since, on Windows, $friendly_name is likely to
+            # include backslashes.
     }
 
     # Create packages at the top level

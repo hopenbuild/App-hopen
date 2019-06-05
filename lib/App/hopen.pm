@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 # Imports {{{1
 use strict;
@@ -9,6 +9,7 @@ use Data::Hopen::Base;
 use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(:default phase_idx next_phase);
+use App::hopen::Util::String qw(line_mark_string);
 use Data::Hopen qw(:default loadfrom isMYH MYH $VERBOSE $QUIET);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Scope::Environment;
@@ -42,12 +43,15 @@ use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
 =head1 NAME
 
-App::hopen - hopen build system command-line interface
+App::hopen - Graph-driven cross-platform build system
+
+=head1 DISCLAIMER
+
+Most features are not yet implemented ;) .  However it will generate a
+C<Makefile> or C<build.ninja> file for a C C<Hello, World> program at this
+point!
 
 =head1 INTRODUCTION
-
-(Note: most features are not yet implemented ;) .  However it will generate
-a Makefile for a basic C<Hello, World> program at this point!)
 
 hopen is a cross-platform software build generator.  It makes files you can
 pass to Make, Ninja, Visual Studio, or other build tools, to compile and
@@ -62,7 +66,8 @@ build scripts (specifically, Perl 5.14+)
 
 =item *
 
-No hidden magic!  All your data is visible and accessible in a build graph.
+No hidden magic!  All your data is visible and accessible in a build graph
+(whence "graph-driven").
 
 =item *
 
@@ -97,7 +102,8 @@ Now C<built/Makefile> has been created.
     $ hopen --build
     Building in foo/built
 
-And your software is ready to go!
+And your software is ready to go!  C<make> has been run in C<built/>,
+with output left in C<built/>.
 
 See L<App::hopen::Conventions> for information on writing C<.hopen.pl> files.
 
@@ -490,10 +496,12 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
     # -- Build the package
 
-    my $src = <<EOT;
+    my $src = line_mark_string <<EOT ;
 {
     package __Rpkg_$pkg_name;
-    use App::hopen::HopenFileKit "$friendly_name";
+    use App::hopen::HopenFileKit "\Q$friendly_name\E";
+        # \\Q and \\E since, on Windows, \$friendly_name is likely to
+        # include backslashes.
 
     # Other lib dirs
     $lib_dirs
@@ -509,7 +517,7 @@ EOT
     # phase in as a literal so that it's read-only (see perlmod).
 
     unless($setting_phase_allowed) {
-        $src .= <<EOT;
+        $src .= line_mark_string <<EOT;
     our \$Phase;
     local *Phase = \\"$Phase";
 EOT
@@ -519,7 +527,7 @@ EOT
     # Phases::on() will work, but don't rely on the return value of that
     # BLOCK (per perlsyn).
 
-    $src .= <<EOT;
+    $src .= line_mark_string <<EOT;
 
     sub __Rsub_$pkg_name {
         my \$__R_retval;
@@ -544,7 +552,7 @@ EOT
     # If the file_text did expressly return(), whatever it returned will
     # be used as-is.  Like perlref says, we are not totalitarians.
 
-    $src .= <<EOT;
+    $src .= line_mark_string <<EOT;
         \$__R_retval //= \$__R_on_result;
 
         ## hlog { '__Rpkg_$pkg_name retval before checks',
@@ -581,7 +589,10 @@ EOT
     die "Error in $friendly_name: $@" if $@;
 
     # Get the data from the package we just ran
-    my $hrAddlData = eval ("\$__Rpkg_$pkg_name" . '::hrNewData');
+    my $hrAddlData = eval {
+        no strict 'refs';
+        ${ "__Rpkg_$pkg_name\::hrNewData" }
+    };
 
     hlog { 'old data', Dumper($_hrData) } 3;
     hlog { 'new data', Dumper($hrAddlData) } 2;
@@ -768,7 +779,8 @@ EOT
             map { ref eq 'HASH' ? "<<$_->{text}>>" : "``$_''" }
                 ($myhopen // (), @$lrHopenFiles) } 2;
 
-    die <<EOT unless $myhopen || @$lrHopenFiles;
+    # Can't proceed if the only hopen file is $myhopen.
+    unless(@$lrHopenFiles) { die <<EOT; }
 I can't find any hopen project files (.hopen.pl or *.hopen.pl) for
 project directory ``$proj_dir''.
 EOT

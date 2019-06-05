@@ -6,7 +6,7 @@ use Data::Hopen::Base;
 use Path::Class;
 # and we use Class::Tiny below.
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 # Docs {{{1
 

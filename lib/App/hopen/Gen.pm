@@ -4,7 +4,7 @@ use Data::Hopen qw(:default $QUIET);
 use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'Data::Hopen::Visitor';
 use Class::Tiny qw(proj_dir dest_dir), {
@@ -16,6 +16,7 @@ use Class::Tiny qw(proj_dir dest_dir), {
 };
 
 use App::hopen::BuildSystemGlobals;
+use App::hopen::Util::String qw(eval_here);
 use Data::Hopen::G::DAG;
 use Data::Hopen::Util::Data qw(forward_opts);
 use File::pushd qw(pushd);
@@ -96,9 +97,15 @@ sub asset {
         return $existing_op;
     }
 
-    # Create a new op
+    # Need to create an op.  First, load its class.
     my $class = $self->_assetop_class;
-    eval "require $class";
+
+    eval_here <<EOT;
+require $class;
+EOT
+    die "$@" if $@;
+
+    # Create a new op
     my $op = $class->new(name => 'Op:<<' . $args{asset}->target . '>>',
                             forward_opts(\%args, qw(asset how)));
     $self->_assetop_by_asset->{refaddr($args{asset})} = $op;

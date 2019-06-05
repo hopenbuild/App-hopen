@@ -4,7 +4,7 @@ use Data::Hopen qw(hlog getparameters $VERBOSE);
 use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'Data::Hopen::Visitor';
 use Class::Tiny;

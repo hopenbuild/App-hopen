@@ -4,7 +4,7 @@ use Data::Hopen;
 use strict;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000011';
+our $VERSION = '0.000012'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);

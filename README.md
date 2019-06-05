@@ -1,11 +1,14 @@
-# App::hopen - hopen build system command-line interface
+# App::hopen - Graph-driven cross-platform build system
 
 [![Appveyor Status](https://img.shields.io/appveyor/ci/cxw42/app-hopen.svg?logo=appveyor)](https://ci.appveyor.com/project/cxw42/app-hopen) [![Travis Status](https://img.shields.io/travis/hopenbuild/app-hopen.svg?logo=travis)](https://travis-ci.org/hopenbuild/app-hopen) 
 
 
+# DISCLAIMER
 
-(Note: most features are not yet implemented ;) .  However it will generate
-a Makefile for a basic `Hello, World` program at this point!)
+Most features are not yet implemented ;) .  However it will generate a
+`Makefile` or `build.ninja` file for a C `Hello, World` program at this
+point!
+
 
 hopen is a cross-platform software build generator.  It makes files you can
 pass to Make, Ninja, Visual Studio, or other build tools, to compile and
@@ -13,7 +16,8 @@ link your software.  hopen gives you:
 
 - A full, Turing-complete, robust programming language to write your
 build scripts (specifically, Perl 5.14+)
-- No hidden magic!  All your data is visible and accessible in a build graph.
+- No hidden magic!  All your data is visible and accessible in a build graph
+(whence "graph-driven").
 - Context-sensitivity.  Your users can tweak their own builds for their own
 platforms without affecting your project.
 
@@ -43,7 +47,8 @@ Now `built/Makefile` has been created.
     $ hopen --build
     Building in foo/built
 
-And your software is ready to go!
+And your software is ready to go!  `make` has been run in `built/`,
+with output left in `built/`.
 
 See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for information on writing `.hopen.pl` files.
 
