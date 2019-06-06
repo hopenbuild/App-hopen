@@ -1,5 +1,5 @@
-# App::hopen::T::Gnu::C::CompileCmd - compile C source using the GNU toolset
-package App::hopen::T::Gnu::C::CompileCmd;
+# App::hopen::T::MSCL::C::CompileCmd - compile C source using the GNU toolset
+package App::hopen::T::MSCL::C::CompileCmd;
 use Data::Hopen;
 use strict;
 use Data::Hopen::Base;
@@ -27,13 +27,13 @@ my $_FN = Data::Hopen::Util::Filename->new;     # for brevity
 
 =head1 NAME
 
-App::hopen::T::Gnu::C::CompileCmd - compile C source using the GNU toolset
+App::hopen::T::MSCL::C::CompileCmd - compile C source using the GNU toolset
 
 =head1 SYNOPSIS
 
 In a hopen file:
 
-    my $cmd = App::hopen::T::Gnu::C::CompileCmd->new(
+    my $cmd = App::hopen::T::MSCL::C::CompileCmd->new(
         compiler => '/usr/bin/gcc',
         name => 'compilation command'   # optional
     );
@@ -75,7 +75,9 @@ sub _run {
 
         my $to = based_path(path => file($_FN->obj($src->target->path)),
                             base => $DestDir);
-        my $how = $self->compiler . " -c #first -o #out";
+        my $how = $self->compiler . " /c #first /Fo#out";
+            # TODO this is the only difference between T::Gnu::C::CompileCmd
+            # and T::MSCL::C::CompileCmd.  Factor out the common code.
         my $obj = App::hopen::Asset->new(
             target => $to,
             made_by => $self,

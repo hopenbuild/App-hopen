@@ -1,5 +1,5 @@
-# App::hopen::T::Gnu::C - support GNU toolset, C language
-package App::hopen::T::Gnu::C;
+# App::hopen::T::MSCL::C - support MS cl.exe toolset, C language
+package App::hopen::T::MSCL::C;
 use Data::Hopen;
 use strict;
 use Data::Hopen::Base;
@@ -14,8 +14,8 @@ use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 
-use App::hopen::T::Gnu::C::CompileCmd;
-use App::hopen::T::Gnu::C::LinkCmd;
+use App::hopen::T::MSCL::C::CompileCmd;
+use App::hopen::T::MSCL::C::LinkCmd;
 
 use Config;
 use Data::Hopen qw(getparameters);
@@ -33,7 +33,7 @@ our $_CC;   # Cached compiler name
 
 =head1 NAME
 
-App::hopen::T::Gnu::C - support for the GNU toolset, C language
+App::hopen::T::MSCL::C - support for the GNU toolset, C language
 
 =head1 SYNOPSIS
 
@@ -71,7 +71,7 @@ compilation options or object-file names).  Usage:
 
 sub compile {
     my ($builder, %args) = getparameters('self', [qw(; name)], @_);
-    my $node = App::hopen::T::Gnu::C::CompileCmd->new(
+    my $node = App::hopen::T::MSCL::C::CompileCmd->new(
         compiler => $_CC,
         forward_opts(\%args, 'name')
     );
@@ -101,7 +101,7 @@ sub link {
 
     my $dest = based_path(path => file($FN->exe($args{exe})), base => $DestDir);
 
-    my $node = App::hopen::T::Gnu::C::LinkCmd->new(
+    my $node = App::hopen::T::MSCL::C::LinkCmd->new(
         linker => $_CC,
         dest => $dest,
         forward_opts(\%args, 'name')
@@ -128,7 +128,7 @@ the graph, before anything else runs.  TODO figure this out.
 =cut
 
 sub _find_compiler {
-    foreach my $candidate ($Config{cc}, qw[cc gcc clang]) {      # TODO also c89 or xlc?
+    foreach my $candidate (qw[cl]) {
         my $path = File::Which::which($candidate);
         next unless defined $path;
 
