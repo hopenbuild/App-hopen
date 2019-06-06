@@ -36,8 +36,11 @@ lib/App/hopen/T/Gnu.pm
 lib/App/hopen/T/Gnu/C.pm
 lib/App/hopen/T/Gnu/C/CompileCmd.pm
 lib/App/hopen/T/Gnu/C/LinkCmd.pm
+lib/App/hopen/T/MSCL.pm
+lib/App/hopen/T/MSCL/C.pm
+lib/App/hopen/T/MSCL/C/CompileCmd.pm
+lib/App/hopen/T/MSCL/C/LinkCmd.pm
 lib/App/hopen/Tool.pm
-lib/App/hopen/Toolchain.pm
 lib/App/hopen/Util/BasedPath.pm
 lib/App/hopen/Util/String.pm
 LICENSE.md

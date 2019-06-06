@@ -1,7 +1,7 @@
 # App::hopen::G::FilesCmd - Cmd that outputs a list of files.
 package App::hopen::G::FilesCmd;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL
@@ -24,6 +24,13 @@ Data::Hopen::G::FilesCmd - Cmd that holds a list of files.
     my $node = Data::Hopen::G::FilesCmd(files=>['foo.c'], name=>'foo node');
 
 Used by L<Data::Hopen::H/files>.
+
+=head1 ATTRIBUTES
+
+=head2 files
+
+The files that this Cmd outputs.  Intended to be L<App::hopen::Util::BasedPath>
+instances.
 
 =head1 FUNCTIONS
 

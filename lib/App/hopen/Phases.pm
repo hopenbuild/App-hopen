@@ -1,7 +1,7 @@
 # App::hopen::Phases - definitions of phases
 package App::hopen::Phases;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

@@ -1,6 +1,6 @@
 # App::hopen::Gen::Ninja - generator for ninja(1).
 package App::hopen::Gen::Ninja;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 # TODO reduce code duplication between this and Gen::Make
@@ -130,7 +130,7 @@ sub _assetop_class { 'App::hopen::Gen::Ninja::AssetGraphNode' }
 
 =head2 _run_build
 
-Implementation of L</run_build>.
+Implementation of L<App::hopen::Gen/run_build>.
 
 =cut
 

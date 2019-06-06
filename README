@@ -1,10 +1,11 @@
 NAME
     App::hopen - Graph-driven cross-platform build system
 
-DISCLAIMER
+CURRENT STATUS
     Most features are not yet implemented ;) .  However it will generate a
     "Makefile" or "build.ninja" file for a C "Hello, World" program at this
-    point!
+    point!  It can generate command lines for gcc(1) or for Microsoft's
+    "cl.exe".
 
     hopen is a cross-platform software build generator.  It makes files you
     can pass to Make, Ninja, Visual Studio, or other build tools, to compile

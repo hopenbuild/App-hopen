@@ -1,6 +1,6 @@
 # App::hopen::G::Cmd - base class for hopen(1) command-graph nodes
 package App::hopen::G::Cmd;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 use Quote::Code;
 

@@ -1,7 +1,7 @@
 # App::hopen::Util::String - string utilities for hopen
 package App::hopen::Util::String;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

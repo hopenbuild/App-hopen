@@ -3,7 +3,7 @@ package App::hopen;
 our $VERSION = '0.000012'; # TRIAL
 
 # Imports {{{1
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 use App::hopen::AppUtil ':all';
@@ -25,16 +25,6 @@ use Scalar::Util qw(looks_like_number);
 BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
 
 # }}}1
-# Constants {{{1
-
-use constant DEBUG          => false;
-
-# Shell exit codes
-use constant EXIT_OK        => 0;   # success
-use constant EXIT_PROC_ERR  => 1;   # error during processing
-use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
-
-# }}}1
 # Documentation {{{1
 
 =pod
@@ -45,11 +35,11 @@ use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
 
 App::hopen - Graph-driven cross-platform build system
 
-=head1 DISCLAIMER
+=head1 CURRENT STATUS
 
 Most features are not yet implemented ;) .  However it will generate a
 C<Makefile> or C<build.ninja> file for a C C<Hello, World> program at this
-point!
+point!  It can generate command lines for gcc(1) or for Microsoft's C<cl.exe>.
 
 =head1 INTRODUCTION
 
@@ -192,6 +182,31 @@ file being generated.
 =cut
 
 # }}}1
+# Constants {{{1
+
+use constant DEBUG          => false;
+
+# Shell exit codes
+use constant EXIT_OK        => 0;   # success
+use constant EXIT_PROC_ERR  => 1;   # error during processing
+use constant EXIT_PARAM_ERR => 2;   # couldn't understand the command line
+
+# }}}1
+# Globals (ick) {{{1
+
+=head2 C<$RUNNING>
+
+Set truthy when a hopen run is in progress.  This is so modules don't have
+to C<die()> if they are being run under C<perl -c>, for example.
+
+TODO replace this with a package parameter --- see
+L<App::hopen::HopenFileKit/_language_import>.
+
+=cut
+
+our $RUNNING;
+
+# }}}1
 # === Command line parsing ============================================== {{{1
 
 =head2 %CMDLINE_OPTS
@@ -200,6 +215,7 @@ A hash from internal name to array reference of
 [getopt-name, getopt-options, optional default-value].
 
 If default-value is a reference, it will be the destination for that value.
+
 =cut
 
 my %CMDLINE_OPTS = (
@@ -950,8 +966,11 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
     # = Do it, Rockapella! ==================================================
 
+    $RUNNING = true;
     eval { _inner(%opts); };
     my $msg = $@;
+    $RUNNING = false;
+
     if($msg) {
         print STDERR $msg;
         return EXIT_PROC_ERR;   # eval{} so we can do this (die() exitcode = 2)

@@ -1,6 +1,6 @@
 # App::hopen::Asset - record representing a file to be produced
 package App::hopen::Asset;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 use Path::Class;

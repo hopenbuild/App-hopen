@@ -1,7 +1,7 @@
 # App::hopen::Phase::Gen - generation-phase operations
 package App::hopen::Phase::Gen;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 #use parent 'Exporter';
 

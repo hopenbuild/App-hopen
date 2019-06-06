@@ -1,7 +1,7 @@
 # App::hopen::Tool - base class for a hopen tool.  DEPRECATED.
 package App::hopen::Tool;
 #use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

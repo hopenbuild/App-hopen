@@ -1,5 +1,5 @@
 use Test::More;
-use strict;
+use strict; use warnings;
 use warnings;
 BEGIN {
     plan skip_all => 'these tests are for release candidate testing'

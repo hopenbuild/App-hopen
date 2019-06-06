@@ -1,7 +1,7 @@
 # App::hopen::Phase::Check - checking-phase operations
 package App::hopen::Phase::Check;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 use parent 'Exporter';
 

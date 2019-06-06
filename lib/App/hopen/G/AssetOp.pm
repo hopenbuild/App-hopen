@@ -1,7 +1,7 @@
 # App::hopen::G::AssetOp - parent class for operations used by a
 # generator to build an asset
 package App::hopen::G::AssetOp;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 use Quote::Code;
 

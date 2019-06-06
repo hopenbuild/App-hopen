@@ -1,7 +1,7 @@
 # App::hopen::Gen - base class for hopen generators
 package App::hopen::Gen;
 use Data::Hopen qw(:default $QUIET);
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

@@ -1,7 +1,7 @@
 #!perl
 # Makefile.PL for App::hopen
 use 5.014;
-use strict;
+use strict; use warnings;
 use warnings;
 use Config;
 use ExtUtils::MakeMaker;

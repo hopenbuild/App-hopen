@@ -1,6 +1,6 @@
 # App::hopen::HopenFileKit - set up a hopen file
 package App::hopen::HopenFileKit;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 use Import::Into;
@@ -92,6 +92,8 @@ C<import()> routine for the fake "language" package
         # Use only the last ::-separated component if :: are present.
         $dest_package = ($src_package =~ m/::([^:]+)$/) ? $1 : $src_package;
         Package::Alias->import::into($target, $dest_package => $src_package);
+            # TODO add to Package::Alias the ability to pass parameters
+            # to the package being loaded.
 
         $_loaded_languages{$language} = true;
     } #foreach requested language
@@ -99,7 +101,7 @@ C<import()> routine for the fake "language" package
 
 sub _create_language { # {{{1
 
-=head2
+=head2 _create_language
 
 Create a package "language" so that the calling package can invoke it.
 

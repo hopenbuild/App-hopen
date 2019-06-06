@@ -2,7 +2,8 @@
 # Copyright (c) 2018--2019 cxw42.  All rights reserved.  See LICENSE file.
 # To run this manually from the source tree, do
 #     perl -Ilib bin/hopen
-use strict; use warnings; use App::hopen;
+use strict; use warnings;
+use App::hopen;
 exit(App::hopen::Main(\@ARGV));
 __END__
 

@@ -1,7 +1,7 @@
 # App::hopen::Gen::Ninja::AssetGraphVisitor - visitor to write goals
 package App::hopen::Gen::Ninja::AssetGraphVisitor;
 use Data::Hopen qw(hlog getparameters $VERBOSE);
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

@@ -1,7 +1,7 @@
 # App::hopen::BuildSystemGlobals - global data for build-system use cases.
 package App::hopen::BuildSystemGlobals;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

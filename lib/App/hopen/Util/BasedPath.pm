@@ -1,6 +1,6 @@
 # App::hopen::Util::BasedPath - A path relative to a specified base
 package App::hopen::Util::BasedPath;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

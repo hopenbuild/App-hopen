@@ -1,7 +1,7 @@
 # App::hopen::T::Gnu - GNU toolset
 package App::hopen::T::Gnu;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

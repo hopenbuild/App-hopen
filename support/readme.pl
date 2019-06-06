@@ -3,7 +3,7 @@
 # Part of Data::Hopen.
 
 use 5.014;
-use strict;
+use strict; use warnings;
 use warnings;
 use Getopt::Long qw(:config gnu_getopt);
 use Path::Class;

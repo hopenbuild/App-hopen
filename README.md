@@ -3,11 +3,11 @@
 [![Appveyor Status](https://img.shields.io/appveyor/ci/cxw42/app-hopen.svg?logo=appveyor)](https://ci.appveyor.com/project/cxw42/app-hopen) [![Travis Status](https://img.shields.io/travis/hopenbuild/app-hopen.svg?logo=travis)](https://travis-ci.org/hopenbuild/app-hopen) 
 
 
-# DISCLAIMER
+# CURRENT STATUS
 
 Most features are not yet implemented ;) .  However it will generate a
 `Makefile` or `build.ninja` file for a C `Hello, World` program at this
-point!
+point!  It can generate command lines for gcc(1) or for Microsoft's `cl.exe`.
 
 
 hopen is a cross-platform software build generator.  It makes files you can

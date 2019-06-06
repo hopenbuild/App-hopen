@@ -1,7 +1,7 @@
 # App::hopen::Gen::Make::AssetGraphNode - AssetOp for Gen::Make
 package App::hopen::Gen::Make::AssetGraphNode;
 use Data::Hopen qw(getparameters $VERBOSE);
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

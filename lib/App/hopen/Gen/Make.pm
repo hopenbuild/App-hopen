@@ -1,6 +1,6 @@
 # App::hopen::Gen::Make - generator for a generic make(1).
 package App::hopen::Gen::Make;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL
@@ -135,7 +135,7 @@ sub _assetop_class { 'App::hopen::Gen::Make::AssetGraphNode' }
 
 =head2 _run_build
 
-Implementation of L</run_build>.
+Implementation of L<App::hopen::Gen/run_build>.
 
 =cut
 

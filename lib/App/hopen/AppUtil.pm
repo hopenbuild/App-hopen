@@ -1,7 +1,7 @@
 # App::hopen::AppUtil - utility routines used by App::hopen::App
 package App::hopen::AppUtil;
 use Data::Hopen qw(:default isMYH MYH);
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 use parent 'Exporter';
 

@@ -1,14 +1,10 @@
 # App::hopen::T::MSCL::C - support MS cl.exe toolset, C language
 package App::hopen::T::MSCL::C;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL
-
-use parent 'Exporter';
-
-use Class::Tiny qw(op files _cc);
 
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
@@ -22,7 +18,6 @@ use Data::Hopen qw(getparameters);
 use Data::Hopen::G::GraphBuilder;
 use Data::Hopen::Util::Data qw(forward_opts);
 use Data::Hopen::Util::Filename;
-#use Deep::Hash::Utils qw(deepvalue);
 use File::Which ();
 use Path::Class;
 
@@ -140,7 +135,7 @@ sub _find_compiler {
     croak "Could not find a C compiler" unless $_CC;
 } #_find_compiler()
 
-BEGIN { _find_compiler; }
+BEGIN { _find_compiler if eval '$App::hopen::RUNNING'; }
 
 1;
 __END__

@@ -1,7 +1,7 @@
 # App::hopen::T::MSCL::C::CompileCmd - compile C source using the GNU toolset
 package App::hopen::T::MSCL::C::CompileCmd;
 use Data::Hopen;
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL

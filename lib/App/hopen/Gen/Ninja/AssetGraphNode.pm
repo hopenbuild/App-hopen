@@ -1,7 +1,7 @@
 # App::hopen::Gen::Ninja::AssetGraphNode - AssetOp for Gen::Ninja
 package App::hopen::Gen::Ninja::AssetGraphNode;
 use Data::Hopen qw(getparameters $VERBOSE);
-use strict;
+use strict; use warnings;
 use Data::Hopen::Base;
 
 our $VERSION = '0.000012'; # TRIAL
