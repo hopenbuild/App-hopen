@@ -4,7 +4,7 @@ use strict; use warnings;
 use Data::Hopen::Base;
 use Quote::Code;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Data::Hopen::G::Op';
 use Class::Tiny {

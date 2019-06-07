@@ -16,7 +16,7 @@ use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
 
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Exporter';  # Exporter-exported symbols {{{1
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
@@ -35,14 +35,14 @@ BEGIN {
 
 =head1 NAME
 
-Data::Hopen::HopenFileKit - Kit to be used by a hopen file
+App::hopen::HopenFileKit - Kit to be used by a hopen file
 
 =head1 SYNOPSIS
 
 This is a special-purpose test kit used for interpreting hopen files.
-See L<Data::Hopen::App/_run_phase>.  Usage:
+See L<App::hopen/_run_phase>.  Usage:
 
-    use Data::Hopen::HopenFileKit "<filename>"[, other args]
+    use App::hopen::HopenFileKit "<filename>"[, other args]
 
 C<< <filename> >> is the name you want to use for the package using
 this module, and will be loaded into constant C<$FILENAME> in that

@@ -4,7 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny {
@@ -17,13 +17,13 @@ use App::hopen::Asset;
 
 =head1 NAME
 
-Data::Hopen::G::FilesCmd - Cmd that holds a list of files.
+App::hopen::G::FilesCmd - Cmd that holds a list of files.
 
 =head1 SYNOPSIS
 
-    my $node = Data::Hopen::G::FilesCmd(files=>['foo.c'], name=>'foo node');
+    my $node = App::hopen::G::FilesCmd(files=>['foo.c'], name=>'foo node');
 
-Used by L<Data::Hopen::H/files>.
+Used by L<App::hopen::H/files>.
 
 =head1 ATTRIBUTES
 
@@ -42,7 +42,7 @@ instances.
 
 Create L<App::hopen::Asset>s for the listed files and add them to the
 generator's asset graph.
-See L<Data::Hopen::Conventions/INTERNALS>.
+See L<App::hopen::Conventions/INTERNALS>.
 
 =cut
 

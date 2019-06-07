@@ -4,7 +4,7 @@ use Data::Hopen qw(getparameters $VERBOSE);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::AssetOp';
 use Class::Tiny;
@@ -36,6 +36,9 @@ use vars::i '&OUTPUT' => sub { '__R_Makefile' };
 Generate a piece of a Makefile and write it to the filehandle in
 C<__R_Makefile>.
 
+If the `how` of a node is defined but falsy, it's a goal.
+If `how` is defined and truthy, it's a file.
+
 =cut
 
 sub _run {
@@ -44,14 +47,15 @@ sub _run {
         # TODO deal with multiple inputs being merged in DAG::_run()
 
     my @inputs = $self->input_assets;
-    my $output = $self->asset->target->path_wrt($DestDir);
+    my $output = $self->asset->target;
+    $output = $output->path_wrt($DestDir) if eval { $output->DOES('App::hopen::Util::BasedPath') };
         # TODO refactor this processing into a utility module/function
 
     # Debugging output
     if($VERBOSE) {
-        print $fh qc'\n# Makefile piece from node {$self->name}\n';
-        print $fh qc'    # {$self->how//"<nothing to be done>"}\n';
-        print $fh qc'    # Depends on {$_->target}\n' foreach @inputs;
+        say $fh qc'\n# Makefile piece from node {$self->name}';
+        say $fh qc'    # {$self->how//"<nothing to be done>"}';
+        say $fh qc'    # Depends on {$_->target}' foreach @inputs;
     }
 
     if(defined $self->how) {
@@ -61,9 +65,13 @@ sub _run {
         $recipe =~ s<#first\b><$paths[0] // ''>ge;      # first input
         $recipe =~ s<#all\b><join(' ', @paths)>ge;      # all inputs
         $recipe =~ s<#out\b><$output // ''>ge;
+
+        # Emit the entry.  If the recipe is defined but falsy,
+        # this is a goal, so it gets a .PHONY.
         print $fh qc_to <<"EOT"
 #{$output}: #{join(" ", @paths)}
-\t#{$recipe}
+#{$recipe ? "\t$recipe" : ".PHONY: $output"}
+
 EOT
 
     }

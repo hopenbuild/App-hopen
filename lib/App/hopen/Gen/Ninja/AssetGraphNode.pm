@@ -4,7 +4,7 @@ use Data::Hopen qw(getparameters $VERBOSE);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::AssetOp';
 use Class::Tiny {
@@ -42,8 +42,11 @@ use vars::i '&OUTPUT' => sub { '__R_Ninjafile' };
 
 =head2 _run
 
-Generate a piece of a Ninja file and write it to the filehandle in
+Generate a piece of a C<build.ninja> file and write it to the filehandle in
 C<__R_Ninjafile>.
+
+If the `how` of a node is defined but falsy, it's a goal.
+If `how` is defined and truthy, it's a file.
 
 =cut
 
@@ -55,7 +58,8 @@ sub _run {
         # TODO deal with multiple inputs being merged in DAG::_run()
 
     my @inputs = $self->input_assets;
-    my $output = $self->asset->target->path_wrt($DestDir);
+    my $output = $self->asset->target;
+    $output = $output->path_wrt($DestDir) if eval { $output->DOES('App::hopen::Util::BasedPath') };
         # TODO refactor this processing into a utility module/function
 
     # Debugging output
@@ -74,17 +78,31 @@ sub _run {
         $recipe =~ s<#all\b><\$in>g;    # all inputs
         $recipe =~ s<#out\b><\$out>g;
 
+        # Emit the entry.  If the recipe is defined but falsy,
+        # this is a goal, so it gets a `phony` and a `default`.
+
         # TODO FIXME ugly hack: for now, each command gets its own rule.
-        my $rulename = 'rule_' . ++$ruleidx;
-        print $fh qc_to <<"EOT"
+
+        if($self->how) {    # File target
+
+            my $rulename = 'rule_' . ++$ruleidx;
+            print $fh qc_to <<"EOT"
 rule #{$rulename}
     command = #{$recipe}
 
 build #{$output}: #{$rulename} #{join(" ", @paths)}
 
 EOT
+        } else {            # Goal target
 
-    }
+            print $fh qc_to <<"EOT"
+build #{$output}: phony #{join(" ", @paths)}
+default #{$output}
+
+EOT
+        }
+
+    } #endif defined $self->how
 
     $self->make($self->asset);
     return {};

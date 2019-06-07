@@ -4,12 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
-
-#use parent 'Data::Hopen::TODO';
-#use Class::Tiny qw(TODO);
-
-# Docs {{{1
+our $VERSION = '0.000013'; # TRIAL
 
 =head1 NAME
 
@@ -21,8 +16,6 @@ This toolset supports any compiler that will accept gcc(1) options, and any
 linker that will accept GNU ld(1) options.
 
 =cut
-
-# }}}1
 
 1;
 __END__

@@ -1,6 +1,6 @@
 #!perl
 # readme_md.pl: Make README.md from a Perl file.
-# Part of Data::Hopen.
+# Part of App::hopen.
 
 use 5.014;
 use strict; use warnings;

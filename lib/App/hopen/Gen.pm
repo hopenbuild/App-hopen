@@ -4,7 +4,7 @@ use Data::Hopen qw(:default $QUIET);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Data::Hopen::Visitor';
 use Class::Tiny qw(proj_dir dest_dir), {
@@ -27,13 +27,13 @@ use Scalar::Util qw(refaddr);
 
 =head1 NAME
 
-Data::Hopen::Gen - Base class for hopen generators
+App::hopen::Gen - Base class for hopen generators
 
 =head1 SYNOPSIS
 
 The code that generates blueprints for specific build systems
-lives under C<Data::Hopen::Gen>.  L<Data::Hopen::Phase::Gen> calls modules
-under C<Data::Hopen::Gen> to create the blueprints.  Those modules must
+lives under C<App::hopen::Gen>.  L<App::hopen> calls modules
+under C<App::hopen::Gen> to create the blueprints.  Those modules must
 implement the interface defined here.
 
 =head1 ATTRIBUTES
@@ -55,7 +55,7 @@ the L<App::Hopen::Asset>s to be created when a build is run.
 
 =head1 FUNCTIONS
 
-A generator (C<Data::Hopen::Gen> subclass) is a Visitor plus some.
+A generator (C<App::hopen::Gen> subclass) is a Visitor plus some.
 
 B<Note>:
 The generator does not have access to L<Data::Hopen::G::Link> instances.
@@ -122,6 +122,9 @@ been added using L</asset>.  Usage:
 
 TODO add missing assets automatically?
 
+TODO rename the asset-graph public interface so it's more clear that it's
+the asset graph and not the command graph.
+
 =cut
 
 sub connect {
@@ -142,6 +145,14 @@ sub connect {
     croak "No To node for asset " . refaddr($args{to}) unless $nodes{to};
     $self->_assets->connect($nodes{from}, $nodes{to});
 } #connect()
+
+=head2 asset_default_goal
+
+Read-only accessor for the default goal of the asset graph
+
+=cut
+
+sub asset_default_goal () { shift->_assets->default_goal }
 
 =head2 run_build
 
@@ -178,6 +189,8 @@ sub BUILD {
 
     # Create the asset graph
     $self->_assets(hnew DAG => 'asset graph');
+    $self->_assets->goal('__R_asset_default_goal');
+        # Create and set default goal
 } #BUILD()
 
 =head1 FUNCTIONS TO BE IMPLEMENTED BY SUBCLASSES
@@ -196,10 +209,10 @@ sub _assetop_class { ... }
 (Required) Returns the package stem of the default toolset for this generator.
 
 When a hopen file invokes C<use language "Foo">, hopen will load
-C<< Data::Hopen::T::<stem>::Foo >>, where C<< <stem> >> is the return
-value of this function.
+C<< App::hopen::T::<stem>::Foo >>.  C<< <stem> >> is the return
+value of this function unless the user has specified a different toolset.
 
-As a sanity check, hopen will first try to load C<< Data::Hopen::T::<stem> >>,
+As a sanity check, hopen will first try to load C<< App::hopen::T::<stem> >>,
 so make sure that is a valid package.
 
 =cut
@@ -212,7 +225,13 @@ sub default_toolset { ... }
 Do whatever the generator wants to do to finish up.  By default, no-op.
 Is provided the L<Data::Hopen::G::DAG> instance as a parameter.  Usage:
 
-    $generator->finalize(-phase=>$Phase, -graph=>$dag)
+    $generator->finalize(-phase=>$Phase, -graph=>$Build,
+                        -data=>$data)
+
+C<$dag> is the command graph, and C<$data> is the output from the
+command graph.
+
+C<finalize> is always called with named parameters.
 
 =cut
 

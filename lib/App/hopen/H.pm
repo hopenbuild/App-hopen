@@ -3,7 +3,7 @@ package App::hopen::H;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Exporter';
 use vars::i '@EXPORT' => [];
@@ -25,12 +25,12 @@ use Path::Class;
 
 =head1 NAME
 
-Data::Hopen::H - H:: namespace for use in hopen files
+App::hopen::H - H:: namespace for use in hopen files
 
 =head1 SYNOPSIS
 
 This module is loaded as C<H::*> into hopen files by
-L<Data::Hopen::HopenFileKit>.
+L<App::hopen::HopenFileKit>.
 
 =head1 FUNCTIONS
 

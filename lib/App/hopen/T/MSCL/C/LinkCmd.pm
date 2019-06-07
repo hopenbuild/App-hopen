@@ -4,7 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);
@@ -12,16 +12,9 @@ use Class::Tiny qw(dest linker);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
-#use Config;
 use Data::Hopen qw(getparameters);
-#use Data::Hopen::G::GraphBuilder;
 use Data::Hopen::Util::Filename;
-#use Deep::Hash::Utils qw(deepvalue);
-#use File::Which ();
 use Path::Class;
-
-#my $FN = Data::Hopen::Util::Filename->new;     # for brevity
-#our $_CC;   # Cached compiler name
 
 # Docs {{{1
 

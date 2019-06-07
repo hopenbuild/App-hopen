@@ -85,15 +85,17 @@ See [App::hopen](https://metacpan.org/pod/App::hopen) and [App::hopen::Conventio
     Specify the project directory.  Overrides a project directory given as a
     positional argument.
 
-- -g `generator`
+- -g `generator` (or -G)
 
     Specify the generator.  The given `generator` should be either a full package
-    name or the part after `App::hopen::Gen::`.
+    name or the part after `App::hopen::Gen::`.  Also accepts `-G` to ease
+    the transition from cmake.
 
-- -t `toolset`
+- -t `toolset` (or -T)
 
     Specify the toolset.  The given `toolset` should be either a full package
-    name or the part after `App::hopen::T::`.
+    name or the part after `App::hopen::T::`.  Also accepts `-T` to ease
+    the transition from cmake.
 
 - --to `destination dir`
 
@@ -133,7 +135,7 @@ You can find documentation for this module with the perldoc command.
 
     perldoc App::hopen                      For command-line options
     perldoc App::hopen::Conventions         For terminology and workflow
-    perldoc Data::Hopen                     For internals
+    perldoc Data::Hopen                     For the underlying engine
 
 You can also look for information at:
 

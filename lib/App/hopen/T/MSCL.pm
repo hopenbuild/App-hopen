@@ -4,12 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000012'; # TRIAL
-
-#use parent 'Data::Hopen::TODO';
-#use Class::Tiny qw(TODO);
-
-# Docs {{{1
+our $VERSION = '0.000013'; # TRIAL
 
 =head1 NAME
 
@@ -18,11 +13,12 @@ Data::Hopen::T::MSCL - Microsoft cl.exe toolset for hopen
 =head1 SYNOPSIS
 
 This toolset supports any compiler and linker that will accept C<cl.exe>
-options.
+options.  It provides command lines, so is useful with generators that
+use command lines directly (e.g., L<App::hopen::Gen::Make>).
+
+TODO add a separate msbuild toolset, and link to it here.
 
 =cut
-
-# }}}1
 
 1;
 __END__

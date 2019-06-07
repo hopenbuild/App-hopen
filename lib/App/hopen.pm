@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000012'; # TRIAL
+our $VERSION = '0.000013'; # TRIAL
 
 # Imports {{{1
 use strict; use warnings;
@@ -132,15 +132,17 @@ the destination directory.
 Specify the project directory.  Overrides a project directory given as a
 positional argument.
 
-=item -g C<generator>
+=item -g C<generator> (or -G)
 
 Specify the generator.  The given C<generator> should be either a full package
-name or the part after C<App::hopen::Gen::>.
+name or the part after C<App::hopen::Gen::>.  Also accepts C<-G> to ease
+the transition from cmake.
 
-=item -t C<toolset>
+=item -t C<toolset> (or -T)
 
 Specify the toolset.  The given C<toolset> should be either a full package
-name or the part after C<App::hopen::T::>.
+name or the part after C<App::hopen::T::>.  Also accepts C<-T> to ease
+the transition from cmake.
 
 =item --to C<destination dir>
 
@@ -997,7 +999,7 @@ You can find documentation for this module with the perldoc command.
 
     perldoc App::hopen                      For command-line options
     perldoc App::hopen::Conventions         For terminology and workflow
-    perldoc Data::Hopen                     For internals
+    perldoc Data::Hopen                     For the underlying engine
 
 You can also look for information at:
 
