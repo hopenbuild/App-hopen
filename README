@@ -64,6 +64,10 @@ OPTIONS
         Specify the architecture.  This is an arbitrary string interpreted by
         the generator or toolset.
 
+    --build
+        Run the generator to process the blueprint files.  Cannot be used with
+        "--fresh".
+
     -e "Perl code"
         Add the "Perl code" as if it were a hopen file.  "-e" files are
         processed after all other hopen files, so can modify anything that has
@@ -71,7 +75,7 @@ OPTIONS
 
     --fresh
         Start a fresh build --- ignore any "MY.hopen.pl" file that may exist
-        in the destination directory.
+        in the destination directory.  Cannot be used with "--build".
 
     --from "project dir"
         Specify the project directory.  Overrides a project directory given as

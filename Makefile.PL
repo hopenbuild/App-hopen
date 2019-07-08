@@ -60,32 +60,11 @@ sub get_perl_filename {
 {   package MY;
 
     # dist_core: make `dist` a :: target rather than a : target,
-    # and add distcheck before dist.  Also, add -TRIAL to the tgz if necessary.
+    # and add distcheck before dist.
     sub dist_core {
         my $self = shift;
         my $text = $self->SUPER::dist_core(@_);
-        $text =~ s/^dist\s*:[^:]/dist:: distcheck /m;
-
-        # Add -TRIAL if it's a trial release
-        if($IS_TRIAL) {
-            # Note: we don't have to worry about EOL; Appveyor uses gmake even
-            # on Windows, and it only uses \n.
-            print STDERR "TRIAL version\n";
-            my $newtext .=  # Command to rename the tgz.  TODO see if this works on Windows.
-                "\t\"$secure_perl_path\" -MExtUtils::Command -e mv -- " .
-                '"$(DISTVNAME).tar$(SUFFIX)" ' .
-                '"$(DISTVNAME)-TRIAL.tar$(SUFFIX)"' . "\n";
-
-            # Insert $newtext at the end of the `dist` target
-            $text =~ s{
-                ^(dist\h*:.*\n      # dist header line
-                    (?:\h+\S.*\n)+) # dist body lines.  `.` doesn't match `\n`.
-                                    # NOTE: on Appveyor, the continuation line
-                                    # begins with a space rather than a tab.
-                                    # Therefore, look for \h after \n.
-                                    # Not \s, because that matches a \n!
-            }{$1$newtext}mx;
-        } #endif $IS_TRIAL
+        $text =~ s/^dist\h*:[^:]/dist:: distcheck /m;
 
         return $text;
     } # MY::dist_core
@@ -275,10 +254,13 @@ my %opts = (
         ## 'Sub::ScopeFinalizer' => '0.02',        # For correct META.yml
 
         'strict' => '0',
+        'Syntax::Construct' => '0.07',
         'Type::Tiny' => '1.004004',
 
         'vars::i' => '1.06',
         'warnings' => '0',
+        'XML::FromPerl' => '0',
+        'XML::LibXML' => '1.60',            # for getElementById()
     },
 
     META_MERGE => {
@@ -313,7 +295,11 @@ my %opts = (
     clean => { FILES => 'App-hopen-*' },
 ); # %opts
 
-$opts{META_MERGE}->{release_status} = 'testing' if $IS_TRIAL;
+if($IS_TRIAL) {
+    print STDERR "TRIAL version\n";
+    $opts{META_MERGE}->{release_status} = 'testing';
+    $opts{DISTVNAME} = '$(DISTNAME)-$(VERSION)-TRIAL';
+}
 
 # Some tests run on older versions of EUMM that do not support TEST_REQUIRES.
 # This is a workaround, modified from

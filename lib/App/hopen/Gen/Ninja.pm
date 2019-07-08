@@ -37,46 +37,6 @@ This generator makes a build.ninja file.
 
 # }}}1
 
-=head2 visit_goal
-
-Add a target corresponding to the name of the goal.  Usage:
-
-    $Generator->visit_goal($node, $node_inputs);
-
-This happens while the command graph is being run.
-
-=cut
-
-sub visit_goal {
-    my ($self, %args) = getparameters('self', [qw(goal node_inputs)], @_);
-
-    # --- Add the goal to the asset graph ---
-
-    #my $asset_goal = $self->_assets->goal($args{goal}->name);
-    my $phony_asset = App::hopen::Asset->new(
-        target => $args{goal}->name,
-        made_by => $self,
-    );
-    my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
-        # \p how defined but falsy => it's a goal
-    $self->connect($phony_node, $self->asset_default_goal);
-
-    # Pull the inputs.  TODO refactor out the code in common with
-    # AhG::Cmd::input_assets().
-    my $hrSourceFiles =
-        $args{node_inputs}->find(-name => 'made',
-                                    -set => '*', -levels => 'local') // {};
-    die 'No input files to goal ' . $args{goal}->name
-        unless scalar keys %$hrSourceFiles;
-
-    my $lrSourceFiles = $hrSourceFiles->{(keys %$hrSourceFiles)[0]};
-    hlog { 'found inputs to goal', $args{goal}->name, Dumper($lrSourceFiles) } 2;
-
-    # TODO? verify that all the assets are actually in the graph first?
-    $self->connect($_, $phony_node) foreach @$lrSourceFiles;
-
-} #visit_goal()
-
 =head2 finalize
 
 Write out the Ninja file.  Usage:

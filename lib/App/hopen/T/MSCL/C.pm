@@ -64,8 +64,11 @@ compilation options or object-file names).  Usage:
 
 =cut
 
+sub _find_compiler; # forward
+
 sub compile {
     my ($builder, %args) = getparameters('self', [qw(; name)], @_);
+    _find_compiler unless $_CC;
     my $node = App::hopen::T::MSCL::C::CompileCmd->new(
         compiler => $_CC,
         forward_opts(\%args, 'name')
@@ -93,6 +96,7 @@ using the compiler?
 
 sub link {
     my ($builder, %args) = getparameters('self', [qw(exe; name)], @_);
+    _find_compiler unless $_CC;
 
     my $dest = based_path(path => file($FN->exe($args{exe})), base => $DestDir);
 

@@ -9,6 +9,12 @@ use Test::Directory;
 
 use App::hopen;
 
+my %outputs_by_gen = (      # What file each generator outputs
+    Make => 'Makefile',
+    Ninja => 'build.ninja',
+    MSBuild => 'build.proj',
+);
+
 sub test_with {     # Takes a generator
     my $gen = shift or croak 'Need a generator';
     diag "Testing with -g $gen";
@@ -45,12 +51,14 @@ sub test_with {     # Takes a generator
     is $stderr, '', 'No error output' if $gen eq 'Make';
     cmp_ok $exitcode, '==', 0, 'Run succeeded';
     $dest->has('MY.hopen.pl');
-    $dest->has($gen eq 'Make' ? 'Makefile' : 'build.ninja');
-    $dest->hasnt($gen eq 'Make' ?  'build.ninja' : 'Makefile');
+    $dest->has($outputs_by_gen{$gen});
+    $dest->hasnt($outputs_by_gen{$_}) foreach
+        grep { $_ ne $gen } keys %outputs_by_gen;
 
 } #test_with
 
 test_with 'Make';
 test_with 'Ninja';
+test_with 'MSBuild';
 
 done_testing();

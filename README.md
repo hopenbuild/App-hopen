@@ -69,6 +69,11 @@ See [App::hopen](https://metacpan.org/pod/App::hopen) and [App::hopen::Conventio
     Specify the architecture.  This is an arbitrary string interpreted by the
     generator or toolset.
 
+- --build
+
+    Run the generator to process the blueprint files.  Cannot be used
+    with `--fresh`.
+
 - -e `Perl code`
 
     Add the `Perl code` as if it were a hopen file.  `-e` files are processed
@@ -78,7 +83,7 @@ See [App::hopen](https://metacpan.org/pod/App::hopen) and [App::hopen::Conventio
 - --fresh
 
     Start a fresh build --- ignore any `MY.hopen.pl` file that may exist in
-    the destination directory.
+    the destination directory.  Cannot be used with `--build`.
 
 - --from `project dir`
 

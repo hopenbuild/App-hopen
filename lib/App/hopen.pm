@@ -116,6 +116,11 @@ See L<App::hopen> and L<App::hopen::Conventions> for more details.
 Specify the architecture.  This is an arbitrary string interpreted by the
 generator or toolset.
 
+=item --build
+
+Run the generator to process the blueprint files.  Cannot be used
+with C<--fresh>.
+
 =item -e C<Perl code>
 
 Add the C<Perl code> as if it were a hopen file.  C<-e> files are processed
@@ -125,7 +130,7 @@ by those files.  Can be specified more than once.
 =item --fresh
 
 Start a fresh build --- ignore any C<MY.hopen.pl> file that may exist in
-the destination directory.
+the destination directory.  Cannot be used with C<--build>.
 
 =item --from C<project dir>
 
@@ -852,6 +857,7 @@ EOT
 
     # Handle --build, now that everything's loaded --------------
     if($opts{BUILD}) {
+        # TODO? make sure we're in the right phase?
         $Generator->run_build();
         return;
     }
@@ -934,10 +940,16 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
     my $lrArgs = shift // [];
 
-    # = Process options =====================================================
+    # = Process options ================================================= {{{2
 
     my %opts;
     _parse_command_line(from => $lrArgs, into => \%opts);
+
+    # Check for mutually-inconsistent options
+    if($opts{FRESH} && $opts{BUILD}) {
+        print STDERR '--fresh and --build cannot be used together';
+        return EXIT_PARAM_ERR;
+    }
 
     # Verbosity is the max of -v and --verbose
     $opts{VERBOSE} = $opts{VERBOSE2} if $opts{VERBOSE2} > $opts{VERBOSE};
@@ -960,12 +972,12 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
 
     delete @opts{qw(VERBOSE VERBOSE2)};
         # After this, code only refers to $QUIET for consistency.
-    # After th
 
     # Don't print the source of an eval'ed hopen file unless -vvv or higher.
     # Need 3 for the "..." that Carp prints when truncating.
     $Carp::MaxEvalLen = 3 unless $VERBOSE >= 3;
 
+    # }}}2
     # = Do it, Rockapella! ==================================================
 
     $RUNNING = true;

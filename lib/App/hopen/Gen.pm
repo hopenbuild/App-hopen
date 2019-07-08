@@ -15,6 +15,7 @@ use Class::Tiny qw(proj_dir dest_dir), {
     _assetop_by_asset => sub { +{} },   # Indexed by refaddr($asset)
 };
 
+use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Util::String qw(eval_here);
 use Data::Hopen::G::DAG;
@@ -250,16 +251,47 @@ sub _run_build {
 
 =head2 visit_goal
 
-(Optional)
-Do whatever the generator wants to do with a L<Data::Hopen::G::Goal>.
-For example, the generator may change the goal's C<outputs>.
-By default, no-op.  Usage:
+Add a target corresponding to the name of the goal.  Usage:
 
-    $generator->visit_goal($goal);
+    $Generator->visit_goal($node, $node_inputs);
+
+This happens while the command graph is being run.
+
+This can be overriden by a generator that wants to handle
+L<Data::Hopen::G::Goal> nodes differently.
+For example, the generator may want to change the goal's C<outputs>.
 
 =cut
 
-sub visit_goal { }
+sub visit_goal {
+    my ($self, %args) = getparameters('self', [qw(goal node_inputs)], @_);
+
+    # --- Add the goal to the asset graph ---
+
+    #my $asset_goal = $self->_assets->goal($args{goal}->name);
+    my $phony_asset = App::hopen::Asset->new(
+        target => $args{goal}->name,
+        made_by => $self,
+    );
+    my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
+        # \p how defined but falsy => it's a goal
+    $self->connect($phony_node, $self->asset_default_goal);
+
+    # Pull the inputs.  TODO refactor out the code in common with
+    # AhG::Cmd::input_assets().
+    my $hrSourceFiles =
+        $args{node_inputs}->find(-name => 'made',
+                                    -set => '*', -levels => 'local') // {};
+    die 'No input files to goal ' . $args{goal}->name
+        unless scalar keys %$hrSourceFiles;
+
+    my $lrSourceFiles = $hrSourceFiles->{(keys %$hrSourceFiles)[0]};
+    hlog { 'found inputs to goal', $args{goal}->name, Dumper($lrSourceFiles) } 2;
+
+    # TODO? verify that all the assets are actually in the graph first?
+    $self->connect($_, $phony_node) foreach @$lrSourceFiles;
+
+} #visit_goal()
 
 =head2 visit_node
 

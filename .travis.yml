@@ -1,4 +1,8 @@
 language: perl
+
+dist: trusty
+  # For older Perls - see https://github.com/travis-ci/perl-builder/issues/8
+
 perl:
   - "5.26"
   - "5.26-shrplib"
