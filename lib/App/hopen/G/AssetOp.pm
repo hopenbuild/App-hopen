@@ -8,6 +8,10 @@ use Quote::Code;
 our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
+    # TODO why is this not directly a child of Data::Hopen::G::Op?
+    # It uses input_assets, but could that be refactored out to a parent
+    # of which this and AhG::Cmd were siblings?
+
 # we use Class::Tiny below
 
 use Class::Tiny::ConstrainedAccessor

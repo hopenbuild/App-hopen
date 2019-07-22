@@ -73,7 +73,9 @@ sub _run {
         made_by => $self,
     );
     $args{visitor}->asset($exe,
-        -how => $self->linker . ' /Fe#out #all',
+        -how => '"' . $self->linker . '" "/Fe#out" #all',
+            # TODO permit escaping #out and #all - see comments in
+            # App::hopen::T::MSCL::C::CompileCmd.
     );      # TODO refactor out common code with T::Gnu::C::LinkCmd
 
     foreach my $obj (@$lrObjFiles) {

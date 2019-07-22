@@ -186,6 +186,8 @@ errors.  *(TODO change this to support LaTeX multi-run files?)*  Then the DAG
 is traversed, and each operation writes the necessary information to the
 file being generated.
 
+=head1 INTERNAL DATA
+
 =cut
 
 # }}}1
@@ -212,6 +214,31 @@ L<App::hopen::HopenFileKit/_language_import>.
 =cut
 
 our $RUNNING;
+
+=head2 C<$_hrData>
+
+The hashref of the current data we have built up by processing hopen files.
+
+=cut
+
+our $_hrData;   # the hashref of current data
+
+=head2 C<$_did_set_phase>
+
+Set to truthy if MY.hopen.pl sets the phase.
+
+=cut
+
+our $_did_set_phase = false;
+    # Whether the current hopen file called set_phase()
+
+=head2 C<$_hf_pkg_idx>
+
+Used to give each hopen file or C<-e> a unique package name.
+
+=cut
+
+my $_hf_pkg_idx = 0;    # unique ID for the packages of hopen files
 
 # }}}1
 # === Command line parsing ============================================== {{{1
@@ -279,6 +306,10 @@ my %CMDLINE_OPTS = (
 
 );
 
+=head1 INTERNAL FUNCTIONS
+
+=cut
+
 sub _parse_command_line { # {{{2
 
 =head2 _parse_command_line
@@ -334,13 +365,13 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
         Pod::Usage::pod2usage(-verbose => 1, -exitval => EXIT_OK, @in)
             if have('h');
 
-        # --man: suppress "INTERNALS" section.  Note that this does
+        # --man: suppress "INTERNAL" sections.  Note that this does
         # get rid of the automatic pager we would otherwise get
         # by virtue of pod2usage's invoking perldoc(1).  Oh well.
 
         Pod::Usage::pod2usage(
-            -exitval => EXIT_OK, @in,
-            -verbose => 99, -sections => '!INTERNALS'   # suppress INTERNALS
+            -exitval => EXIT_OK, @in,   # VVV see Pod::Select for format
+            -verbose => 99, -sections => '!INTERNAL.*'
         ) if have('man');
     }
 
@@ -368,24 +399,6 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
 # }}}1
 # === Main worker code ================================================== {{{1
 
-=head2 $_hrData
-
-The hashref of the current data we have built up by processing hopen files.
-
-=cut
-
-our $_hrData;   # the hashref of current data
-
-=head2 $_did_set_phase
-
-Set to truthy if MY.hopen.pl sets the phase.
-
-=cut
-
-our $_did_set_phase = false;
-    # Whether the current hopen file called set_phase()
-
-my $_hf_pkg_idx = 0;    # unique ID for the packages of hopen files
 
 sub _execute_hopen_file {       # Load and run a single hopen file {{{2
 
@@ -519,6 +532,9 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
     # -- Build the package
 
+    # TODO move phase-setting to App::hopen::MYhopen
+    # TODO set $App::hopen::MYhopen::IsMYH to indicate whether or not this
+    # file is MY.hopen.pl.
     my $src = line_mark_string <<EOT ;
 {
     package __Rpkg_$pkg_name;

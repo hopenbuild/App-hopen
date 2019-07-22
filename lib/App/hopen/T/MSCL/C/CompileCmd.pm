@@ -63,7 +63,19 @@ sub _process_input {
 
     my $to = based_path(path => file($_FN->obj($src->target->path)),
                         base => $DestDir);
-    my $how = $self->compiler . " /c #first /Fo#out";
+    my $how = '"' . $self->compiler . '" /c "#first" "/Fo#out"';
+        # TODO? escape quotes in #first and #out?
+        # => No, instead permit the asset node to carry the compiler ID
+        #    in its scope, so that the generator can quote appropriately
+        #    for the platform.
+
+        # TODO better: T::MSCL::C should put the compiler name in the
+        # global Scope of the DAG.  Then this node can set how to, e.g.,
+        # '#compiler /c #first /Fo#out', and let the generator escape
+        # appropriately for the platform.  If a particular node needs a
+        # different compiler, that compiler can be added to the Scope of
+        # that particular node to override what the generator sees.
+
     my $obj = App::hopen::Asset->new(
         target => $to,
         made_by => $self,
