@@ -1,6 +1,6 @@
 # App::hopen::Gen::MSBuild::AssetGraphNode - AssetOp for Gen::MSBuild
 package App::hopen::Gen::MSBuild::AssetGraphNode;
-use Data::Hopen qw(hlog getparameters $VERBOSE);
+use Data::Hopen qw(hlog getparameters *VERBOSE);
 use strict; use warnings;
 use Data::Hopen::Base;
 

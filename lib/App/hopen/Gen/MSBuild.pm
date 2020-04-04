@@ -12,7 +12,7 @@ use Class::Tiny;
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(is_last_phase);
 use App::hopen::Util::XML::FromPerl qw(xml_from_perl);
-use Data::Hopen qw(:default getparameters $QUIET);
+use Data::Hopen qw(:default getparameters *QUIET);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Util::Data qw(forward_opts);
 use File::Which;
