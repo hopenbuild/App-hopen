@@ -1,3 +1,4 @@
+# Auto-generated from Makefile.PL by cpanfile-from-Makefile-PL
 requires 'Carp';
 requires 'Class::Method::Modifiers', '2.10';
 requires 'Class::Tiny', '1.000';
@@ -69,6 +70,9 @@ on test => sub {
 
 on develop => sub {
     requires 'App::RewriteVersion';
+    requires 'CPAN::Meta';
+    requires 'File::Slurp', '9999.26';
+    requires 'Module::CPANfile', '0.9020';
     requires 'Module::Metadata', '1.000016';
     requires 'Test::Kwalitee';
 };

@@ -1,6 +1,9 @@
 Revision history for App-hopen
 
-0.000011    2019-06-04
+0.000012    2019-06-06 (TRIAL RELEASE)
+    - Added Microsoft cl.exe toolset
+
+0.000011    2019-06-04 (TRIAL RELEASE)
     - Added Ninja generator
     - Added examples in the `eg/` directory
     - Updated documentation
