@@ -8,7 +8,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 =head1 NAME
 
-Data::Hopen::T::MSCL - Microsoft cl.exe toolset for hopen
+App::hopen::T::MSCL - Microsoft cl.exe toolset for hopen
 
 =head1 SYNOPSIS
 

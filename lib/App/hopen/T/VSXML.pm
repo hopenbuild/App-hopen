@@ -8,7 +8,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 =head1 NAME
 
-Data::Hopen::T::VSXML - hopen Visual Studio toolset for MSBuild projects
+App::hopen::T::VSXML - hopen Visual Studio toolset for MSBuild projects
 
 =head1 SYNOPSIS
 

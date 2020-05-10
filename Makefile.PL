@@ -176,7 +176,7 @@ my %opts = (
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Data::Hopen' => '0.000014',
+        'Data::Hopen' => '0.000016',    # for features
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',

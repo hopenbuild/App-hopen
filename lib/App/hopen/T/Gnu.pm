@@ -8,7 +8,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 =head1 NAME
 
-Data::Hopen::T::Gnu - GNU toolset for hopen
+App::hopen::T::Gnu - GNU toolset for hopen
 
 =head1 SYNOPSIS
 
