@@ -23,6 +23,13 @@ use Hash::Merge;
 use Path::Class;
 use Scalar::Util qw(looks_like_number);
 
+use Class::Tiny {
+    argv => sub { [] },
+    cmdopts => sub { +{} },
+    did_set_phase => sub { false },
+    hrData => sub { +{} },
+};
+
 BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
 
 # }}}1
@@ -189,6 +196,24 @@ file being generated.
 
 =head1 INTERNAL DATA
 
+=head2 Instance member variables
+
+=head3 argv
+
+Arrayref of the command-line parameters, or C<[]>.
+
+=head3 cmdopts
+
+Hashref of the parsed command-line options, or C<{}>.
+
+=head3 did_set_phase
+
+Set to truthy if MY.hopen.pl sets the phase.
+
+=head3 hrData
+
+The hashref of the current data we have built up by processing hopen files.
+
 =cut
 
 # }}}1
@@ -215,23 +240,6 @@ L<App::hopen::HopenFileKit/_language_import>.
 =cut
 
 our $RUNNING;
-
-=head2 C<$_hrData>
-
-The hashref of the current data we have built up by processing hopen files.
-
-=cut
-
-our $_hrData;   # the hashref of current data
-
-=head2 C<$_did_set_phase>
-
-Set to truthy if MY.hopen.pl sets the phase.
-
-=cut
-
-our $_did_set_phase = false;
-    # Whether the current hopen file called set_phase()
 
 =head2 C<$_hf_pkg_idx>
 
@@ -315,15 +323,15 @@ sub _parse_command_line { # {{{2
 
 =head2 _parse_command_line
 
-Takes {into=>hash ref, from=>array ref}.  Fills in the hash with the
-values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
+Usage: C<< $self->_parse_command_line; >>.  Fills in L</cmdopts> with the
+values from L</argv>, keyed by the keys in L</%CMDLINE_OPTS>.
 
 =cut
 
-    my %params = @_;
     #local @_Sources;
 
-    my $hrOptsOut = $params{into};
+    my $self = shift or croak "Need an instance";
+    my $hrOptsOut = $self->cmdopts;
 
     # Easier syntax for checking whether optional args were provided.
     # Syntax thanks to http://www.perlmonks.org/?node_id=696592
@@ -338,7 +346,7 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
 
     # Get options
     my $opts_ok = GetOptionsFromArray(
-        $params{from},                  # source array
+        $self->argv,                    # source array
         $hrOptsOut,                     # destination hash
         'usage|?', 'h|help', 'man',     # options we handle here
         map { $_->[0] . ($_->[1] // '') } values %CMDLINE_OPTS, # options strs
@@ -385,8 +393,8 @@ values from the command line, keyed by the keys in L</%CMDLINE_OPTS>.
 
     # Process other arguments.  The first two non-option arguments are dest
     # dir and project dir, if --from and --to were not given.
-    $hrOptsOut->{DEST_DIR} //= $params{from}->[0] if @{$params{from}};
-    $hrOptsOut->{PROJ_DIR} //= $params{from}->[1] if @{$params{from}}>1;
+    $hrOptsOut->{DEST_DIR} //= $self->argv->[0] if @{$self->argv};
+    $hrOptsOut->{PROJ_DIR} //= $self->argv->[1] if @{$self->argv}>1;
 
     # Sanity check VERBOSE2, and give it a default of 0
     my $v2 = $hrOptsOut->{VERBOSE2} // 0;
@@ -407,10 +415,10 @@ sub _execute_hopen_file {       # Load and run a single hopen file {{{2
 
 Execute a single hopen file, but B<do not> run the DAG.  Usage:
 
-    _execute_hopen_file($filename[, options...])
+    $instance->_execute_hopen_file($filename[, options...])
 
-This function takes input from L</$_hrData> unless a C<< DATA=>{...} >> option
-is given.  This function updates L</$_hrData> based on the results.
+This function takes input from L</hrData> unless a C<< DATA=>{...} >> option
+is given.  This function updates L</hrData> based on the results.
 
 Options are:
 
@@ -433,6 +441,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
 =cut
 
+    my $self = shift or croak "Need an instance";
     my $fn = shift or croak 'Need a file to run';
     my %opts = @_;
     $Phase = $opts{phase} if $opts{phase};
@@ -448,6 +457,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     # for them to do!
 
     $set_phase = q(
+        sub _mark_phase_as_set;
         sub can_set_phase { true }
         sub set_phase {
             my $new_phase = shift or croak 'Need a phase';
@@ -456,7 +466,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
                 join(', ', @PHASES) . ')'
                     unless defined phase_idx($new_phase);
             $App::hopen::BuildSystemGlobals::Phase = $new_phase;
-            $App::hopen::_did_set_phase = true;
+            _mark_phase_as_set;
     ) .
     ($opts{quiet} ? '' : 'say "Running $new_phase phase";') . "}\n";
 
@@ -489,7 +499,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
     # == Make the hopen file into a package we can eval ==
 
-    my ($friendly_name, $pkg_name, $file_text, $phase_text);
+    my ($friendly_name, $pkg_stem, $file_text, $phase_text);
 
     $phase_text = q(
         use App::hopen::Phases ':all';
@@ -501,14 +511,14 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         hlog { 'Processing', $fn->{name} };
         $file_text = $fn->{text};
         $friendly_name = $fn->{name};
-        $pkg_name = 'CmdLineE' . $fn->{num} . '_' . $_hf_pkg_idx++;
+        $pkg_stem = 'CmdLineE' . $fn->{num} . '_' . $_hf_pkg_idx++;
         $phase_text .= defined($opts{phase}) ? $cannot_set_phase : $set_phase;
             # -e's can set phase unless --phase was specified
 
     } else {
         hlog { 'Processing', $fn };
         $file_text = file($fn)->slurp;
-        $pkg_name = ($fn =~ s/[^a-zA-Z0-9]/_/gr) . '_' . $_hf_pkg_idx++;
+        $pkg_stem = ($fn =~ s/[^a-zA-Z0-9]/_/gr) . '_' . $_hf_pkg_idx++;
         $friendly_name = $fn;
 
         if( isMYH($fn) and !defined($opts{phase}) ) {
@@ -531,6 +541,13 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     $friendly_name =~ s{"}{-}g;
         # as far as I can tell, #line can't handle embedded quotes.
 
+    my $pkg_name = "__Rpkg_$pkg_stem";
+    my $sub_name = "__Rsub_$pkg_stem";
+    my $instance_name = "$pkg_name\::__R_instance";
+
+    # Give the package access to the instance
+    do { no strict 'refs'; ${$instance_name} = $self };
+
     # -- Build the package
 
     # TODO move phase-setting to App::hopen::MYhopen
@@ -538,7 +555,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     # file is MY.hopen.pl.
     my $src = line_mark_string <<EOT ;
 {
-    package __Rpkg_$pkg_name;
+    package $pkg_name;
     use App::hopen::HopenFileKit "\Q$friendly_name\E";
         # \\Q and \\E since, on Windows, \$friendly_name is likely to
         # include backslashes.
@@ -546,6 +563,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     # Other lib dirs
     $lib_dirs
     # /Other lib dirs
+
+    sub _mark_phase_as_set { \$$instance_name\->did_set_phase(true) }
 
     # Other phase text
     $phase_text
@@ -569,7 +588,7 @@ EOT
 
     $src .= line_mark_string <<EOT;
 
-    sub __Rsub_$pkg_name {
+    sub $sub_name {
         my \$__R_retval;
         __R_DO: {
             \$__R_retval = do {   # return statements in here will exit the Rsub
@@ -595,7 +614,7 @@ EOT
     $src .= line_mark_string <<EOT;
         \$__R_retval //= \$__R_on_result;
 
-        ## hlog { '__Rpkg_$pkg_name retval before checks',
+        ## hlog { '$pkg_name retval before checks',
         ##        ref \$__R_retval, Dumper \$__R_retval} 3;
 
         if(defined(\$__R_retval) && ref(\$__R_retval)) {
@@ -613,9 +632,9 @@ EOT
         }
 
         return \$__R_retval;
-    } #__Rsub_$pkg_name
+    } #$sub_name
 
-    our \$hrNewData = __Rsub_$pkg_name(\$App::hopen::_hrData);
+    our \$hrNewData = $sub_name(\$$instance_name\->hrData);
 } #package
 EOT
         # Put the result in a package variable because that way I don't have
@@ -631,10 +650,10 @@ EOT
     # Get the data from the package we just ran
     my $hrAddlData = eval {
         no strict 'refs';
-        ${ "__Rpkg_$pkg_name\::hrNewData" }
+        ${ "$pkg_name\::hrNewData" }
     };
 
-    hlog { 'old data', Dumper($_hrData) } 3;
+    hlog { 'old data', Dumper($self->hrData) } 3;
     hlog { 'new data', Dumper($hrAddlData) } 2;
 
     # TODO? Remove all __R* hash keys from $hrAddlData unless it's a
@@ -642,8 +661,8 @@ EOT
 
     # == Merge in the data ==
 
-    $_hrData = $merger->merge($_hrData, $hrAddlData) if $hrAddlData;
-    hlog { 'data after merge', Dumper($_hrData) } 2;
+    $self->hrData($merger->merge($self->hrData, $hrAddlData)) if $hrAddlData;
+    hlog { 'data after merge', Dumper($self->hrData) } 2;
 
 } #_execute_hopen_file() }}}2
 
@@ -652,10 +671,10 @@ sub _run_phase {    # Run a single phase. {{{2
 =head2 _run_phase
 
 Run a phase by executing the hopen files and running the DAG.
-Reads from and writes to L</$_hrData>, which must be initialized by
+Reads from and writes to L</hrData>, which must be initialized by
 the caller.  Usage:
 
-    my $hrDagOutput = _run_phase(files=>[...][, options...])
+    my $hrDagOutput = $instance->_run_phase(files=>[...][, options...])
 
 Options C<phase>, C<quiet>, and C<libs> are as L</_execute_hopen_file>.
 Other options are:
@@ -675,6 +694,7 @@ be run if it is empty.
 
 =cut
 
+    my $self = shift or croak "Need an instance";
     my %opts = @_;
     $Phase = $opts{phase} if $opts{phase};
     my $lrHopenFiles = $opts{files};
@@ -684,13 +704,13 @@ be run if it is empty.
     # = Process the files ======================================
 
     foreach my $fn (@$lrHopenFiles) {
-        _execute_hopen_file($fn,
+        $self->_execute_hopen_file($fn,
             forward_opts(\%opts, qw(phase quiet libs))
         );
     } # foreach hopen file
 
     hlog { 'Graph is', ($Build->empty ? 'empty.' : 'not empty.'),
-            ' Final data is', Dumper($_hrData) } 2;
+            ' Final data is', Dumper($self->hrData) } 2;
 
     hlog { 'Build graph', '' . $Build->_graph } 5;
     hlog { Data::Dumper->new([$Build], ['$Build'])->Indent(1)->Dump } 9;
@@ -698,14 +718,14 @@ be run if it is empty.
     # If there is no build graph, just return the data.  This is useful
     # enough for debugging that I am making it documented behaviour.
 
-    return $_hrData if $Build->empty or $opts{norun};
+    return $self->hrData if $Build->empty or $opts{norun};
 
     # = Execute the resulting build graph ======================
 
     # Wrap the final data in a Scope
     my $env = Data::Hopen::Scope::Environment->new(name => 'outermost');
     my $scope = Data::Hopen::Scope::Hash->new(name => 'from hopen files');
-    $scope->adopt_hash($_hrData);
+    $scope->adopt_hash($self->hrData);
     $scope->outer($env);    # make the environment accessible...
     $scope->local(true);    # ... but not copied by local-scope calls.
 
@@ -720,26 +740,27 @@ sub _inner {    # Run a single invocation of hopen(1). {{{2
 
 =head2 _inner
 
-Do the work for one invocation of hopen(1).  Dies on failure.  Main() then
+Do the work for one invocation of hopen(1).  Dies on failure.  L</Main> then
 translates the die() into a print and error return.
 
-Takes a hash of options.
+Usage: C<< $instance->_inner; >>.
 
 The return value of _inner is unspecified and ignored.
 
 =cut
 
-    my %opts = @_;
-    local $_hrData = {};
+    my $self = shift or croak "Need an instance";
+
+    $self->hrData({});
 
     # TODO FIXME.  This is a bit of a hack: Reset global variables on --fresh.
     # Instead, App::hopen should be a class, and each instance should have its
     # own data (I think).
-    if($opts{FRESH}) {
-        $_did_set_phase = false;
+    if($self->cmdopts->{FRESH}) {
+        $self->did_set_phase(false);
     }
 
-    if($opts{PRINT_VERSION}) {  # print version, raw and dotted
+    if($self->cmdopts->{PRINT_VERSION}) {  # print version, raw and dotted
         if($App::hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
             printf "hopen version %d.%d.%d ($App::hopen::VERSION)\n", $1, $2, $3;
         } else {
@@ -752,19 +773,19 @@ The return value of _inner is unspecified and ignored.
     # = Initialize filesystem-related build-system globals ==================
 
     # Start with the default phase unless one was specified.
-    $Phase = $opts{PHASE} // $PHASES[0];
+    $Phase = $self->cmdopts->{PHASE} // $PHASES[0];
     die "Phase $Phase is not one of the ones I know about (" .
         join(', ', @PHASES) . ')'
             unless defined phase_idx($Phase);
 
     # Get the project dir
-    my $proj_dir = $opts{PROJ_DIR} ? dir($opts{PROJ_DIR}) : dir;    #default=cwd
+    my $proj_dir = $self->cmdopts->{PROJ_DIR} ? dir($self->cmdopts->{PROJ_DIR}) : dir;    #default=cwd
     $ProjDir = $proj_dir;
 
     # Get the destination dir
     my $dest_dir;
-    if($opts{DEST_DIR}) {
-        $dest_dir = dir($opts{DEST_DIR});
+    if($self->cmdopts->{DEST_DIR}) {
+        $dest_dir = dir($self->cmdopts->{DEST_DIR});
     } else {
         $dest_dir = $proj_dir->subdir('built');
     }
@@ -785,8 +806,8 @@ here, remove or rename @{[MYH]} and run me again.
 EOT
 
     # See if we have hopen files associated with the project dir
-    my $myhopen = find_myhopen($dest_dir, !!$opts{FRESH});
-    my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir, !!$opts{FRESH});
+    my $myhopen = find_myhopen($dest_dir, !!$self->cmdopts->{FRESH});
+    my $lrHopenFiles = find_hopen_files($proj_dir, $dest_dir, !!$self->cmdopts->{FRESH});
 
     # Check the mtimes - we don't use MYH if another hopen file is newer.
     if($myhopen && -e $myhopen) {
@@ -806,13 +827,13 @@ EOT
     } #if MYH exists
 
     # Add -e's to the list of hopen files
-    if($opts{EVAL}) {
+    if($self->cmdopts->{EVAL}) {
         my $which_e = 0;
         push @$lrHopenFiles,
             map {
                 ++$which_e;
                 +{text=>$_, num=>$which_e, name=>("-e #" . $which_e)}
-            } @{$opts{EVAL}};
+            } @{$self->cmdopts->{EVAL}};
     }
 
     hlog { 'hopen files: ',
@@ -838,24 +859,25 @@ EOT
 
     # Load MY.hopen.pl first so the results of the Probe phase are
     # available to the generator and toolset.
-    if($myhopen && !$opts{BUILD}) {
-        _execute_hopen_file($myhopen,
-            forward_opts(\%opts, {lc=>1}, qw(PHASE QUIET)),
+    if($myhopen && !$self->cmdopts->{BUILD}) {
+        $self->_execute_hopen_file($myhopen,
+            forward_opts($self->cmdopts, {lc=>1}, qw(PHASE QUIET)),
         );  # TODO support _e_h_f libs option
     }
 
     # Tell the user the initial phase if MY.hopen.pl didn't change it
-    say "Running $Phase phase" unless $opts{BUILD} or $_did_set_phase or $QUIET;
+    say "Running $Phase phase" unless
+        $self->cmdopts->{BUILD} or $self->did_set_phase or $QUIET;
 
     # Load generator
     {
         my ($gen, $gen_class);
-        $gen_class = loadfrom($opts{GENERATOR}, 'App::hopen::Gen::', '');
-        die "Can't find generator $opts{GENERATOR}" unless $gen_class;
-        hlog { "Generator spec ``$opts{GENERATOR}'' -> using generator $gen_class" };
+        $gen_class = loadfrom($self->cmdopts->{GENERATOR}, 'App::hopen::Gen::', '');
+        die "Can't find generator $self->cmdopts->{GENERATOR}" unless $gen_class;
+        hlog { "Generator spec ``$self->cmdopts->{GENERATOR}'' -> using generator $gen_class" };
 
         $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
-            architecture => $opts{ARCHITECTURE})
+            architecture => $self->cmdopts->{ARCHITECTURE})
                 or die "Can't initialize generator";
         $Generator = $gen;
     }
@@ -863,17 +885,17 @@ EOT
     # Load toolset
     {
         my $toolset_class;
-        $opts{TOOLSET} //= $Generator->default_toolset;
-        $toolset_class = loadfrom($opts{TOOLSET},
+        $self->cmdopts->{TOOLSET} //= $Generator->default_toolset;
+        $toolset_class = loadfrom($self->cmdopts->{TOOLSET},
                                         'App::hopen::T::', '');
-        die "Can't find toolset $opts{TOOLSET}" unless $toolset_class;
+        die "Can't find toolset $self->cmdopts->{TOOLSET}" unless $toolset_class;
 
-        hlog { "Toolset spec ``$opts{TOOLSET}'' -> using toolset $toolset_class" };
+        hlog { "Toolset spec ``$self->cmdopts->{TOOLSET}'' -> using toolset $toolset_class" };
         $Toolset = $toolset_class;
     }
 
     # Handle --build, now that everything's loaded --------------
-    if($opts{BUILD}) {
+    if($self->cmdopts->{BUILD}) {
         # TODO? make sure we're in the right phase?
         $Generator->run_build();
         return;
@@ -883,13 +905,13 @@ EOT
 
     my $new_data;
     if(@$lrHopenFiles) {
-        $new_data = _run_phase(
+        $new_data = $self->_run_phase(
             files => [@$lrHopenFiles],
-            forward_opts(\%opts, {lc=>1}, qw(PHASE QUIET))
+            forward_opts($self->cmdopts, {lc=>1}, qw(PHASE QUIET))
         );      # TODO support _run_phase libs option
 
     } else {    # No hopen files (other than MYH) => just use the data from MYH
-        $new_data = $_hrData;
+        $new_data = $self->hrData;
     }
 
     $Generator->finalize(-phase => $Phase, -dag => $Build,
@@ -951,35 +973,54 @@ sub Main {
 
 =head2 Main
 
-Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
+Command-line runner.  Call as C<< App::hopen->Main(\@ARGV) >>.
+Constructs a new instance and delegates to L</run>.
 
 =cut
 
+    my $class = shift;
+    die "Call as a class method" if ref $class;
+
     my $lrArgs = shift // [];
+
+    my $self = $class->new(argv => $lrArgs);
+    return $self->run;
+} #Main()
+
+sub run {
+
+=head2 run
+
+Run hopen.  Usage: C<< $instance->run; >>.  Returns a shell exit code,
+or dies.
+
+=cut
+
+    my $self = shift;
 
     # = Process options ================================================= {{{2
 
-    my %opts;
-    _parse_command_line(from => $lrArgs, into => \%opts);
+    $self->_parse_command_line;
 
     # Check for mutually-inconsistent options
-    if($opts{FRESH} && $opts{BUILD}) {
+    if($self->cmdopts->{FRESH} && $self->cmdopts->{BUILD}) {
         print STDERR '--fresh and --build cannot be used together';
         return EXIT_PARAM_ERR;
     }
 
     # Verbosity is the max of -v and --verbose
-    $opts{VERBOSE} = $opts{VERBOSE2} if $opts{VERBOSE2} > $opts{VERBOSE};
+    $self->cmdopts->{VERBOSE} = $self->cmdopts->{VERBOSE2}
+        if $self->cmdopts->{VERBOSE2} > $self->cmdopts->{VERBOSE};
 
     # Option overrides: -q beats -v
-    $opts{VERBOSE} = 0 if $opts{QUIET};
-    $QUIET = !!($opts{QUIET} // false);
-    delete $opts{QUIET};
+    $self->cmdopts->{VERBOSE} = 0 if $self->cmdopts->{QUIET};
+    $QUIET = !!($self->cmdopts->{QUIET} // false);
+    delete $self->cmdopts->{QUIET};
         # After this, code only refers to $QUIET for consistency.
 
     # Implement verbosity
-    if(!$QUIET && $opts{VERBOSE}) {
-        $VERBOSE += $opts{VERBOSE};
+    if(!$QUIET && $self->cmdopts->{VERBOSE}) {
+        $VERBOSE += $self->cmdopts->{VERBOSE};
         #hlog { Verbosity => $VERBOSE };
 
         # Under -v, keep stdout and stderr lines in order.
@@ -987,8 +1028,8 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
         STDERR->autoflush(true);
     }
 
-    delete @opts{qw(VERBOSE VERBOSE2)};
-        # After this, code only refers to $QUIET for consistency.
+    delete @{$self->cmdopts}{qw(VERBOSE VERBOSE2)};
+        # After this, code only refers to $VERBOSE for consistency.
 
     # Don't print the source of an eval'ed hopen file unless -vvv or higher.
     # Need 3 for the "..." that Carp prints when truncating.
@@ -998,17 +1039,17 @@ Command-line runner.  Call as C<< App::hopen::Main(\@ARGV) >>.
     # = Do it, Rockapella! ==================================================
 
     $RUNNING = true;
-    eval { _inner(%opts); };
+    eval { $self->_inner; };
     my $msg = $@;
     $RUNNING = false;
 
     if($msg) {
         print STDERR $msg;
-        return EXIT_PROC_ERR;   # eval{} so we can do this (die() exitcode = 2)
+        return EXIT_PROC_ERR;   # eval{} is so we can do this (die() exitcode = 2)
     }
 
     return EXIT_OK;
-} #Main()
+} #run()
 
 # }}}1
 
@@ -1050,7 +1091,7 @@ See the C<eg/> directory distributed with this software for examples.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2018--2019 Christopher White.  All rights reserved.
+Copyright (c) 2018--2020 Christopher White.  All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

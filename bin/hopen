@@ -4,7 +4,7 @@
 #     perl -Ilib bin/hopen
 use strict; use warnings;
 use App::hopen;
-exit(App::hopen::Main(\@ARGV));
+exit(App::hopen->Main(\@ARGV));
 __END__
 
 =head1 NAME

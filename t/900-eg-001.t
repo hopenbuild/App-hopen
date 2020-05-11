@@ -25,7 +25,7 @@ sub test_with {     # Takes a generator
 
     # Check phase
     my ($stdout, $stderr, $exitcode) = capture {
-        App::hopen::Main([
+        App::hopen->Main([
             '--fresh',
             -g => $gen,
             '--from', $src,
@@ -40,7 +40,7 @@ sub test_with {     # Takes a generator
 
     # Gen phase
     ($stdout, $stderr, $exitcode) = capture {
-        App::hopen::Main([
+        App::hopen->Main([
             -g => $gen,
             '--from', $src,
             '--to', $dest->path('.'),
