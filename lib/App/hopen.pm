@@ -556,9 +556,11 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $src = line_mark_string <<EOT ;
 {
     package $pkg_name;
+    our \$@{[App::hopen::AppUtil::HOPEN_FILE_FLAG]};    # A::h::HopenFileKit/import()
     use App::hopen::HopenFileKit "\Q$friendly_name\E";
         # \\Q and \\E since, on Windows, \$friendly_name is likely to
         # include backslashes.
+        # TODO test if this gets double-backslashed.
 
     # Other lib dirs
     $lib_dirs

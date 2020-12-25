@@ -24,15 +24,22 @@ use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
     # 5.14 doesn't support the ':bsd_glob' tag.
 use Path::Class;
 
-# Docs {{{1
-
 =head1 NAME
 
 App::hopen::AppUtil - utility routines used by App::hopen
 
-=head1 FUNCTIONS
+=head1 CONSTANTS
 
-# }}}1
+=head2 HOPEN_FILE_FLAG
+
+The name of a variable that must exist in a hopen file when it is interpreted.
+See L<App::hopen::HopenFileKit/import>.
+
+=cut
+
+use constant HOPEN_FILE_FLAG => 'IsHopenFile';
+
+=head1 FUNCTIONS
 
 =head2 find_hopen_files
 

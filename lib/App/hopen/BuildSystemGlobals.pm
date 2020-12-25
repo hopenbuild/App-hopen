@@ -18,7 +18,7 @@ App::hopen::BuildSystemGlobals - global data for hopen build-system use cases
 =head1 SYNOPSIS
 
 This module exports variables used when employing hopen(1) as a build system.
-They are in a separate module so that it's easy to tell in which parts of
+They are in a separate module so that it's easy to tell which parts of
 L<App::hopen> I<don't> need them.
 
 =head1 VARIABLES

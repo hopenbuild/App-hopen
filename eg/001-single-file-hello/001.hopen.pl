@@ -5,7 +5,7 @@ use language 'C';   # uses <toolset>::C, and makes `C` an alias for it.
 
 on check => {};     # Nothing to do during the Check phase
 
-$Build
+rule
     ->H::files('hello.c', -name=>'FilesHello')  # H is automatically loaded
     ->C::compile(-name=>'CompileHello')
     ->C::link('hello', -name=>'LinkHello')
