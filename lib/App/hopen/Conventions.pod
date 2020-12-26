@@ -175,7 +175,8 @@ The name of the current C<< App::hopen::T::<stem> >> package root.
 
 The L<Data::Hopen::G::DAG> instance representing the current build.
 Goals in C<$Build> will become, e.g., top-level targets of a
-generated C<Makefile>.
+generated C<Makefile>.  The function L<App::hopen::HopenFileKit/rule> is
+an alias for this variable.
 
 =item $Phase
 
@@ -198,16 +199,22 @@ problem with cmake.)  Each time you run hopen(1), it will run the next phase
 During this phase, the generator, toolset, or hopen file can collect
 information about the environment.
 
+After this phase, the user can set options by editing MY.hopen.pl.
+A better interface for this is TBD.
+
 =head2 Gen
 
 During this phase, blueprint files and any supporting files
 (e.g., a C<config.h>) are written to the destination directory.
 
-=head2 After all the phases are run
+=head2 Build
 
-Once all of hopen's phases have been run, you can run make(1), ninja(1), or
+This phase consists soley of running make(1), ninja(1), or
 whatever build system corresponds with the generator you have selected.
 You can do this by running C<hopen --build>, if you wish.
+
+Hopen itself does not take any action during this phase, so it is different
+from the other phases.
 
 =head1 INTERNALS
 

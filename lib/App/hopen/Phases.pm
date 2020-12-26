@@ -9,8 +9,8 @@ our $VERSION = '0.000013'; # TRIAL
 use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
-    my @normal_export_ok = qw(is_phase is_last_phase phase_idx
-        curr_phase_idx next_phase);
+    my @normal_export_ok = qw(is_phase is_last_phase is_gen_phase phase_idx
+        curr_phase_idx next_phase last_phase);
     my @hopenfile_export = qw(on);
 
     @EXPORT = qw(@PHASES);
@@ -45,7 +45,7 @@ This package also defines a special export tag, C<:hopenfile>, for use when
 running hopen files.  The wrapper code in L<App::hopen> uses this
 tag.  Hopen files themselves do not need to use this tag.
 
-The names C<first>, C<start>, C<last>, and C<end> are reserved.
+The phase names C<first>, C<start>, C<last>, and C<end> are reserved.
 
 =head1 VARIABLES
 
@@ -59,8 +59,11 @@ The phases we know about, in order.
 
 # }}}1
 
+# TODO RESUME HERE: refactor this into a general case-insensitive string-set
+# class --- I'm having a hard time finding one for some reason.
+
 # Phases are case-insensitive.
-our @PHASES; BEGIN { @PHASES = ('Check', 'Gen'); }
+our @PHASES; BEGIN { @PHASES = qw(Check Gen Build); }
     # *** This is where the default phase ($PHASES[0]) is set ***
     # TODO? be more sophisticated about this :)
 
@@ -70,7 +73,7 @@ sub _clean {
     $test_phase = lc $test_phase;
     $test_phase = $PHASES[0]
         if $test_phase eq 'first' or $test_phase eq 'start';
-    $test_phase = $PHASES[$#PHASES]
+    $test_phase = last_phase()
         if $test_phase eq 'last' or $test_phase eq 'end';
     return lc($test_phase);
 } #_clean()
@@ -88,6 +91,14 @@ sub is_phase {
     return $curr_idx+1;     # -1 => falsy; all others => truthy
 } #is_phase()
 
+=head2 last_phase
+
+Convenience accessor for C<$PHASES[$#PHASES]>.
+
+=cut
+
+sub last_phase { $PHASES[$#PHASES] }
+
 =head2 is_last_phase
 
 Return truthy if the argument is the name of the last phase.
@@ -96,7 +107,18 @@ If no argument is given, checks the current phase
 
 =cut
 
-sub is_last_phase { _clean(shift // $Phase) eq lc($PHASES[$#PHASES]) }
+sub is_last_phase { _clean(shift // $Phase) eq lc(last_phase) }
+
+=head2 is_gen_phase
+
+Return truthy if the argument is the name of the Gen phase.  This function
+is just to save C<'Gen'> from appearing in multiple places.
+If no argument is given, checks the current phase
+(L<App::hopen::BuildSystemGlobals/$Phase>).
+
+=cut
+
+sub is_gen_phase { _clean(shift // $Phase) eq 'gen' }
 
 =head2 phase_idx
 

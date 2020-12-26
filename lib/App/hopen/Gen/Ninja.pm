@@ -11,7 +11,7 @@ use parent 'App::hopen::Gen';
 use Class::Tiny;
 
 use App::hopen::BuildSystemGlobals;
-use App::hopen::Phases qw(is_last_phase);
+use App::hopen::Phases qw(is_gen_phase);
 use Data::Hopen qw(:default getparameters *QUIET);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Util::Data qw(forward_opts);
@@ -50,7 +50,7 @@ C<$dag> is the build graph.
 sub finalize {
     my ($self, %args) = getparameters('self', [qw(phase dag; data)], @_);
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
-    return unless is_last_phase $args{phase};
+    return unless is_gen_phase $args{phase};
 
     hlog { __PACKAGE__, 'Asset graph', '' . $self->_assets->_graph } 3;
 

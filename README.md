@@ -44,8 +44,11 @@ happen next.
 
 Now `built/Makefile` has been created.
 
-    $ hopen --build
-    Building in foo/built
+    $ hopen
+    From ``.'' into ``built''
+    Running Build phase
+    Building in foo/built...
+    <make(1) output>
 
 And your software is ready to go!  `make` has been run in `built/`,
 with output left in `built/`.

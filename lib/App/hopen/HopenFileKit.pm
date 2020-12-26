@@ -125,7 +125,6 @@ Create a package "language" so that the calling package can invoke it.
 
 # TODO add a function to import hopen files?
 
-
 =head2 rule
 
 A convenience accessor for L<App::hopen::BuildSystemGlobals/$Build>.

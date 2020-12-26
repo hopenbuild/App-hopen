@@ -8,7 +8,7 @@ use Data::Hopen::Base;
 
 use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;
-use App::hopen::Phases qw(:default phase_idx next_phase);
+use App::hopen::Phases qw(:default phase_idx next_phase last_phase is_last_phase);
 use App::hopen::Util qw(isMYH MYH);
 use App::hopen::Util::String qw(line_mark_string);
 use Data::Hopen qw(:default loadfrom *VERBOSE *QUIET);
@@ -34,6 +34,7 @@ BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
 
 # }}}1
 # Documentation {{{1
+# README is this file's POD
 
 =pod
 
@@ -97,8 +98,11 @@ happen next.
 
 Now C<built/Makefile> has been created.
 
-    $ hopen --build
-    Building in foo/built
+    $ hopen
+    From ``.'' into ``built''
+    Running Build phase
+    Building in foo/built...
+    <make(1) output>
 
 And your software is ready to go!  C<make> has been run in C<built/>,
 with output left in C<built/>.
@@ -268,9 +272,8 @@ my %CMDLINE_OPTS = (
     ARCHITECTURE => ['a','|A|architecture|platform=s'],
         # -A and --platform are for the comfort of folks migrating from CMake
 
-    BUILD => ['build'],     # If specified, do not
-                            # run any phases.  Instead, run the
-                            # build tool indicated by the generator.
+    BUILD => ['build'],     # If specified, jump ahead to the last phase, and
+                            # run the build tool indicated by the generator.
 
     #DUMP_VARS => ['d', '|dump-variables', false],
     #DEBUG => ['debug','', false],
@@ -487,7 +490,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     ) .
     ($opts{quiet} ? '' :
         q(
-            warn "``$FILENAME'': Ignoring attempt to set phase";
+            warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, since phase $App::hopen::BuildSystemGlobals::Phase was given on the command line\n";
         )
     ) . "}\n";
 
@@ -654,6 +657,7 @@ EOT
         no strict 'refs';
         ${ "$pkg_name\::hrNewData" }
     };
+    die "Could not get output data from $friendly_name: $@" if $@;
 
     hlog { 'old data', Dumper($self->hrData) } 3;
     hlog { 'new data', Dumper($hrAddlData) } 2;
@@ -772,13 +776,22 @@ The return value of _inner is unspecified and ignored.
         return;
     }
 
-    # = Initialize filesystem-related build-system globals ==================
+    # = Initialize phase ====================================================
+
+    if($self->cmdopts->{BUILD} && $self->cmdopts->{PHASE} &&
+            !is_last_phase($self->cmdopts->{PHASE})) {
+        die '--phase ' . $self->cmdopts->{PHASE} . ' and --build are mutually exclusive';
+    }
+
+    $self->cmdopts->{PHASE} = last_phase if $self->cmdopts->{BUILD};
 
     # Start with the default phase unless one was specified.
     $Phase = $self->cmdopts->{PHASE} // $PHASES[0];
     die "Phase $Phase is not one of the ones I know about (" .
         join(', ', @PHASES) . ')'
             unless defined phase_idx($Phase);
+
+    # = Initialize filesystem-related build-system globals ==================
 
     # Get the project dir
     my $proj_dir = $self->cmdopts->{PROJ_DIR} ? dir($self->cmdopts->{PROJ_DIR}) : dir;    #default=cwd
@@ -861,15 +874,14 @@ EOT
 
     # Load MY.hopen.pl first so the results of the Probe phase are
     # available to the generator and toolset.
-    if($myhopen && !$self->cmdopts->{BUILD}) {
+    if($myhopen) {
         $self->_execute_hopen_file($myhopen,
             forward_opts($self->cmdopts, {lc=>1}, qw(PHASE QUIET)),
         );  # TODO support _e_h_f libs option
     }
 
     # Tell the user the initial phase if MY.hopen.pl didn't change it
-    say "Running $Phase phase" unless
-        $self->cmdopts->{BUILD} or $self->did_set_phase or $QUIET;
+    say "Running $Phase phase" unless $self->did_set_phase or $QUIET;
 
     # Load generator
     {
@@ -896,9 +908,8 @@ EOT
         $Toolset = $toolset_class;
     }
 
-    # Handle --build, now that everything's loaded --------------
-    if($self->cmdopts->{BUILD}) {
-        # TODO? make sure we're in the right phase?
+    # Handle Build phase, now that myh is loaded ----------------
+    if(is_last_phase) {
         $Generator->run_build();
         return;
     }
