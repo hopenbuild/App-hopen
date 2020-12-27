@@ -1,0 +1,33 @@
+Goal: remove the separate asset graph, and phase-specific code.
+
+Desired state:
+- a hopen file defines the cmd graph and nothing else
+- MY.hopen.pl has data from earlier phases, plus options set by the user
+
+To do:
+
+- Update per Data::Hopen v0.0.19
+  - Phase as a member of scope rather than as a parameter
+  - Generator as a member of scope rather than as a parameter
+    (related to #5)
+
+- Data::Hopen::G::GraphBuilder: change `node` from a single node to an arrayref
+  of nodes.
+  - Make sure it's possible to do 1-1, many-1, and 1-many transforms in a builder
+    - Maybe use instance methods on the builder instead of retval?
+
+- Change H::files to return separate Cmd nodes that output the respective
+  filenames
+
+- Change C::compile to return a separate Compile node for each input node
+
+- Add an Ah::Gen routine to accept a command from a toolset node
+
+- Change the toolset nodes to make commands and pass them to that Gen
+  routine directly, rather than creating an Asset node (which goes to the
+  generator anyway)
+
+- Remove the asset graph
+
+- Add a command-line option to re-run all phases through Gen (for use in
+  auto-rebuild rules)
