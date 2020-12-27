@@ -21,7 +21,7 @@ App::hopen::G::FilesCmd - Cmd that holds a list of files.
 
 =head1 SYNOPSIS
 
-    my $node = App::hopen::G::FilesCmd(files=>['foo.c'], name=>'foo node');
+    my $node = App::hopen::G::FilesCmd->new(files=>['foo.c'], name=>'foo node');
 
 Used by L<App::hopen::H/files>.
 

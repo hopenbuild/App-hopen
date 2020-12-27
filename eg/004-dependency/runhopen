@@ -1,0 +1,10 @@
+#!/bin/sh
+# This is a convenience invoker for testing.
+if [ "$1" = "-d" ]; then
+    dbg="-d"
+    shift
+else
+    dbg=""
+fi
+
+perl -I../../lib $dbg ../../bin/hopen "$@"

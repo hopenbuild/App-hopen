@@ -1,4 +1,4 @@
-# App::hopen::H - H:: namespace for use in hopen files
+# App::hopen::H - basic functions for use in hopen files
 package App::hopen::H;
 use strict; use warnings;
 use Data::Hopen::Base;
@@ -7,7 +7,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Exporter';
 use vars::i '@EXPORT' => [];
-use vars::i '@EXPORT_OK' => qw(files);
+use vars::i '@EXPORT_OK' => qw(files want);
 use vars::i '%EXPORT_TAGS' => (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
@@ -15,6 +15,7 @@ use vars::i '%EXPORT_TAGS' => (
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::G::FilesCmd;
+#use App::hopen::G::FindDependencyCmd;
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
@@ -25,7 +26,7 @@ use Path::Class;
 
 =head1 NAME
 
-App::hopen::H - H:: namespace for use in hopen files
+App::hopen::H - basic functions for use in hopen files
 
 =head1 SYNOPSIS
 
@@ -69,6 +70,20 @@ sub files {
 } #files()
 
 make_GraphBuilder 'files';
+
+=head2 want
+
+Declare an optional dependency.  The necessary information to use the
+dependency will be sent down the build graph from this node.
+
+=cut
+
+sub want {
+    my ($builder, %args) = getparameters('self', ['*'], @_);
+    hlog { __PACKAGE__, 'want:', Dumper(\%args) } 3;
+} #want()
+
+make_GraphBuilder 'want';
 
 1;
 __END__

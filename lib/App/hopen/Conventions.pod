@@ -229,7 +229,8 @@ nodes that implement L<App::hopen::G::Cmd>.  The idea is that the hopen
 files specify the I<commands> you would run to build your software by hand.
 
 Each command node, when run, outputs a C<made> arrayref of
-L<App::hopen::Asset> instances.
+L<App::hopen::Asset> instances.  These instances represent files or other
+artifacts created by that command node.
 
 =item 2.
 
@@ -290,7 +291,7 @@ Maybe TODO:
 
 =head2 Phases
 
-App::hopen::Phase - Namespace for hopen phases.
+OLD - App::hopen::Phase - Namespace for hopen phases.
 
 The specific phases in hopen live under C<App::hopen::Phase>.  The
 current phases are:

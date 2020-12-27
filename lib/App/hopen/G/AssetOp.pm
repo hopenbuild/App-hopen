@@ -51,6 +51,8 @@ TODO or a different formatter?
 TODO? require that format specifications call a specified modifier that
 will quote file names for shell-specific command-line use.
 
+TODO CFLAGS/LDFLAGS?
+
 =cut
 
 sub _run { ... }
