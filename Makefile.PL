@@ -117,6 +117,8 @@ actually_uninstall_from_sitedirs ::
 actually_uninstall_from_vendordirs ::
 \t-\$(ACTUALLY_UNINSTALL) "\$(VENDORARCHEXP)/auto/\$(FULLEXT)/.packlist"
 
+cover: all
+\tHARNESS_OPTIONS=j4 cover -test
 EOT
 
     } #postamble()
@@ -176,7 +178,7 @@ my %opts = (
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Data::Hopen' => '0.000016',    # for features
+        'Data::Hopen' => '0.000020',    # for builder->nodes()
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',

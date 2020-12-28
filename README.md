@@ -88,6 +88,9 @@ See [App::hopen](https://metacpan.org/pod/App%3A%3Ahopen) and [App::hopen::Conve
     Start a fresh build --- ignore any `MY.hopen.pl` file that may exist in
     the destination directory.  Cannot be used with `--build`.
 
+    Note that this **does not** completely delete the build directory and
+    start over.
+
 - --from `project dir`
 
     Specify the project directory.  Overrides a project directory given as a
