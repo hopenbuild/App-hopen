@@ -31,8 +31,8 @@ isa_ok($dag, 'Data::Hopen::G::DAG');
 # Make the node
 my $builder = $dag->App::hopen::H::files('foo.c');
 isa_ok($builder, 'Data::Hopen::G::GraphBuilder');
-isa_ok($builder->node, 'App::hopen::G::FilesCmd');
-my $node = $builder->node;
+my $node = get_only_builder_node($builder);
+isa_ok($node, 'App::hopen::G::FilesCmd');
 
 # Run the DAG
 $builder->default_goal;

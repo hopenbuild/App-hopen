@@ -9,6 +9,7 @@ our $VERSION = '0.000013'; # TRIAL
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;

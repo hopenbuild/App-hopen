@@ -9,6 +9,7 @@ our $VERSION = '0.000013'; # TRIAL
 use parent 'App::hopen::G::OutputPerFileCmd';
 use Class::Tiny qw(compiler);
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.

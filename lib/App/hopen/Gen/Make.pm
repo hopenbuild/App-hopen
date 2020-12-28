@@ -67,11 +67,9 @@ EOT
     my $context = Data::Hopen::Scope::Hash->new;
     $context->put(App::hopen::Gen::Make::AssetGraphNode::OUTPUT, $fh);
 
-    # Write the Makefile.  TODO flip the order.
+    # Write the Makefile.  TODO flip the order of items in the Makefile.
 
-    $self->_assets->run(-context => $context,
-        forward_opts(\%args, {'-'=>1}, qw(phase))
-    );
+    $self->_assets->run(-context => $context);
 
     close $fh;
 } #finalize()

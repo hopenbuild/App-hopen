@@ -7,7 +7,7 @@ Desired state:
 To do:
 
 - Update per Data::Hopen v0.0.19
-  - Phase as a member of scope rather than as a parameter
+  - DONE Phase as a member of scope rather than as a parameter
   - Generator as a member of scope rather than as a parameter
     (related to #5)
 

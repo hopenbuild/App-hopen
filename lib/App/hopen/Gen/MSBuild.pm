@@ -58,9 +58,7 @@ sub finalize {
         # undef => will be ignored when making the XML
 
     # Generate the XML
-    my $hrOut = $self->_assets->run(-context => $context,
-        forward_opts(\%args, {'-'=>1}, qw(phase))
-    );
+    my $hrOut = $self->_assets->run(-context => $context);
 
     my $lrXML = $hrOut->{$self->asset_default_goal->name}
                         ->{$App::hopen::Gen::MSBuild::AssetGraphNode::OUTPUT};

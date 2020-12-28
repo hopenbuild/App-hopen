@@ -72,9 +72,7 @@ EOT
 
     # Write the Ninja file.  TODO? flip the order?
 
-    $self->_assets->run(-context => $context,
-        forward_opts(\%args, {'-'=>1}, qw(phase))
-    );
+    $self->_assets->run(-context => $context);
 
     close $fh;
 } #finalize()
