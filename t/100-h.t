@@ -5,6 +5,7 @@ use HopenTest 'App::hopen::H';
 use Path::Class;
 
 use App::hopen::BuildSystemGlobals;
+use App::hopen::AppUtil qw(:constants);
 use Data::Hopen qw(:default :v);
 use Data::Hopen::G::DAG;
 
@@ -35,7 +36,9 @@ my $node = $builder->node;
 
 # Run the DAG
 $builder->default_goal;
-my $dag_out = $dag->run(-phase=>'foo', -visitor => FakeGenerator->new);
+my $context = Data::Hopen::Scope::Hash->new;
+$context->put(KEY_PHASE, 'foo');
+my $dag_out = $dag->run(-context => $context, -visitor => FakeGenerator->new);
 
 # Check the results
 ok($node->outputs, 'Node has outputs');

@@ -738,11 +738,17 @@ be run if it is empty.
     my $env = Data::Hopen::Scope::Environment->new(name => 'outermost');
     my $scope = Data::Hopen::Scope::Hash->new(name => 'from hopen files');
     $scope->adopt_hash($self->hrData);
+
+    # Load hopen-owned variables
+    $scope->put(KEY_PHASE, $Phase);
+    $scope->put(KEY_GENERATOR_CLASS, ref $Generator);
+    $scope->put(KEY_TOOLSET_CLASS, $Toolset);
+
     $scope->outer($env);    # make the environment accessible...
     $scope->local(true);    # ... but not copied by local-scope calls.
 
     # Run the DAG
-    my $result_data = $Build->run(-context => $scope, -phase => $Phase,
+    my $result_data = $Build->run(-context => $scope,
                                     -visitor => $Generator);
     hlog { Data::Dumper->new([$result_data], ['Build graph result data'])->Indent(1)->Dump } 2;
     return $result_data;

@@ -59,10 +59,10 @@ Create the link command line.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-nocontext=>1) if $args{phase} ne 'Gen';
+    return $self->passthrough(-nocontext=>1) if ($self->scope->find(KEY_PHASE)//'') ne 'Gen';
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;

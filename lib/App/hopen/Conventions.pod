@@ -169,7 +169,7 @@ The current L<App::hopen::Gen> instance.
 
 =item $Toolset
 
-The name of the current C<< App::hopen::T::<stem> >> package root.
+The package name of the current C<< App::hopen::T::<stem> >> top-level class.
 
 =item $Build
 
@@ -242,6 +242,49 @@ implement is determined by the generator.
 =item 3.
 
 The generator runs the asset graph to output the blueprint files.
+
+=back
+
+=head2 The execution environment (scope) of a command-graph node
+
+Each command-graph node is (via inheritance) a L<Data::Hopen::G::Runnable>.
+A command-graph node does its work in overridden function
+L<Data::Hopen::G::Runnable/_run>.  Inside C<_run()>,
+L<Data::Hopen::G::Runnable/scope> (available as C<< $self->scope >>) is a
+key-value store of all the information
+available to the node.
+
+Keys starting with C<=> are reserved by hopen.  Treat them as read-only.
+(C<=> because that character may not be used in an environment variable's name
+under both Windows and POSIX.)
+
+The information in a command-graph node's C<scope> includes the following.
+In case of name conflicts, earlier items override later items.
+
+=over
+
+=item C<=Phase>
+
+The current phase
+
+=item C<=GeneratorClass>
+
+The name of the current generator class
+
+=item C<=ToolsetClass>
+
+The name of the current toolset class
+
+=item the outputs from the current hopen file(s)
+
+All the members of any hash(es) returned by hopen file(s) in this run.   The
+hopen file(s) are run before the command graph is traversed, because the
+hopen file(s) create the command graph when run!  Therefore, data created by
+the hopen file(s) is available to the command graph.
+
+=item the environment
+
+All the variables in the current process's environment
 
 =back
 

@@ -50,7 +50,7 @@ TODO
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     ...
 

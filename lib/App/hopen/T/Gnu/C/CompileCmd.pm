@@ -56,7 +56,7 @@ Create the compile command line for a given asset.
 =cut
 
 sub _process_input {
-    my ($self, %args) = getparameters('self', [qw(asset phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(asset visitor ; *)], @_);
     my $src = $args{asset};
 
     die "Cannot compile non-file $src" unless $src->isdisk;
@@ -79,8 +79,8 @@ Returns truthy if L</_process_input> should be called.
 =cut
 
 sub _should_act {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
-    return ($args{phase} eq 'Gen');
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
+    return ($self->scope->find(KEY_PHASE)//'') eq 'Gen';
 } #_should_act()
 
 1;

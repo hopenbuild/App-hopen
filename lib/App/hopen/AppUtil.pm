@@ -8,13 +8,15 @@ use parent 'Exporter';
 
 our $VERSION = '0.000013'; # TRIAL
 
-our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS, @_export_constants);
 BEGIN {
     @EXPORT = qw();
-    @EXPORT_OK = qw(find_hopen_files find_myhopen);
+    @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS);
+    @EXPORT_OK = (qw(find_hopen_files find_myhopen), @_export_constants);
     %EXPORT_TAGS = (
         default => [@EXPORT],
-        all => [@EXPORT, @EXPORT_OK]
+        all => [@EXPORT, @EXPORT_OK],
+        constants => [@_export_constants],
     );
 }
 
@@ -38,6 +40,19 @@ See L<App::hopen::HopenFileKit/import>.
 =cut
 
 use constant HOPEN_FILE_FLAG => 'IsHopenFile';
+
+=head2 KEY_PHASE, KEY_GENERATOR_CLASS, KEY_TOOLSET_CLASS
+
+The names of the keys used in scopes for phase, generator class, and
+toolset class, respectively.
+
+=cut
+
+use constant {
+    KEY_PHASE => '=Phase',
+    KEY_GENERATOR_CLASS => '=GeneratorClass',
+    KEY_TOOLSET_CLASS => '=ToolsetClass',
+};
 
 =head1 FUNCTIONS
 

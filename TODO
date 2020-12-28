@@ -11,10 +11,10 @@ To do:
   - Generator as a member of scope rather than as a parameter
     (related to #5)
 
-- Data::Hopen::G::GraphBuilder: change `node` from a single node to an arrayref
+- DONE Data::Hopen::G::GraphBuilder: change `node` from a single node to an arrayref
   of nodes.
-  - Make sure it's possible to do 1-1, many-1, and 1-many transforms in a builder
-    - Maybe use instance methods on the builder instead of retval?
+  - DONE Make sure it's possible to do 1-1, many-1, and 1-many transforms in a builder
+    - NOPE Maybe use instance methods on the builder instead of retval?
 
 - Change H::files to return separate Cmd nodes that output the respective
   filenames

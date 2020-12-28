@@ -9,6 +9,7 @@ our $VERSION = '0.000013'; # TRIAL
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
@@ -59,10 +60,10 @@ Create the link command line.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-nocontext=>1) if $args{phase} ne 'Gen';
+    return $self->passthrough(-nocontext=>1) if ($self->scope->find(KEY_PHASE)//'') ne 'Gen';
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;

@@ -53,7 +53,7 @@ If `how` is defined and truthy, it's a file.
 sub _run {
     state $ruleidx=0;
 
-    my ($self, %args) = getparameters('self', [qw(; phase visitor)], @_);
+    my ($self, %args) = getparameters('self', [qw(; visitor)], @_);
     my $fh = $self->scope->find(OUTPUT);
         # TODO deal with multiple inputs being merged in DAG::_run()
 
