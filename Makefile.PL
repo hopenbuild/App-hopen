@@ -117,8 +117,13 @@ actually_uninstall_from_sitedirs ::
 actually_uninstall_from_vendordirs ::
 \t-\$(ACTUALLY_UNINSTALL) "\$(VENDORARCHEXP)/auto/\$(FULLEXT)/.packlist"
 
+# Code-coverage testing
 cover: all
 \tHARNESS_OPTIONS=j4 cover -test
+
+# HTML documentation using Pod::ProjectDocs
+html: all
+\tpod2projdocs -l lib -o html -title "App::hopen" -desc "The hopen build system"
 EOT
 
     } #postamble()
@@ -286,10 +291,17 @@ my %opts = (
         },
 
         prereqs => {
+            build => {
+                recommends => {
+                    'Pod::ProjectDocs' => '0.52',   # latest as of writing
+                },
+            },
+
             develop => {
                 requires => {
                     'App::RewriteVersion' => '0',   # for perl-bump-version
                     'CPAN::Meta' => '0',
+                    'Devel::Cover' => '0',
                     'File::Slurp' => '9999.26',
                     'Module::CPANfile' => '0.9020', # for from_prereqs()
                     'Module::Metadata' => '1.000016',

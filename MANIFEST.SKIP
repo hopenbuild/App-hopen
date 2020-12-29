@@ -20,6 +20,7 @@ TODO
 \bbuilt[\\/]
 \.o(bj)?$
 \.exe$
+\bhtml[\\\/]
 
 #modified included
 # Avoid version control files.
@@ -41,7 +42,7 @@ TODO
 # Avoid Makemaker generated and utility files.
 \bMANIFEST\.bak
 \bMakefile$
-\bblib/
+\bblib[\\\/]
 \bMakeMaker-\d
 \bpm_to_blib\.ts$
 \bpm_to_blib$

@@ -54,6 +54,7 @@ on build => sub {
     requires 'Path::Class', '0.37';
     requires 'Pod::Markdown';
     requires 'Pod::Text';
+    recommends 'Pod::ProjectDocs', '0.52';
 };
 
 on test => sub {
@@ -72,6 +73,7 @@ on test => sub {
 on develop => sub {
     requires 'App::RewriteVersion';
     requires 'CPAN::Meta';
+    requires 'Devel::Cover';
     requires 'File::Slurp', '9999.26';
     requires 'Module::CPANfile', '0.9020';
     requires 'Module::Metadata', '1.000016';

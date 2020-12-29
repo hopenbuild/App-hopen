@@ -5,6 +5,9 @@
 *.obj
 *.elf
 
+# Generated documentation
+/html/
+
 # Precompiled Headers
 *.gch
 *.pch
