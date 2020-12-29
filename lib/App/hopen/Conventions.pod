@@ -15,6 +15,22 @@ and L<App::hopen::AppUtil>.
 Note: everything in this document is subject to change since C<App::hopen>
 is currently under active development.
 
+=head1 HOPEN'S PHILOSOPHY
+
+=head2 "Show me"
+
+Rather than telling the build system the pieces of your project,
+show the build system how I<you> build your project.  Once you have a
+successful workflow for building your project, you can translate it (more
+or less) directly into hopen files.
+
+=head2 Turing completeness
+
+Building software is just as complicated as writing that software.  Therefore,
+any build system not Turing complete will eventually hit its limits and need
+to be monkey-patched, worked around, or supplemented.  Rather than dealing
+with that, hopen uses all Turing-complete components from the get-go.
+
 =head1 COMPONENTS USED BY THE BUILD SYSTEM
 
 =over
@@ -220,6 +236,8 @@ from the other phases.
 
 =head2 Overall data flow
 
+During each phase except Build:
+
 =over
 
 =item 1.
@@ -239,9 +257,26 @@ provide asset nodes to the generator and to later command nodes.  The asset
 nodes implement L<App::hopen::G::AssetNode>.  The specific subclass they
 implement is determined by the generator.
 
-=item 3.
+While the command graph is running:
 
-The generator runs the asset graph to output the blueprint files.
+=over
+
+=item *
+
+During the Check phase, the outputs are passed along.  Specifics of the
+Check phase are TBD.
+
+=item *
+
+During the Gen phase, the generator receives information from each
+command node about work to transform that node's C<made> inputs into
+outputs.
+
+=back
+
+In the Gen phase, after the command graph is traversed, the generator's
+L<finalize|App::hopen::Gen/finalize> metnod is called to produce the
+blueprint files.
 
 =back
 
