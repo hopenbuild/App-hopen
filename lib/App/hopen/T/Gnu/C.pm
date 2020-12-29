@@ -20,6 +20,7 @@ use Data::Hopen::Util::Data qw(forward_opts);
 use Data::Hopen::Util::Filename;
 use File::Which ();
 use Path::Class;
+use PerlX::Maybe qw(:all);
 
 my $FN = Data::Hopen::Util::Filename->new;     # for brevity
 our $_CC;   # Cached compiler name
@@ -69,14 +70,15 @@ sub _find_compiler; # forward
 sub compile {
     my ($builder, %args) = getparameters('self', [qw(; name)], @_);
     _find_compiler unless $_CC;
-    my $node = App::hopen::T::Gnu::C::CompileCmd->new(
+    my $idx = 0;
+    my @nodes = map { App::hopen::T::Gnu::C::CompileCmd->new(
         compiler => $_CC,
-        forward_opts(\%args, 'name')
-    );
+        provided exists($args{name}), name => ($args{name} . $idx++),
+    ) } @{$builder->nodes};
 
-    hlog { __PACKAGE__, 'Built compile node', Dumper($node) } 2;
+    hlog { __PACKAGE__, 'Built compile nodes', Dumper(\@nodes) } 2;
 
-    return $node;   # The builder will automatically add it
+    return { parallel => \@nodes };
 } #compile()
 
 make_GraphBuilder 'compile';
@@ -107,7 +109,7 @@ sub link {
     );
     hlog { __PACKAGE__, 'Built link node', Dumper($node) } 2;
 
-    return $node;
+    return { complete => [$node] };
 } #link()
 
 make_GraphBuilder 'link';

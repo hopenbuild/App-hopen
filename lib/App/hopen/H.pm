@@ -21,6 +21,7 @@ use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
 use Data::Hopen::Util::Data qw(forward_opts);
 use Path::Class;
+use PerlX::Maybe qw(:all);
 
 # Docs {{{1
 
@@ -61,12 +62,13 @@ sub files {
     my $lrFiles = $args{'*'} // [];
     my @files = map { based_path(path => file($_), base => $ProjDir) } @$lrFiles;
     hlog { __PACKAGE__, 'file objects:', @files } 3;
-    my $files_op = App::hopen::G::FilesCmd->new(
-        files => [ @files ],
-        forward_opts(\%args, 'name')
-    );
+    my $idx = 0;
+    my @files_op = map { App::hopen::G::FilesCmd->new(
+        files => [ $_ ],
+        provided exists($args{name}), name => ($args{name} . $idx++),
+    ) } @files;
 
-    return $files_op;
+    return { complete => \@files_op };
 } #files()
 
 make_GraphBuilder 'files';
@@ -81,6 +83,7 @@ dependency will be sent down the build graph from this node.
 sub want {
     my ($builder, %args) = getparameters('self', ['*'], @_);
     hlog { __PACKAGE__, 'want:', Dumper(\%args) } 3;
+    ...
 } #want()
 
 make_GraphBuilder 'want';

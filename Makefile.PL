@@ -244,6 +244,7 @@ my %opts = (
             #   precedence in P::RD grammars.
 
         'Path::Class' => '0.37',
+        'PerlX::Maybe' => '1.200',  # for latest API as of writing
         'Pod::Usage' => '0',
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
                                 # Alternative: Padre::Perl
