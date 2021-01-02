@@ -49,9 +49,7 @@ See L<App::hopen::Conventions/INTERNALS>.
 sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
-    my @assets = $self->make(@{$self->files});
-    $args{visitor}->asset($_) foreach @assets;
-
+    $self->make(@{$self->files});
     return {};
 } #run()
 

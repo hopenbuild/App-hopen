@@ -7,7 +7,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Exporter';
 use vars::i '@EXPORT' => [];
-use vars::i '@EXPORT_OK' => qw(files want);
+use vars::i '@EXPORT_OK' => qw(files want);     # TODO move these to @EXPORT?
 use vars::i '%EXPORT_TAGS' => (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]

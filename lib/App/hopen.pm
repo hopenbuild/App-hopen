@@ -4,7 +4,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 # Imports {{{1
 use strict; use warnings;
-use Data::Hopen::Base;
+use Data::Hopen::Base 0.000020;
 
 use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;

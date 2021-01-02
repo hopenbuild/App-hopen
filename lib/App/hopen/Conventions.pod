@@ -42,7 +42,8 @@ Where the main hopen file file of the project is (see L</"HOPEN FILES">).
 =item Destination directory
 
 Where the output will go.  hopen(1) does not support in-source builds.
-The default directory is C<< <project dir>/built >>.
+The default directory is C<< <project dir>/built >>, though, so you don't
+have to manually create a build directory.
 
 =item Generator
 
@@ -225,7 +226,7 @@ During this phase, blueprint files and any supporting files
 
 =head2 Build
 
-This phase consists soley of running make(1), ninja(1), or
+This phase consists solely of running make(1), ninja(1), or
 whatever build system corresponds with the generator you have selected.
 You can do this by running C<hopen --build>, if you wish.
 

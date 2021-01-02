@@ -78,7 +78,7 @@ sub _run {
 
     # Pull the inputs
     my $lrSourceFiles = $self->input_assets;
-    hlog { 'found source files', Dumper($lrSourceFiles) } 2;
+    hlog { 'found inputs', Dumper($lrSourceFiles) } 2;
 
     my @outputs;
     foreach my $src (@$lrSourceFiles) {

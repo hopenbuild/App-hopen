@@ -54,9 +54,6 @@ sub _run {
 
     ...
 
-    my @assets = $self->make(@{$self->files});
-    $args{visitor}->asset($_) foreach @assets;
-
     return {TODO => 'TODO'};
 } #run()
 

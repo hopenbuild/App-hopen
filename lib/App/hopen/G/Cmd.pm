@@ -40,11 +40,12 @@ instances.
 
 =head2 make
 
-Adds L<App::hopen::Asset> instances to L</made> (a L<Cmd|App::hopen::G::Cmd>'s
-asset output).  B<Does not> add the assets to the generator's asset graph,
-since the generator is not available as instance data.  One or more parameters
-or arrayrefs of parameters can be given.  Returns a list of the C<Asset>
-instances made.  Each parameter can be:
+Adds L<App::hopen::Asset> instances to L</made> (a Cmd's asset output).
+B<Does not> add the assets to the generator's asset graph, since the asset graph
+(if any) is an implementation detail of the generator.  No return value.
+
+One or more parameters or arrayrefs of parameters can be given.  Each parameter
+can be:
 
 =over
 
@@ -55,7 +56,7 @@ L<made_by|App::hopen::Asset/made_by> is updated)
 
 =item *
 
-A valid C<target> for an L<App::hopen::Asset>.
+A valid C<target|App::hopen::Asset/target> for an L<App::hopen::Asset>.
 
 =back
 
@@ -63,22 +64,27 @@ A valid C<target> for an L<App::hopen::Asset>.
 
 sub make {
     my $self = shift or croak 'Need an instance';
+    push @{$self->made}, $self->_assets_for(@_);
+    return undef;
+} #make()
+
+# Recursively collect assets to be made
+sub _assets_for {
+    my $self = shift;
     my @retval;
     for my $arg (@_) {
         if(ref $arg eq 'ARRAY') {
-            push @retval, $self->make(@$arg);
+            push @retval, $self->_assets_for(@$arg);
         } elsif(eval { $arg->DOES('App::hopen::Asset') }) {
             $arg->made_by($self);
-            push @{$self->made}, $arg;
             push @retval, $arg;
         } else {
             my $asset = App::hopen::Asset->new(target=>$arg, made_by=>$self);
-            push @{$self->made}, $asset;
             push @retval, $asset;
         }
     } #foreach arg
     return @retval;
-} #make()
+} # _assets_for()
 
 =head2 input_assets
 
