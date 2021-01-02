@@ -67,7 +67,6 @@ sub _process_input {
     my $how = $self->compiler . " -c #first -o #out";
     my $obj = App::hopen::Asset->new(
         target => $to,
-        made_by => $self,
     );
 
     return [$obj, $how];

@@ -49,11 +49,12 @@ value.
 
 No default, so don't call C<< $obj->target >> until you've assigned a target!
 
-=head2 made_by
+=head2 made_from
 
-The L<App::hopen::G::Cmd> (or subclass) instance that produced this asset, or
-C<undef>.  Used to distinguish assets from different sources.  Stored as a weak
-reference, but will probably be returned as a strong reference --- see
+Optional arrayref of Assets used in producing this asset.
+
+TODO store these as weak references, and enforce that each entry be an Asset.
+Note that copying a weak reference creates a strong reference --- see
 L<Scalar::Util/weaken>.
 
 =head2 name
@@ -88,27 +89,10 @@ sub target {
     }
 } #target()
 
-# The accessor for the made_by attribute.  Makes sure values are weak refs.
-sub made_by {
-    my $self = shift;
-    if (@_) {   # Setter
-        my $candidate = shift;
-
-        return $self->{made_by} = $candidate unless defined $candidate;
-        croak 'made_by values must implement App::hopen::G::Cmd'
-            unless eval { $candidate->DOES('App::hopen::G::Cmd') };
-
-        $self->{made_by} = $candidate;
-        weaken $self->{made_by};
-        return $self->{made_by};    # NOTE: most likely a strong ref
-
-    } else {    # Getter
-        return $self->{made_by};
-    }
-} #made_by()
-
 # Set up the rest of the class
-use Class::Tiny qw(target made_by name);
+use Class::Tiny qw(target name), {
+   made_from => sub { [] },
+};
 
 =head2 isdisk
 
@@ -127,7 +111,7 @@ sub isdisk {
 
 =head2 BUILD
 
-Enforces the requirement for C<target> and C<made_by>.
+Enforces the requirement for C<target> and C<made_from>.
 
 =cut
 
@@ -137,8 +121,8 @@ sub BUILD {
     my ($self) = @_;
     $self->name('__R_Asset_' . $_id_counter++) unless $self->name;
     # Check the custom constraints by re-setting the values
-    $self->target($self->{target});     # Check the custom constraint on target
-    $self->made_by($self->{made_by});
+    $self->target($self->{target});
+    $self->made_from($self->{made_from});
 } #BUILD()
 
 1;

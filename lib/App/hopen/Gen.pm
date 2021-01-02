@@ -271,7 +271,6 @@ sub visit_goal {
     #my $asset_goal = $self->_assets->goal($args{goal}->name);
     my $phony_asset = App::hopen::Asset->new(
         target => $args{goal}->name,
-        made_by => $self,
     );
     my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
         # \p how defined but falsy => it's a goal

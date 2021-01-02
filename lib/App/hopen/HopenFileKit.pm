@@ -151,7 +151,7 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     my $target_friendly_name;
     unless($target_friendly_name = $_[1]) {
         warn "No filename given --- creating one";
-        $target_friendly_name = 'hopenfile__' . $_uniq_idx++;
+        $target_friendly_name = '__R_hopenfile_' . $_uniq_idx++;
     }
 
     my @args = splice @_, 1, 1;

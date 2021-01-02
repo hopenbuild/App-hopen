@@ -71,7 +71,6 @@ sub _run {
 
     my $exe = App::hopen::Asset->new(
         target => $self->dest,
-        made_by => $self,
     );
     $args{visitor}->asset($exe,
         -how => $self->linker . ' -o #out #all',

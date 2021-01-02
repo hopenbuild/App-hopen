@@ -79,7 +79,6 @@ sub _process_input {
 
     my $obj = App::hopen::Asset->new(
         target => $to,
-        made_by => $self,
     );
 
     return [$obj, $how];

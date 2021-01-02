@@ -51,8 +51,7 @@ can be:
 
 =item *
 
-An L<App::hopen::Asset> or subclass (in which case
-L<made_by|App::hopen::Asset/made_by> is updated)
+An L<App::hopen::Asset> or subclass
 
 =item *
 
@@ -76,10 +75,9 @@ sub _assets_for {
         if(ref $arg eq 'ARRAY') {
             push @retval, $self->_assets_for(@$arg);
         } elsif(eval { $arg->DOES('App::hopen::Asset') }) {
-            $arg->made_by($self);
             push @retval, $arg;
         } else {
-            my $asset = App::hopen::Asset->new(target=>$arg, made_by=>$self);
+            my $asset = App::hopen::Asset->new(target=>$arg);
             push @retval, $asset;
         }
     } #foreach arg
