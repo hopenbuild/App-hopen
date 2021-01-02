@@ -96,7 +96,7 @@ sub made_by {
 
         return $self->{made_by} = $candidate unless defined $candidate;
         croak 'made_by values must implement App::hopen::G::Cmd'
-            unless eval { $_[0]->DOES('App::hopen::G::Cmd') };
+            unless eval { $candidate->DOES('App::hopen::G::Cmd') };
 
         $self->{made_by} = $candidate;
         weaken $self->{made_by};

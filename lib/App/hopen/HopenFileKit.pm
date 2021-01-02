@@ -47,7 +47,7 @@ See L<App::hopen/_run_phase>.  Usage: in a hopen file:
 
 C<< <filename> >> is the name you want to use for the package using
 this module, and will be loaded into constant C<$FILENAME> in that
-package.
+package.  If a filename is omitted, a default name will be used.
 
 C<[other args]> are per Exporter, and should be omitted unless you
 really know what you're doing!
@@ -133,6 +133,8 @@ A convenience accessor for L<App::hopen::BuildSystemGlobals/$Build>.
 
 sub rule { $Build }
 
+my $_uniq_idx = 0;
+
 sub import {    # {{{1
 
 =head2 import
@@ -146,9 +148,14 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
 =cut
 
     my $target = caller;
-    my $target_friendly_name = $_[1] or croak "Need a filename";
-        # 0=__PACKAGE__, 1=filename
+    my $target_friendly_name;
+    unless($target_friendly_name = $_[1]) {
+        warn "No filename given --- creating one";
+        $target_friendly_name = 'hopenfile__' . $_uniq_idx++;
+    }
+
     my @args = splice @_, 1, 1;
+        # 0=__PACKAGE__, 1=filename
         # Remove the filename; leave the rest of the args for Exporter's use
 
     {
