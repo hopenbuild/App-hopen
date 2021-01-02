@@ -58,10 +58,13 @@ Adds each specified file as a separate node in the asset graph.
 
 sub files {
     my ($builder, %args) = getparameters('self', ['*'], @_);
-    hlog { __PACKAGE__, 'files:', Dumper(\%args) } 3;
     my $lrFiles = $args{'*'} // [];
+    hlog { __PACKAGE__, 'files:', Dumper($lrFiles) } 3;
+
     my @files = map { based_path(path => file($_), base => $ProjDir) } @$lrFiles;
     hlog { __PACKAGE__, 'file objects:', @files } 3;
+
+    # A separate Cmd node for each file
     my $idx = 0;
     my @files_op = map { App::hopen::G::FilesCmd->new(
         files => [ $_ ],

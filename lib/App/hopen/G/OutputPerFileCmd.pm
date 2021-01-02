@@ -43,7 +43,7 @@ by subclasses.  Called as:
     $self->_process_input(-asset=>$asset,
         -visitor=>$visitor);
 
-Returns a list of arrayrefs of C<[$asset, $how]>.  C<$how> defaults to C<undef>.
+Should return a list of assets.
 
 =cut
 
@@ -72,29 +72,27 @@ Creates the output list by calling L</_process_input>.
 
 sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
+    my @visitor_if_any = forward_opts(\%args, {'-'=>1}, qw(visitor));
 
     return $self->passthrough(-nocontext=>1) unless
-        $self->_should_act(forward_opts(\%args, {'-'=>1}, qw(visitor)));
+        $self->_should_act(@visitor_if_any);
 
     # Pull the inputs
     my $lrSourceFiles = $self->input_assets;
+    unless(@$lrSourceFiles) {
+        warn $self->name . ': no inputs --- skipping';
+        return;
+    }
     hlog { 'found inputs', Dumper($lrSourceFiles) } 2;
 
     my @outputs;
     foreach my $src (@$lrSourceFiles) {
-        my @outputs_here = $self->_process_input(-asset=>$src,
-            forward_opts(\%args, {'-'=>1}, qw(visitor)));
+        my $obj = $self->_process_input(-asset=>$src, @visitor_if_any);
+        $obj->made_from([$obj]) unless @{$obj->made_from};
+        push @outputs, $obj;
+    }
 
-        foreach my $lrOutput (@outputs_here) {
-            my ($obj, $how) = @$lrOutput;
-            push @outputs, $obj;
-            $args{visitor}->asset($obj, -how => $how);
-            $args{visitor}->connect($src, $obj);
-        } #foreach $lrOutput
-    } #foreach $src
-
-    $self->make(\@outputs);
-    return {};
+    $self->make(@outputs);
 } #_run()
 
 

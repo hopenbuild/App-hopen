@@ -47,10 +47,9 @@ See L<App::hopen::Conventions/INTERNALS>.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
+    my $self = shift;
 
     $self->make(@{$self->files});
-    return {};
 } #run()
 
 1;

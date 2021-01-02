@@ -12,6 +12,7 @@ use Class::Tiny qw(dest linker);
 use App::hopen::AppUtil qw(:constants);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
+use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
 use Data::Hopen::Util::Filename;
@@ -63,26 +64,26 @@ sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-nocontext=>1) if ($self->scope->find(KEY_PHASE)//'') ne 'Gen';
+    return $self->passthrough(-nocontext=>1)
+        unless is_gen_phase($self->scope->find(KEY_PHASE));
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;
+    croak $self->name . ": No inputs to link node" unless @$lrObjFiles;
     hlog { 'found object files', Dumper($lrObjFiles) } 2;
+
+    # Sanity check
+    foreach my $obj (@$lrObjFiles) {
+        die "Cannot link non-file $obj" unless $obj->isdisk;
+    }
 
     my $exe = App::hopen::Asset->new(
         target => $self->dest,
+        how => $self->linker . ' -o #out #all',
+        made_from => $lrObjFiles,
     );
-    $args{visitor}->asset($exe,
-        -how => $self->linker . ' -o #out #all',
-    );
-
-    foreach my $obj (@$lrObjFiles) {
-        die "Cannot link non-file $obj" unless $obj->isdisk;
-        $args{visitor}->connect($obj, $exe);
-    }
 
     $self->make($exe);
-    return {};
 } #_run()
 
 1;

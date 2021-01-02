@@ -49,6 +49,10 @@ value.
 
 No default, so don't call C<< $obj->target >> until you've assigned a target!
 
+=head2 how
+
+Information used by the generator --- TODO document this
+
 =head2 made_from
 
 Optional arrayref of Assets used in producing this asset.
@@ -90,7 +94,7 @@ sub target {
 } #target()
 
 # Set up the rest of the class
-use Class::Tiny qw(target name), {
+use Class::Tiny qw(target how name), {
    made_from => sub { [] },
 };
 
@@ -121,8 +125,8 @@ sub BUILD {
     my ($self) = @_;
     $self->name('__R_Asset_' . $_id_counter++) unless $self->name;
     # Check the custom constraints by re-setting the values
-    $self->target($self->{target});
-    $self->made_from($self->{made_from});
+    $self->target($self->target);
+    $self->made_from($self->made_from);
 } #BUILD()
 
 1;

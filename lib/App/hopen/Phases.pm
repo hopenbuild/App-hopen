@@ -118,7 +118,7 @@ If no argument is given, checks the current phase
 
 =cut
 
-sub is_gen_phase { _clean(shift // $Phase) eq 'gen' }
+sub is_gen_phase { _clean(shift // $Phase // '') eq 'gen' }
 
 =head2 phase_idx
 

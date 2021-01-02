@@ -42,7 +42,8 @@ instances.
 
 Adds L<App::hopen::Asset> instances to L</made> (a Cmd's asset output).
 B<Does not> add the assets to the generator's asset graph, since the asset graph
-(if any) is an implementation detail of the generator.  No return value.
+(if any) is an implementation detail of the generator.  Always returns undef
+so it can be used as the last statement in a _run function.
 
 One or more parameters or arrayrefs of parameters can be given.  Each parameter
 can be:
