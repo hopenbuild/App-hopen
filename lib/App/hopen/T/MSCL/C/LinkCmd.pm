@@ -72,6 +72,7 @@ sub _run {
     my $exe = App::hopen::Asset->new(
         target => $self->dest,
     );
+    # TODO modify per recent changes to visitor
     $args{visitor}->asset($exe,
         -how => '"' . $self->linker . '" "/Fe#out" #all',
             # TODO permit escaping #out and #all - see comments in

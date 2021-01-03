@@ -249,11 +249,13 @@ sub _run_build {
     warn "This generator is not configured to run a build tool.  Sorry!";
 } #_run_build()
 
-=head2 visit_goal
+=head2 visit
 
-Add a target corresponding to the name of the goal.  Usage:
+For regular nodes, delegate to L</_visit_node>.
 
-    $Generator->visit_goal($node, $node_inputs);
+For goals, add a target corresponding to the name of the goal.  Usage:
+
+    $Generator->visit($node, 'goal', $node_inputs, \@predecessors);
 
 This happens while the command graph is being run.
 
@@ -263,10 +265,14 @@ For example, the generator may want to change the goal's C<outputs>.
 
 =cut
 
-sub visit_goal {
-    my ($self, %args) = getparameters('self', [qw(goal node_inputs)], @_);
+sub visit {
+    my ($self, %args) = getparameters('self', [qw(node type node_inputs preds)], @_);
+    return $self->_visit_node($args{node}, $args{type}, $args{node_inputs}, $args{preds})
+        unless $args{type} eq 'goal';
 
     # --- Add the goal to the asset graph ---
+
+    # TODO modify per recent changes to visitor
 
     #my $asset_goal = $self->_assets->goal($args{goal}->name);
     my $phony_asset = App::hopen::Asset->new(
@@ -296,13 +302,12 @@ sub visit_goal {
 
 (Optional)
 Do whatever the generator wants to do with a L<Data::Hopen::G::Node> that
-is not a Goal (see L</visit_goal>).  By default, no-op.  Usage:
-
-    $generator->visit_node($node)
+is not a Goal (see L</visit>).  By default, no-op.  Parameters are as
+L</visit>.
 
 =cut
 
-sub visit_node { }
+sub _visit_node { }
 
 1;
 __END__

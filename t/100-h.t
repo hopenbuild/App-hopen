@@ -13,9 +13,7 @@ package FakeGenerator {
     # Since AhG::FilesCmd requires a visitor be present
     use parent 'Data::Hopen::Visitor';
     use Class::Tiny;
-    sub asset { }
-    sub visit_node { }
-    sub visit_goal { }
+    sub visit { }
 }
 
 $VERBOSE = @ARGV;
