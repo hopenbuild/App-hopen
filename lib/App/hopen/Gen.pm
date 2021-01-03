@@ -6,14 +6,7 @@ use Data::Hopen::Base;
 
 our $VERSION = '0.000013'; # TRIAL
 
-use parent 'Data::Hopen::Visitor';
-use Class::Tiny qw(proj_dir dest_dir), {
-    architecture => '',
-
-    # private
-    _assets => undef,   # A Data::Hopen::G::DAG of the assets
-    _assetop_by_asset => sub { +{} },   # Indexed by refaddr($asset)
-};
+use parent 'Data::Hopen::Visitor';  # uses Class::Tiny below
 
 use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;
@@ -49,122 +42,152 @@ the project.
 (Required) A L<Path::Class::Dir> instance specifying where the generated output
 (e.g., blueprint or other files) should be written.
 
-=head2 _assets (Internal)
+=head2 architecture
 
-A L<Data::Hopen::G::DAG> of L<App::hopen::G::AssetOp> instances representing
-the L<App::Hopen::Asset>s to be created when a build is run.
+(Optional) A string of architecture information meaningful to the generator.
+TODO specify the format of this information.
+
+=cut
+
+# TODO eventually support coercions?  I'm trying to avoid pulling in
+# Type::Tiny, but that would be the thing to do if I need the coercions.
+use vars::i '$IsPathClassDir' => [
+    sub { eval { $_[0]->DOES('Path::Class::Dir') } },
+    sub { "Need a Path::Class::Dir instance" }
+];
+
+use Class::Tiny::ConstrainedAccessor {
+    proj_dir => $IsPathClassDir,
+    dest_dir => $IsPathClassDir,
+};
+
+use Class::Tiny qw(proj_dir dest_dir), {
+    architecture => '',
+
+    # private
+
+    _reqd_for => sub { +{} },
+        # a map from goals to arrayrefs of the assets required for those goals.
+        # TODO? use Hash::DefaultValue?
+
+##   _assets => undef,   # A Data::Hopen::G::DAG of the assets
+##   _assetop_by_asset => sub { +{} },   # Indexed by refaddr($asset)
+##       # NOTE: can change to using Tie::RefHash
+};
 
 =head1 FUNCTIONS
 
-A generator (C<App::hopen::Gen> subclass) is a Visitor plus some.
+A generator (C<App::hopen::Gen> subclass) is a Visitor plus a bit.
 
 B<Note>:
 The generator does not have access to L<Data::Hopen::G::Link> instances.
-That lack of access is the primary distinction between Ops and Links.
+That lack of access is the primary distinction between Ops and Links in
+L<Data::Hopen>.  Don't expect that access here :) .
 
 =cut
 
 # }}}1
 
-=head2 asset
-
-Called by an Op (L<App::hopen::G::Op> subclass) to add an asset
-(L<App::hopen::G::AssetOp> instance) to the build.  Usage:
-
-    $Generator->asset([-asset=>]$asset, [-from=>]$from[, [-how=>]$how]);
-
-If C<$how> is specified, it will be saved in the C<AssetOp> for use later.
-Later calls with the same asset and a defined C<$how> will overwrite the
-C<how> value in the C<AssetOp>.  Specify 'UNDEF' as the C<$how> to
-expressly undefine a C<how>.
-
-Returns the C<AssetOp>.
-
-=cut
-
-sub asset {
-    my ($self, %args) = getparameters('self', [qw(asset; how)], @_);
-    hlog { 'Generator adding asset at',refaddr($args{asset}),$args{asset} } 3;
-
-    my $existing_op = $self->_assetop_by_asset->{refaddr($args{asset})};
-
-    # Update an existing op
-    if(defined $existing_op) {
-        if( ($args{how}//'') eq 'UNDEF') {
-            $existing_op->how(undef);
-        } elsif(defined $args{how}) {
-            $existing_op->how($args{how});
-        }
-        return $existing_op;
-    }
-
-    # Need to create an op.  First, load its class.
-    my $class = $self->_assetop_class;
-
-    eval_here <<EOT;
-require $class;
-EOT
-    die "$@" if $@;
-
-    # Create a new op
-    my $op = $class->new(name => 'Op:<<' . $args{asset}->target . '>>',
-                            forward_opts(\%args, qw(asset how)));
-    $self->_assetop_by_asset->{refaddr($args{asset})} = $op;
-    $self->_assets->add($op);
-    return $op;
-} #asset()
-
-=head2 connect
-
-Add a dependency edge between two assets or goals.  Any assets must have already
-been added using L</asset>.  Usage:
-
-    $Generator->connect([-from=>]$from, [-to=>$to]);
-
-TODO add missing assets automatically?
-
-TODO rename the asset-graph public interface so it's more clear that it's
-the asset graph and not the command graph.
-
-=cut
-
-sub connect {
-    my ($self, %args) = getparameters('self', [qw(from to)], @_);
-    my %nodes;
-
-    # Get the nodes if we were passed assets.
-    foreach my $field (qw(from to)) {
-        if(eval { $args{$field}->DOES('App::hopen::Asset') }) {
-            $nodes{$field} = $self->_assetop_by_asset->{refaddr($args{$field})};
-        } else {
-            $nodes{$field} = $args{$field};
-        }
-    }
-
-    # TODO better error messages
-    croak "No From node for asset " . refaddr($args{from}) unless $nodes{from};
-    croak "No To node for asset " . refaddr($args{to}) unless $nodes{to};
-    $self->_assets->connect($nodes{from}, $nodes{to});
-} #connect()
-
-=head2 asset_default_goal
-
-Read-only accessor for the default goal of the asset graph
-
-=cut
-
-sub asset_default_goal () { shift->_assets->default_goal }
+## =head2 asset
+##
+## Called by an Op (L<App::hopen::G::Op> subclass) to add an asset
+## (L<App::hopen::G::AssetOp> instance) to the build.  Usage:
+##
+##     $Generator->asset([-asset=>]$asset, [-from=>]$from[, [-how=>]$how]);
+##
+## If C<$how> is specified, it will be saved in the C<AssetOp> for use later.
+## Later calls with the same asset and a defined C<$how> will overwrite the
+## C<how> value in the C<AssetOp>.  Specify 'UNDEF' as the C<$how> to
+## expressly undefine a C<how>.
+##
+## Returns the C<AssetOp>.
+##
+## =cut
+##
+## sub asset {
+##     my ($self, %args) = getparameters('self', [qw(asset; how)], @_);
+##     hlog { 'Generator adding asset at',refaddr($args{asset}),$args{asset} } 3;
+##
+##     my $existing_op = $self->_assetop_by_asset->{refaddr($args{asset})};
+##
+##     # Update an existing op
+##     if(defined $existing_op) {
+##         if( ($args{how}//'') eq 'UNDEF') {
+##             $existing_op->how(undef);
+##         } elsif(defined $args{how}) {
+##             $existing_op->how($args{how});
+##         }
+##         return $existing_op;
+##     }
+##
+##     # Need to create an op.  First, load its class.
+##     my $class = $self->_assetop_class;
+##
+##     eval_here <<EOT;
+## require $class;
+## EOT
+##     die "$@" if $@;
+##
+##     # Create a new op
+##     my $op = $class->new(name => 'Op:<<' . $args{asset}->target . '>>',
+##                             forward_opts(\%args, qw(asset how)));
+##     $self->_assetop_by_asset->{refaddr($args{asset})} = $op;
+##     $self->_assets->add($op);
+##     return $op;
+## } #asset()
+##
+## =head2 connect
+##
+## Add a dependency edge between two assets or goals.  Any assets must have already
+## been added using L</asset>.  Usage:
+##
+##     $Generator->connect([-from=>]$from, [-to=>$to]);
+##
+## TODO add missing assets automatically?
+##
+## TODO rename the asset-graph public interface so it's more clear that it's
+## the asset graph and not the command graph.
+##
+## =cut
+##
+## sub connect {
+##     my ($self, %args) = getparameters('self', [qw(from to)], @_);
+##     my %nodes;
+##
+##     # Get the nodes if we were passed assets.
+##     foreach my $field (qw(from to)) {
+##         if(eval { $args{$field}->DOES('App::hopen::Asset') }) {
+##             $nodes{$field} = $self->_assetop_by_asset->{refaddr($args{$field})};
+##         } else {
+##             $nodes{$field} = $args{$field};
+##         }
+##     }
+##
+##     # TODO better error messages
+##     croak "No From node for asset " . refaddr($args{from}) unless $nodes{from};
+##     croak "No To node for asset " . refaddr($args{to}) unless $nodes{to};
+##     $self->_assets->connect($nodes{from}, $nodes{to});
+## } #connect()
+##
+## =head2 asset_default_goal
+##
+## Read-only accessor for the default goal of the asset graph
+##
+## =cut
+##
+## sub asset_default_goal () { shift->_assets->default_goal }
 
 =head2 run_build
 
 Runs the build tool for which this generator has created blueprint files.
 Runs the tool with the destination directory as the current dir.
+Uses abstract L</_run_build>.
 
 =cut
 
 sub run_build {
     my $self = shift or croak 'Need an instance';
-    my $abs_dir = $DestDir->absolute;
+    my $abs_dir = $self->dest_dir->absolute;
         # NOTE: You have to call this *before* pushd() or chdir(), because
         # it may be a relative path, and absolute() converts with respect
         # to cwd at the time of the call.
@@ -173,37 +196,33 @@ sub run_build {
     $self->_run_build();
 } #run_build()
 
-=head2 BUILD
-
-Constructor.
-
-=cut
-
-sub BUILD {
-    my ($self, $args) = @_;
-
-    # Enforce the required argument types
-    croak "Need a project directory (Path::Class::Dir)"
-        unless eval { $self->proj_dir->DOES('Path::Class::Dir') };
-    croak "Need a destination directory (Path::Class::Dir)"
-        unless eval { $self->dest_dir->DOES('Path::Class::Dir') };
-
-    # Create the asset graph
-    $self->_assets(hnew DAG => 'asset graph');
-    $self->_assets->goal('__R_asset_default_goal');
-        # Create and set default goal
-} #BUILD()
+## =head2 BUILD
+##
+## Constructor.
+##
+## =cut
+##
+## sub BUILD {
+##     my ($self, $args) = @_;
+##
+##     # Create the asset graph
+##     $self->_assets(hnew DAG => 'asset graph');
+##     $self->_assets->goal('__R_asset_default_goal');
+##         # Create and set default goal
+## } #BUILD()
 
 =head1 FUNCTIONS TO BE IMPLEMENTED BY SUBCLASSES
 
-=head2 _assetop_class
-
-(Required) Returns the name of the L<App::hopen::G::AssetOp> subclass that
-should be used to represent assets in the C<_assets> graph.
-
 =cut
 
-sub _assetop_class { ... }
+## =head2 _assetop_class
+##
+## (Required) Returns the name of the L<App::hopen::G::AssetOp> subclass that
+## should be used to represent assets in the C<_assets> graph.
+##
+## =cut
+##
+## sub _assetop_class { ... }
 
 =head2 default_toolset
 
@@ -278,9 +297,9 @@ sub visit {
     my $phony_asset = App::hopen::Asset->new(
         target => $args{goal}->name,
     );
-    my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
-        # \p how defined but falsy => it's a goal
-    $self->connect($phony_node, $self->asset_default_goal);
+    ## my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
+    ##     # \p how defined but falsy => it's a goal
+    ## $self->connect($phony_node, $self->asset_default_goal);
 
     # Pull the inputs.  TODO refactor out the code in common with
     # AhG::Cmd::input_assets().
@@ -293,12 +312,14 @@ sub visit {
     my $lrSourceFiles = $hrSourceFiles->{(keys %$hrSourceFiles)[0]};
     hlog { 'found inputs to goal', $args{goal}->name, Dumper($lrSourceFiles) } 2;
 
+    # TODO RESUME HERE add all the source files to _reqd_for
+
     # TODO? verify that all the assets are actually in the graph first?
     $self->connect($_, $phony_node) foreach @$lrSourceFiles;
 
 } #visit_goal()
 
-=head2 visit_node
+=head2 _visit_node
 
 (Optional)
 Do whatever the generator wants to do with a L<Data::Hopen::G::Node> that

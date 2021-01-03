@@ -16,7 +16,7 @@ use Data::Hopen::Util::Data qw(forward_opts);
 use File::Which;
 use Quote::Code;
 
-use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
+#use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
 
 # Docs {{{1
 
@@ -38,7 +38,7 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 
 Write out the Makefile.  Usage:
 
-    $Generator->finalize($phase, $dag);     # $data parameter unused
+    $Generator->finalize(-phase => $phase, -dag => $dag);     # $data parameter unused
 
 C<$dag> is the build graph.
 
