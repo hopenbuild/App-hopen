@@ -8,6 +8,7 @@ use Data::Hopen::Base 0.000020;
 
 use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;
+use App::hopen::G::Goal ();
 use App::hopen::Phases qw(:default phase_idx next_phase last_phase is_last_phase);
 use App::hopen::Util qw(isMYH MYH);
 use App::hopen::Util::String qw(line_mark_string);
@@ -878,7 +879,7 @@ EOT
 
     # Create the initial DAG before loading anything so that the
     # generator and toolset can add initialization operations.
-    $Build = hnew DAG => '__R_main';
+    $Build = hnew DAG => '__R_main', goal_class => 'App::hopen::G::Goal';
 
     # = Load generator and toolset (and run MYH) ============================
 

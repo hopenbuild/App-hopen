@@ -284,10 +284,8 @@ sub visit {
     my ($self, %args) = getparameters('self', [qw(node type node_inputs preds)], @_);
 
     # Stash all the assets
-    my $assets = $args{node}->outputs->find(-name => 'made',
-                                        -set => '*', -levels => 'local') //
-                                        {made => []};
-    $self->_assets->{$_} = 1 foreach @{$assets->{made}};
+    my $assets = $args{node}->outputs->{made} // [];
+    $self->_assets->{$_} = 1 foreach @$assets;
 
     $self->_assets->{$args{node}->asset} = 1 if $args{type} eq 'goal' && $args{node}->asset;
 

@@ -57,14 +57,14 @@ sub _run {
     hlog { __PACKAGE__, $self->name } 2;
 
     my $inputs = $self->input_assets;
-    my $asset = App::hopen::Asset->new(target => $args{node}->name,
+    my $asset = App::hopen::Asset->new(target => $self->name,
                                         made_from => $inputs);
-    $self->asset($asset);
+    $self->_asset($asset);
         # Not an output, since output is controlled by
         # Data::Hopen::G::Goal::should_output.  Therefore, we also don't
         # call make($asset).
 
-    return $self->Data::Hopen::G::Goal::_run(@_);
+    return $self->Data::Hopen::G::Goal::_run(forward_opts(\%args, {'-'=>1}, qw(visitor)));
 } #_run()
 
 1;

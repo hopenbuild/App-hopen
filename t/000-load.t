@@ -22,7 +22,7 @@ is App::hopen::AppUtil::HOPEN_FILE_FLAG(), 'IsHopenFile', 'correct HOPEN_FILE_FL
 
 require App::hopen;
 ok($App::hopen::VERSION, 'has a VERSION');
-diag( "Testing App::Hopen $App::Hopen::VERSION, Perl $], $^X" );
+diag( "Testing App::Hopen $App::hopen::VERSION, Perl $], $^X" );
 diag 'App::hopen from ' . $INC{'App/hopen.pm'};
 diag 'Data::Hopen from ' . $INC{'Data/Hopen.pm'};
 
