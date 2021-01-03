@@ -284,13 +284,13 @@ sub visit {
     my ($self, %args) = getparameters('self', [qw(node type node_inputs preds)], @_);
 
     # Stash all the assets
-    my $assets = $args{node}->outputs->{made} // [];
-    $self->_assets->{$_} = 1 foreach @$assets;
-
-    $self->_assets->{$args{node}->asset} = 1 if $args{type} eq 'goal' && $args{node}->asset;
+    my @assets = @{$args{node}->outputs->{made} // []};
+    push @assets, $args{node}->asset if $args{type} eq 'goal' && $args{node}->asset;
+    hlog { __PACKAGE__, 'at node', $args{node}->name, 'stashing assets',
+        join ', ', map { $_->target } @assets } 3;
+    $self->_assets->{$_} = 1 foreach @assets;
 
     return $self->_visit_node($args{node}, $args{type}, $args{node_inputs}, $args{preds})
-
 } #visit_goal()
 
 =head2 _visit_node

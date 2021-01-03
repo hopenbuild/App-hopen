@@ -59,6 +59,7 @@ sub _run {
     my $inputs = $self->input_assets;
     my $asset = App::hopen::Asset->new(target => $self->name,
                                         made_from => $inputs);
+    hlog { __PACKAGE__, 'Goal asset', Dumper $asset } 3;
     $self->_asset($asset);
         # Not an output, since output is controlled by
         # Data::Hopen::G::Goal::should_output.  Therefore, we also don't

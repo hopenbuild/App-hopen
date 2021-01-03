@@ -88,7 +88,7 @@ sub _run {
     my @outputs;
     foreach my $src (@$lrSourceFiles) {
         my $obj = $self->_process_input(-asset=>$src, @visitor_if_any);
-        $obj->made_from([$obj]) unless @{$obj->made_from};
+        $obj->made_from([$src]) unless @{$obj->made_from};
         push @outputs, $obj;
     }
 

@@ -50,8 +50,8 @@ sub _finalize {
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
     return unless is_gen_phase $args{phase};
 
-    hlog { __PACKAGE__, 'Assets:',
-            map { $_->name . "\n" } keys %{$self->_assets}
+    hlog { __PACKAGE__, 'Assets:', join ', ',
+            map { $_->target } keys %{$self->_assets}
     } 3;
 
     # During the Gen phase, create the Makefile
@@ -73,7 +73,7 @@ EOT
 
         # Goals
         unless($asset->isdisk) {
-            $tags{$asset} = $asset->name;
+            $tags{$asset} = $asset->target;
             next;
         }
 
@@ -95,30 +95,34 @@ sub _emit_asset {
     my ($self, $asset, $tags, $fh) = @_;
 
     if($VERBOSE) {
-        say $fh qc'\n# Makefile piece from node {$asset->name}';
+        hlog { __PACKAGE__, 'Emitting asset', $asset->target } 3;
+        say $fh qc'\n# Makefile piece from node {$asset->name}: {$asset->target}';
         say $fh qc'    # {$asset->how//"<nothing to be done>"}';
         my $deps = join ', ', map { $_->target } @{$asset->made_from};
-        say $fh qc'    # Depends on {$deps}';
+        say $fh qc'    # Depends on {$deps || "nothing"}';
     }
+
+    my $output = $tags->{$asset};
+    my @prereq_tags = map { $tags->{$_} } @{$asset->made_from};
+    my $recipe = $asset->how;
+
+    return unless @prereq_tags || $recipe;
 
     if(defined $asset->how) {
-        my $output = $tags->{$asset};
-        my @prereqs = map { $tags->{$_} } @{$asset->made_from};
-        my $recipe = $asset->how;
-
         # TODO refactor this processing into a utility module/function
-        $recipe =~ s<#first\b><$prereqs[0] // ''>ge;      # first input
-        $recipe =~ s<#all\b><join(' ', @prereqs)>ge;      # all inputs
+        $recipe =~ s<#first\b><$prereq_tags[0] // ''>ge;      # first input
+        $recipe =~ s<#all\b><join(' ', @prereq_tags)>ge;      # all inputs
         $recipe =~ s<#out\b><$output // ''>ge;
+    }
 
-        # Emit the entry.  If the recipe is defined but falsy,
-        # this is a goal, so it gets a .PHONY.
-        print $fh qc_to <<"EOT"
+    # Emit the entry.  If the recipe is defined but falsy,
+    # this is a goal, so it gets a .PHONY.
+    print $fh qc_to <<"EOT";
 #{$asset->isdisk ? '' : ".PHONY: " . $tags->{$asset}}
-#{$output}: #{join(" ", @prereqs)}
+#{$output}: #{join(" ", @prereq_tags)}
+#{$recipe ? "\t$recipe" : ''}
 
 EOT
-    }
 }
 
 =head2 _default_toolset
