@@ -37,18 +37,18 @@ This generator makes a build.ninja file.
 
 # }}}1
 
-=head2 finalize
+=head2 _finalize
 
 Write out the Ninja file.  Usage:
 
-    $Generator->finalize($phase, $dag);     # $data parameter unused
+    $Generator->_finalize($phase, $dag);     # $data parameter unused
 
 C<$dag> is the build graph.
 
 =cut
 
-sub finalize {
-    my ($self, %args) = getparameters('self', [qw(phase dag; data)], @_);
+sub _finalize {
+    my ($self, %args) = getparameters('self', [qw(phase graph; data)], @_);
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
     return unless is_gen_phase $args{phase};
 
@@ -75,16 +75,16 @@ EOT
     $self->_assets->run(-context => $context);
 
     close $fh;
-} #finalize()
+} #_finalize()
 
-=head2 default_toolset
+=head2 _default_toolset
 
 Returns the package name of the default toolset for this generator,
 which is C<Gnu> (i.e., L<App::hopen::T::Gnu>).
 
 =cut
 
-sub default_toolset { 'Gnu' }
+sub _default_toolset { 'Gnu' }
 
 =head2 _assetop_class
 

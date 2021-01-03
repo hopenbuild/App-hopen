@@ -17,7 +17,7 @@ use File::pushd qw(pushd);
 use Path::Class ();
 use Scalar::Util qw(refaddr);
 
-# Docs {{{1
+# Docs (general and attrs) {{{1
 
 =head1 NAME
 
@@ -29,6 +29,13 @@ The code that generates blueprints for specific build systems
 lives under C<App::hopen::Gen>.  L<App::hopen> calls modules
 under C<App::hopen::Gen> to create the blueprints.  Those modules must
 implement the interface defined here.
+
+A generator (C<App::hopen::Gen> subclass) is a Visitor plus a bit.
+
+B<Note>:
+The generator does not have access to L<Data::Hopen::G::Link> instances.
+That lack of access is the primary distinction between Ops and Links in
+L<Data::Hopen>.  Don't expect that access here :) .
 
 =head1 ATTRIBUTES
 
@@ -47,7 +54,19 @@ the project.
 (Optional) A string of architecture information meaningful to the generator.
 TODO specify the format of this information.
 
+=head1 ATTRIBUTES FOR USE BY SUBCLASSES
+
+=head2 _assets
+
+A hash (L<Tie::RefHash>) from each asset to C<1>.  A hash rather than
+a list for ease of lookup.
+
+This is filled in by L</visit>, so if you override C<visit()> and don't call
+C<SUPER::visit()>, don't use this.
+
 =cut
+
+# }}}1
 
 # TODO eventually support coercions?  I'm trying to avoid pulling in
 # Type::Tiny, but that would be the thing to do if I need the coercions.
@@ -66,27 +85,12 @@ use Class::Tiny qw(proj_dir dest_dir), {
 
     # private
 
-    _reqd_for => sub { +{} },
-        # a map from goals to arrayrefs of the assets required for those goals.
-        # TODO? use Hash::DefaultValue?
-
-##   _assets => undef,   # A Data::Hopen::G::DAG of the assets
-##   _assetop_by_asset => sub { +{} },   # Indexed by refaddr($asset)
-##       # NOTE: can change to using Tie::RefHash
+    _assets => sub { tie my %h, 'Tie::RefHash'; \%h },
 };
 
 =head1 FUNCTIONS
 
-A generator (C<App::hopen::Gen> subclass) is a Visitor plus a bit.
-
-B<Note>:
-The generator does not have access to L<Data::Hopen::G::Link> instances.
-That lack of access is the primary distinction between Ops and Links in
-L<Data::Hopen>.  Don't expect that access here :) .
-
 =cut
-
-# }}}1
 
 ## =head2 asset
 ##
@@ -224,7 +228,7 @@ sub run_build {
 ##
 ## sub _assetop_class { ... }
 
-=head2 default_toolset
+=head2 _default_toolset
 
 (Required) Returns the package stem of the default toolset for this generator.
 
@@ -237,25 +241,25 @@ so make sure that is a valid package.
 
 =cut
 
-sub default_toolset { ... }
+sub _default_toolset { ... }
 
-=head2 finalize
+=head2 _finalize
 
 (Optional)
 Do whatever the generator wants to do to finish up.  By default, no-op.
 Is provided the L<Data::Hopen::G::DAG> instance as a parameter.  Usage:
 
-    $generator->finalize(-phase=>$Phase, -graph=>$Build,
+    $generator->_finalize(-phase=>$Phase, -graph=>$Build,
                         -data=>$data)
 
 C<$dag> is the command graph, and C<$data> is the output from the
 command graph.
 
-C<finalize> is always called with named parameters.
+C<_finalize> is always called with named parameters.
 
 =cut
 
-sub finalize { }
+sub _finalize { }
 
 =head2 _run_build
 
@@ -270,61 +274,31 @@ sub _run_build {
 
 =head2 visit
 
-For regular nodes, delegate to L</_visit_node>.
+Stash all the assets from this node in L</_assets>.
 
-For goals, add a target corresponding to the name of the goal.  Usage:
-
-    $Generator->visit($node, 'goal', $node_inputs, \@predecessors);
-
-This happens while the command graph is being run.
-
-This can be overriden by a generator that wants to handle
-L<Data::Hopen::G::Goal> nodes differently.
-For example, the generator may want to change the goal's C<outputs>.
+Also delegate to L</_visit_node>.
 
 =cut
 
 sub visit {
     my ($self, %args) = getparameters('self', [qw(node type node_inputs preds)], @_);
+
+    # Stash all the assets
+    my $assets = $args{node}->outputs->find(-name => 'made',
+                                        -set => '*', -levels => 'local') //
+                                        {made => []};
+    $self->_assets->{$_} = 1 foreach @{$assets->{made}};
+
+    $self->_assets->{$args{node}->asset} = 1 if $args{type} eq 'goal' && $args{node}->asset;
+
     return $self->_visit_node($args{node}, $args{type}, $args{node_inputs}, $args{preds})
-        unless $args{type} eq 'goal';
-
-    # --- Add the goal to the asset graph ---
-
-    # TODO modify per recent changes to visitor
-
-    #my $asset_goal = $self->_assets->goal($args{goal}->name);
-    my $phony_asset = App::hopen::Asset->new(
-        target => $args{goal}->name,
-    );
-    ## my $phony_node = $self->asset(-asset => $phony_asset, -how => '');
-    ##     # \p how defined but falsy => it's a goal
-    ## $self->connect($phony_node, $self->asset_default_goal);
-
-    # Pull the inputs.  TODO refactor out the code in common with
-    # AhG::Cmd::input_assets().
-    my $hrSourceFiles =
-        $args{node_inputs}->find(-name => 'made',
-                                    -set => '*', -levels => 'local') // {};
-    die 'No input files to goal ' . $args{goal}->name
-        unless scalar keys %$hrSourceFiles;
-
-    my $lrSourceFiles = $hrSourceFiles->{(keys %$hrSourceFiles)[0]};
-    hlog { 'found inputs to goal', $args{goal}->name, Dumper($lrSourceFiles) } 2;
-
-    # TODO RESUME HERE add all the source files to _reqd_for
-
-    # TODO? verify that all the assets are actually in the graph first?
-    $self->connect($_, $phony_node) foreach @$lrSourceFiles;
 
 } #visit_goal()
 
 =head2 _visit_node
 
-(Optional)
-Do whatever the generator wants to do with a L<Data::Hopen::G::Node> that
-is not a Goal (see L</visit>).  By default, no-op.  Parameters are as
-L</visit>.
+(Optional) Do whatever the generator wants to do with a
+L<Data::Hopen::G::Node>.  By default, no-op.  Parameters are as L</visit>.
 
 =cut
 

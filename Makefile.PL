@@ -269,6 +269,7 @@ my %opts = (
 
         'strict' => '0',
         'Syntax::Construct' => '0.07',
+        'Tie::RefHash' => '0',
         'Type::Tiny' => '1.004004',
 
         'vars::i' => '1.06',

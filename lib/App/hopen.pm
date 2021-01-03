@@ -911,7 +911,7 @@ EOT
     # Load toolset
     {
         my $toolset_class;
-        $self->cmdopts->{TOOLSET} //= $Generator->default_toolset;
+        $self->cmdopts->{TOOLSET} //= $Generator->_default_toolset;
         $toolset_class = loadfrom($self->cmdopts->{TOOLSET},
                                         'App::hopen::T::', '');
         die "Can't find toolset $self->cmdopts->{TOOLSET}" unless $toolset_class;
@@ -939,7 +939,7 @@ EOT
         $new_data = $self->hrData;
     }
 
-    $Generator->finalize(-phase => $Phase, -dag => $Build,
+    $Generator->_finalize(-phase => $Phase, -graph => $Build,
         -data => $new_data);
         # TODO RESUME HERE - figure out how the generator works into this.
 

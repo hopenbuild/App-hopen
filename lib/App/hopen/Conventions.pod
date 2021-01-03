@@ -276,7 +276,7 @@ outputs.
 =back
 
 In the Gen phase, after the command graph is traversed, the generator's
-L<finalize|App::hopen::Gen/finalize> metnod is called to produce the
+L<_finalize|App::hopen::Gen/_finalize> metnod is called to produce the
 blueprint files.
 
 =back

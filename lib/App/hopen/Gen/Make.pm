@@ -10,11 +10,12 @@ use Class::Tiny;
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(is_gen_phase);
-use Data::Hopen qw(:default getparameters *QUIET);
+use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Util::Data qw(forward_opts);
 use File::Which;
-use Quote::Code;
+use Quote::Code;    # TODO replace Quote::Code with pure-Perl for fatpackability
+use Tie::RefHash;
 
 #use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
 
@@ -34,22 +35,24 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 
 # }}}1
 
-=head2 finalize
+=head2 _finalize
 
 Write out the Makefile.  Usage:
 
-    $Generator->finalize(-phase => $phase, -dag => $dag);     # $data parameter unused
+    $Generator->_finalize(-phase => $phase, -dag => $dag);     # $data parameter unused
 
 C<$dag> is the build graph.
 
 =cut
 
-sub finalize {
-    my ($self, %args) = getparameters('self', [qw(phase dag; data)], @_);
+sub _finalize {
+    my ($self, %args) = getparameters('self', [qw(phase graph; data)], @_);
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
     return unless is_gen_phase $args{phase};
 
-    hlog { __PACKAGE__, 'Asset graph', '' . $self->_assets->_graph } 3;
+    hlog { __PACKAGE__, 'Assets:',
+            map { $_->name . "\n" } keys %{$self->_assets}
+    } 3;
 
     # During the Gen phase, create the Makefile
     open my $fh, '>', $self->dest_dir->file('Makefile') or die "Couldn't create Makefile";
@@ -62,35 +65,79 @@ sub finalize {
 EOT
 
     # Make sure the first goal is 'all' regardless of order.
-    say $fh qc'first__goal__: {$args{dag}->default_goal->name}\n';
+    say $fh qc'first__goal__: {$args{graph}->default_goal->name}\n';
 
-    my $context = Data::Hopen::Scope::Hash->new;
-    $context->put(App::hopen::Gen::Make::AssetGraphNode::OUTPUT, $fh);
+    # Make the Make-friendly name ("tag") of each of the assets we have
+    tie my %tags, 'Tie::RefHash';
+    foreach my $asset (keys %{$self->_assets}) {
 
-    # Write the Makefile.  TODO flip the order of items in the Makefile.
+        # Goals
+        unless($asset->isdisk) {
+            $tags{$asset} = $asset->name;
+            next;
+        }
 
-    $self->_assets->run(-context => $context);
+        # Files
+        my $output = $asset->target;
+        $output = $output->path_wrt($self->dest_dir) if eval { $output->DOES('App::hopen::Util::BasedPath') };
+        $tags{$asset} = $output;
+    }
+
+    # Write the Makefile goals and recipes.
+    # Arbitrary choice: alphabetical order
+    my @assets = sort { $a->name cmp $b->name } keys %{$self->_assets};
+    $self->_emit_asset($_, \%tags, $fh) foreach @assets;
 
     close $fh;
-} #finalize()
+} #_finalize()
 
-=head2 default_toolset
+sub _emit_asset {
+    my ($self, $asset, $tags, $fh) = @_;
+
+    if($VERBOSE) {
+        say $fh qc'\n# Makefile piece from node {$asset->name}';
+        say $fh qc'    # {$asset->how//"<nothing to be done>"}';
+        my $deps = join ', ', map { $_->target } @{$asset->made_from};
+        say $fh qc'    # Depends on {$deps}';
+    }
+
+    if(defined $asset->how) {
+        my $output = $tags->{$asset};
+        my @prereqs = map { $tags->{$_} } @{$asset->made_from};
+        my $recipe = $asset->how;
+
+        # TODO refactor this processing into a utility module/function
+        $recipe =~ s<#first\b><$prereqs[0] // ''>ge;      # first input
+        $recipe =~ s<#all\b><join(' ', @prereqs)>ge;      # all inputs
+        $recipe =~ s<#out\b><$output // ''>ge;
+
+        # Emit the entry.  If the recipe is defined but falsy,
+        # this is a goal, so it gets a .PHONY.
+        print $fh qc_to <<"EOT"
+#{$asset->isdisk ? '' : ".PHONY: " . $tags->{$asset}}
+#{$output}: #{join(" ", @prereqs)}
+
+EOT
+    }
+}
+
+=head2 _default_toolset
 
 Returns the package name of the default toolset for this generator,
 which is C<Gnu> (i.e., L<App::hopen::T::Gnu>).
 
 =cut
 
-sub default_toolset { 'Gnu' }
+sub _default_toolset { 'Gnu' }
 
-=head2 _assetop_class
-
-The class of asset-graph operations, which in this case is
-L<App::hopen::Gen::Make::AssetGraphNode>.
-
-=cut
-
-sub _assetop_class { 'App::hopen::Gen::Make::AssetGraphNode' }
+## =head2 _assetop_class
+##
+## The class of asset-graph operations, which in this case is
+## L<App::hopen::Gen::Make::AssetGraphNode>.
+##
+## =cut
+##
+## sub _assetop_class { 'App::hopen::Gen::Make::AssetGraphNode' }
 
 =head2 _run_build
 
