@@ -17,8 +17,6 @@ use File::Which;
 use Quote::Code;    # TODO replace Quote::Code with pure-Perl for fatpackability
 use Tie::RefHash;
 
-#use App::hopen::Gen::Make::AssetGraphNode;     # for $OUTPUT
-
 # Docs {{{1
 
 =head1 NAME
@@ -39,7 +37,7 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 
 Write out the Makefile.  Usage:
 
-    $Generator->_finalize(-phase => $phase, -dag => $dag);     # $data parameter unused
+    $Generator->_finalize(-phase => $phase, -graph => $dag);    # $data parameter unused
 
 C<$dag> is the build graph.
 
@@ -133,15 +131,6 @@ which is C<Gnu> (i.e., L<App::hopen::T::Gnu>).
 =cut
 
 sub _default_toolset { 'Gnu' }
-
-## =head2 _assetop_class
-##
-## The class of asset-graph operations, which in this case is
-## L<App::hopen::Gen::Make::AssetGraphNode>.
-##
-## =cut
-##
-## sub _assetop_class { 'App::hopen::Gen::Make::AssetGraphNode' }
 
 =head2 _run_build
 

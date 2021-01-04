@@ -27,7 +27,6 @@ lib/App/hopen/G/Goal.pm
 lib/App/hopen/G/OutputPerFileCmd.pm
 lib/App/hopen/Gen.pm
 lib/App/hopen/Gen/Make.pm
-lib/App/hopen/Gen/Make/AssetGraphNode.pm
 lib/App/hopen/Gen/MSBuild.pm
 lib/App/hopen/Gen/MSBuild/AssetGraphNode.pm
 lib/App/hopen/Gen/Ninja.pm
