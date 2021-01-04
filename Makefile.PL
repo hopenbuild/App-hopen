@@ -208,6 +208,7 @@ my %opts = (
 
         'constant' => '0',
         'Data::Dumper' => '2.154',      # For Maxrecurse
+        'Data::Section::Simple' => '0.07',
         'Deep::Hash::Utils' => '0.03',  # For correct metadata
         ## 'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',
@@ -269,6 +270,7 @@ my %opts = (
 
         'strict' => '0',
         'Syntax::Construct' => '0.07',
+        'Text::MicroTemplate' => '0.23',
         'Tie::RefHash' => '0',
         'Type::Tiny' => '1.004004',
 

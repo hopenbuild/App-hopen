@@ -5,17 +5,26 @@ use Data::Hopen::Base;
 
 our $VERSION = '0.000013'; # TRIAL
 
-use parent 'App::hopen::Gen';
-use Class::Tiny;
+use parent 'App::hopen::Gen';   # and Class::Tiny below
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(is_gen_phase);
+use App::hopen::Util::String qw(line_mark_string);
 use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Util::Data qw(forward_opts);
+use Data::Section::Simple qw(get_data_section);
 use File::Which;
 use Quote::Code;    # TODO replace Quote::Code with pure-Perl for fatpackability
+use Text::MicroTemplate;
 use Tie::RefHash;
+
+use Class::Tiny {
+    # Cache templates from __DATA__ since Data::Section::Simple doesn't
+    _templates => sub { get_data_section },
+    # Cache renderers
+    _renderers => sub { +{} },
+};
 
 # Docs {{{1
 
@@ -32,6 +41,30 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 =cut
 
 # }}}1
+
+# Make a renderer for a given template
+my $_renderer_idx = 0;
+sub _renderer {
+    my ($self, $name) = @_;
+    unless($self->_renderers->{$name}) {
+        # Thanks to the T::MT docs for this workflow
+        my $code = Text::MicroTemplate->new(
+            template => $self->_templates->{$name},
+            escape_func => undef,
+            package_name => '__R_GenMake_Renderer_' . $_renderer_idx++,
+        )->code;
+        $self->_renderers->{$name} = eval line_mark_string <<"EOT";
+            sub {
+                my %v;  # basic variable unpacking --- accept a hashref
+                %v = %{\$_[0]} if ref \$_[0] eq 'HASH';
+                $code->()
+            }
+EOT
+        die "Could not create template: $@" if $@;
+        hlog { "Template renderer for $name", $code } 3;
+    }
+    return $self->_renderers->{$name};
+}
 
 =head2 _finalize
 
@@ -94,10 +127,7 @@ sub _emit_asset {
 
     if($VERBOSE) {
         hlog { __PACKAGE__, 'Emitting asset', $asset->target } 3;
-        say $fh qc'\n# Makefile piece from node {$asset->name}: {$asset->target}';
-        say $fh qc'    # {$asset->how//"<nothing to be done>"}';
-        my $deps = join ', ', map { $_->target } @{$asset->made_from};
-        say $fh qc'    # Depends on {$deps || "nothing"}';
+        print $fh $self->_renderer('verbose.tt')->({ asset => $asset });
     }
 
     my $output = $tags->{$asset};
@@ -107,7 +137,7 @@ sub _emit_asset {
     return unless @prereq_tags || $recipe;
 
     if(defined $asset->how) {
-        # TODO refactor this processing into a utility module/function
+        # TODO RESUME HERE refactor this processing into a template
         $recipe =~ s<#first\b><$prereq_tags[0] // ''>ge;      # first input
         $recipe =~ s<#all\b><join(' ', @prereq_tags)>ge;      # all inputs
         $recipe =~ s<#out\b><$output // ''>ge;
@@ -115,6 +145,7 @@ sub _emit_asset {
 
     # Emit the entry.  If the recipe is defined but falsy,
     # this is a goal, so it gets a .PHONY.
+    # TODO move into a template
     print $fh qc_to <<"EOT";
 #{$asset->isdisk ? '' : ".PHONY: " . $tags->{$asset}}
 #{$output}: #{join(" ", @prereq_tags)}
@@ -153,5 +184,13 @@ sub _run_build {
 } #_run_build()
 
 1;
-__END__
+__DATA__
+
+@@ verbose.tt
+# Makefile piece from node <?= $v{asset}->name ?>: <?= $v{asset}->target ?>
+#   <? if($v{asset}->how) { ?>Recipe: <?= $v{asset}->how ?><? } else { ?><?= '<no recipe>' ?><? } ?>
+<? my $deps = join ', ', map { $_->target } @{$v{asset}->made_from}; ?>
+#   Depends on <?= $deps || "nothing" ?>
+
+@@ __ignore__
 # vi: set fdm=marker: #
