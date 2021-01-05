@@ -7,22 +7,18 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::Gen';   # and Class::Tiny below
 
+use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::String qw(line_mark_string);
+use App::hopen::Util::Templates;
 use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
 use Data::Hopen::Util::Data qw(forward_opts);
-use Data::Section::Simple qw(get_data_section);
 use File::Which;
-use Text::MicroTemplate;
 use Tie::RefHash;
 
 use Class::Tiny {
-    # Cache templates from __DATA__ since Data::Section::Simple doesn't
-    _templates => sub { get_data_section },
-    # Cache renderers
-    _renderers => sub { +{} },
     # .PHONY targets
     _phony => sub { [] },
 };
@@ -42,30 +38,6 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 =cut
 
 # }}}1
-
-# Make a renderer for a given template
-my $_renderer_idx = 0;
-sub _renderer {
-    my ($self, $name) = @_;
-    unless($self->_renderers->{$name}) {
-        # Thanks to the T::MT docs for this workflow
-        my $code = Text::MicroTemplate->new(
-            template => $self->_templates->{$name},
-            escape_func => undef,
-            package_name => '__R_GenMake_Renderer_' . $_renderer_idx++,
-        )->code;
-        $self->_renderers->{$name} = eval line_mark_string <<"EOT";
-            sub {
-                my %v;  # basic variable unpacking --- accept a hashref
-                %v = %{\$_[0]} if ref \$_[0] eq 'HASH';
-                $code->()
-            }
-EOT
-        die "Could not create template: $@" if $@;
-        hlog { "Template renderer for $name", $code } 3;
-    }
-    return $self->_renderers->{$name};
-}
 
 =head2 _finalize
 
@@ -119,9 +91,7 @@ EOT
     }
 
     # Write the Makefile goals and recipes.
-    # The sort order is an arbitrary choice I made --- don't count on it ;)
-    my @assets = sort { $a->isdisk <=> $b->isdisk || $a->target cmp $b->target || $a->name cmp $b->name }
-                    keys %{$self->_assets};
+    my @assets = sort App::hopen::Asset::assetwise keys %{$self->_assets};
     $self->_emit_asset($_, \%tags, $fh) foreach @assets;
 
     # Last thing: the .PHONY tag
@@ -135,7 +105,7 @@ sub _emit_asset {
 
     if($VERBOSE) {
         hlog { __PACKAGE__, 'Emitting asset', $asset->target } 3;
-        print $fh $self->_renderer('verbose.tt')->({ asset => $asset });
+        say $fh template('verbose')->(asset => $asset);
     }
 
     my @prereq_tags = map { $tags->{$_} } @{$asset->made_from};
@@ -152,10 +122,10 @@ sub _emit_asset {
     }
 
     # Emit the entry.
-    print $fh $self->_renderer('entry.tt')->({
+    say $fh template('entry')->(
             asset => $asset, tags => $tags, prereqs => \@prereq_tags,
             recipe => $recipe,
-    });
+    );
 } # sub _emit_asset()
 
 =head2 _default_toolset
@@ -190,14 +160,14 @@ sub _run_build {
 1;
 __DATA__
 
-@@ verbose.tt
+@@ verbose
 ?# Explanation of an asset's build block --- emitted when $VERBOSE
 # Makefile piece from node <?= $v{asset}->name ?>: <?= $v{asset}->target ?>
 #   <? if($v{asset}->how) { ?>Recipe: <?= $v{asset}->how ?><? } else { ?><?= '<no recipe>' ?><? } ?>
 ? my $deps = join ', ', map { $_->target } @{$v{asset}->made_from};
 #   Depends on <?= $deps || "nothing" ?>
 
-@@ entry.tt
+@@ entry
 ?# Main Makefile entry for an asset
 <?= $v{tags}->{$v{asset}} ?>: <?= join ' ', @{$v{prereqs}} ?>
 ?= $v{recipe} ? "\t$v{recipe}" : ''
