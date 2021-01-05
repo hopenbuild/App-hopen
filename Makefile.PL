@@ -176,7 +176,7 @@ my %opts = (
         'Scalar::Util' => '0',
         'Test::Deep' => '0.084',        # for superhashof
         'Test::Directory' => '0.02',    # for subdirs
-        'Test::Exception' => '0',
+        'Test::Fatal' => '0.014',
         'Test::More' => '0',
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
         'Test::UseAllModules' => '0.12',    # for _get_module_list()

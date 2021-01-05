@@ -67,7 +67,7 @@ on test => sub {
     requires 'Scalar::Util';
     requires 'Test::Deep', '0.084';
     requires 'Test::Directory', '0.02';
-    requires 'Test::Exception';
+    requires 'Test::Fatal', '0.014';
     requires 'Test::More';
     requires 'Test::UseAllModules', '0.12';
     requires 'Test::Warn', '0.35';
