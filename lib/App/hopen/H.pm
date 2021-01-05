@@ -68,7 +68,7 @@ sub files {
     my $idx = 0;
     my @files_op = map { App::hopen::G::FilesCmd->new(
         files => [ $_ ],
-        provided exists($args{name}), name => ($args{name} . $idx++),
+        provided_deref exists($args{name}), sub { name => ($args{name} . $idx++) },
     ) } @files;
 
     return { complete => \@files_op };
