@@ -129,6 +129,21 @@ sub BUILD {
     $self->made_from($self->made_from);
 } #BUILD()
 
+=head1 STATIC FUNCTIONS
+
+=head2 assetwise
+
+A sorter for assets.  The sort order is an arbitrary choice the author made ---
+don't assume it will never change ;) .
+
+=cut
+
+sub assetwise($$) {
+    $_[0]->isdisk <=> $_[1]->isdisk ||
+        $_[0]->target cmp $_[1]->target ||
+            $_[0]->name cmp $_[1]->name
+}
+
 1;
 __END__
 # vi: set fdm=marker: #
