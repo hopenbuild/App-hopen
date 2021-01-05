@@ -47,6 +47,7 @@ lib/App/hopen/T/VSXML.pm
 lib/App/hopen/Util.pm
 lib/App/hopen/Util/BasedPath.pm
 lib/App/hopen/Util/String.pm
+lib/App/hopen/Util/Templates.pm
 lib/App/hopen/Util/XML/FromPerl.pm
 LICENSE.md
 Makefile.PL
@@ -62,6 +63,8 @@ t/040-ah-g-assetop.t
 t/100-h.t
 t/199-util.t
 t/200-apputil-basic.t
+t/210-util-templates.t
+t/211-util-templates-fnname.t
 t/900-eg-001.t
 t/dir200/inner.hopen.pl
 t/dir200/inner/.hopen.pl
