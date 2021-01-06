@@ -7,15 +7,9 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::Util::GenWithoutAssetGraph';    # and Class::Tiny below
 
-use App::hopen::Asset;
-use App::hopen::BuildSystemGlobals;
-use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::Templates;
-use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
-use Data::Hopen::Scope::Hash;
-use Data::Hopen::Util::Data qw(forward_opts);
+use Data::Hopen;
 use File::Which;
-use Tie::RefHash;
 
 use Class::Tiny;
 

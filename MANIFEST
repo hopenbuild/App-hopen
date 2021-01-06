@@ -30,7 +30,6 @@ lib/App/hopen/Gen/Make.pm
 lib/App/hopen/Gen/MSBuild.pm
 lib/App/hopen/Gen/MSBuild/AssetGraphNode.pm
 lib/App/hopen/Gen/Ninja.pm
-lib/App/hopen/Gen/Ninja/AssetGraphNode.pm
 lib/App/hopen/H.pm
 lib/App/hopen/HopenFileKit.pm
 lib/App/hopen/MYhopen.pm
