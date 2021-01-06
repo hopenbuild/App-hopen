@@ -46,6 +46,7 @@ lib/App/hopen/T/MSCL/C/LinkCmd.pm
 lib/App/hopen/T/VSXML.pm
 lib/App/hopen/Util.pm
 lib/App/hopen/Util/BasedPath.pm
+lib/App/hopen/Util/GenWithoutAssetGraph.pm
 lib/App/hopen/Util/String.pm
 lib/App/hopen/Util/Templates.pm
 lib/App/hopen/Util/XML/FromPerl.pm
