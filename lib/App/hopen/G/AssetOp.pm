@@ -3,7 +3,6 @@
 package App::hopen::G::AssetOp;
 use strict; use warnings;
 use Data::Hopen::Base;
-use Quote::Code;
 
 our $VERSION = '0.000013'; # TRIAL
 
@@ -16,7 +15,7 @@ use parent 'App::hopen::G::Cmd';
 
 use Class::Tiny::ConstrainedAccessor
     asset => [ sub { eval { $_[0]->DOES('App::hopen::Asset') } },
-                sub { qc'{$_[0]//"<undef>"} is not an App::hopen::Asset or subclass' } ];
+                sub { ($_[0]//'<undef>') . ' is not an App::hopen::Asset or subclass' } ];
 
 use Class::Tiny qw(asset), {
     how => undef,

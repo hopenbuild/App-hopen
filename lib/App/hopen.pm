@@ -22,7 +22,6 @@ use File::stat ();
 use Getopt::Long qw(GetOptionsFromArray :config gnu_getopt);
 use Hash::Merge;
 use Path::Class;
-use Quote::Code;
 use Scalar::Util qw(looks_like_number);
 
 use Class::Tiny {
@@ -901,7 +900,8 @@ EOT
         my ($gen, $gen_class);
         $gen_class = loadfrom($self->cmdopts->{GENERATOR}, 'App::hopen::Gen::', '');
         die "Can't find generator $self->cmdopts->{GENERATOR}" unless $gen_class;
-        hlog { qc"Generator spec ``{$self->cmdopts->{GENERATOR}}'' -> using generator {$gen_class}" };
+        hlog { "Generator spec ``" . $self->cmdopts->{GENERATOR} .
+                "'' -> using generator $gen_class" };
 
         $gen = "$gen_class"->new(proj_dir => $proj_dir, dest_dir => $dest_dir,
             architecture => $self->cmdopts->{ARCHITECTURE})
@@ -917,7 +917,8 @@ EOT
                                         'App::hopen::T::', '');
         die "Can't find toolset $self->cmdopts->{TOOLSET}" unless $toolset_class;
 
-        hlog { qc"Toolset spec ``{$self->cmdopts->{TOOLSET}}'' -> using toolset {$toolset_class}" };
+        hlog { "Toolset spec ``" . $self->cmdopts->{TOOLSET} .
+                "'' -> using toolset $toolset_class" };
         $Toolset = $toolset_class;
     }
 
