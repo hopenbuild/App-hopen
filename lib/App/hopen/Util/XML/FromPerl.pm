@@ -1,4 +1,5 @@
 package App::hopen::Util::XML::FromPerl;
+# TODO? replace with XML::TreePP or XML::MyXML?
 
 our $VERSION = '0.02';
 
