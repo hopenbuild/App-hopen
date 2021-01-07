@@ -269,7 +269,7 @@ my %opts = (
         ## 'Sub::ScopeFinalizer' => '0.02',        # For correct META.yml
 
         'strict' => '0',
-        'Syntax::Construct' => '0.07',
+        #'Syntax::Construct' => '0.07',
         'Text::MicroTemplate' => '0.23',
         'Tie::RefHash' => '0',
         'Type::Tiny' => '1.004004',

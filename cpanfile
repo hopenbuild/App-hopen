@@ -30,7 +30,6 @@ requires 'Quote::Code', '1.01';
 requires 'Scalar::Util';
 requires 'Set::Scalar', '1.27';
 requires 'String::Print', '0.92';
-requires 'Syntax::Construct', '0.07';
 requires 'Text::MicroTemplate', '0.23';
 requires 'Tie::RefHash';
 requires 'Type::Tiny', '1.004004';
