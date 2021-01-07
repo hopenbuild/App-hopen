@@ -4,8 +4,5 @@
 
 use language 'C';
 
-on check => sub {
-};
-
-rule-> #H::want(library => 'va')->
+rule->H::want(library => 'va')->
 H::files('hello.c')->C::compile->C::link('hello')->default_goal;
