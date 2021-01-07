@@ -35,9 +35,6 @@ use vars::i '*OUTPUT' => eval "\\'__R_MSBuildXML'";
 
 Add to the XML hashref being built up in C<__R_MSBuildXML>.
 
-If the `how` of a node is defined but falsy, it's a goal.
-If `how` is defined and truthy, it's a file.
-
 =cut
 
 sub _run {
@@ -53,19 +50,19 @@ sub _run {
     # Debugging output
     hlog {;
         qc'Project piece from node {$self->name}',
-        qc'{$self->how//"<nothing to be done>"}',
+        qc'{$self->asset->how//"<nothing to be done>"}',
         map { qc'Depends on {$_->target}' } @inputs,
     };
 
-    if(defined $self->how && !$self->how) {     # goal = MSBuild <Target>
+    if(defined $self->asset->how && !$self->asset->how) {     # goal = MSBuild <Target>
         hlog { Goal => $output };
         $lrXML = [ Target => { Name => $output },
                     $lrXML ];
 
-    } elsif(defined $self->how) {               # file = MSBuild task
+    } elsif(defined $self->asset->how) {               # file = MSBuild task
         hlog { File => $output };
         my @paths = map { $_->target->path_wrt($DestDir) } @inputs;
-        my $recipe = $self->how;
+        my $recipe = $self->asset->how;
 
         # TODO refactor this processing into a utility module/function
         $recipe =~ s<#first\b><$paths[0] // ''>ge;      # first input
@@ -76,7 +73,6 @@ sub _run {
                     $lrXML ];
     }
 
-    $self->make($self->asset);
     return {$OUTPUT=>$lrXML};
 } #_run()
 

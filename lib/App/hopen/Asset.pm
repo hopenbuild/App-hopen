@@ -51,7 +51,16 @@ No default, so don't call C<< $obj->target >> until you've assigned a target!
 
 =head2 how
 
-Information used by the generator --- TODO document this
+Information used by the generator --- TODO document this.  Currently a string.
+
+TODO? If defined, a string suitable as input to C<sprinti> in L<String::Print>.
+
+TODO or a different formatter?
+
+TODO? require that format specifications call a specified modifier that
+will quote file names for shell-specific command-line use.
+
+TODO CFLAGS/LDFLAGS?
 
 =head2 made_from
 

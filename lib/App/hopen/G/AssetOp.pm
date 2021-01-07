@@ -17,12 +17,7 @@ use Class::Tiny::ConstrainedAccessor
     asset => [ sub { eval { $_[0]->DOES('App::hopen::Asset') } },
                 sub { ($_[0]//'<undef>') . ' is not an App::hopen::Asset or subclass' } ];
 
-use Class::Tiny qw(asset), {
-    how => undef,
-};
-
-use App::hopen::Asset;
-use Data::Hopen::Util::Data qw(forward_opts);
+use Class::Tiny qw(asset);
 
 # Docs
 
@@ -32,8 +27,7 @@ App::hopen::G::AssetOp - parent class for operations used by a generator to buil
 
 =head1 SYNOPSIS
 
-This is an abstract class.  Each generator implements its own subclass of
-AssetOp for its own use.
+This is an abstract L<App::hopen::G::Cmd> that stores an asset.
 
 =head1 ATTRIBUTES
 
@@ -41,20 +35,7 @@ AssetOp for its own use.
 
 An L<App::hopen::Asset> instance.
 
-=head2 how
-
-If defined, a string suitable as input to C<sprinti> in L<String::Print>.
-
-TODO or a different formatter?
-
-TODO? require that format specifications call a specified modifier that
-will quote file names for shell-specific command-line use.
-
-TODO CFLAGS/LDFLAGS?
-
 =cut
-
-sub _run { ... }
 
 1;
 __END__
