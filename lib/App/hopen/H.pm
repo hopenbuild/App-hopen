@@ -86,6 +86,18 @@ dependency will be sent down the build graph from this node.
 sub want {
     my ($builder, %args) = getparameters('self', ['*'], @_);
     hlog { __PACKAGE__, 'want:', Dumper(\%args) } 3;
+
+    # TODO: create a node and give it a reference to the graph.
+    # That node, when run, will:
+    #  - collect the list of all its successors in the graph (not just
+    #    direct children)
+    #  - Use the package names of those successors (or in some other way)
+    #    figure out which languages are used in the graph
+    #    - Do Cmds need to carry a language tag?
+    #  - Invoke language-specific search routines to find the wanted dependendencies
+    #  - Output those as keys under, e.g, $hr->{lang}->{C}->{I} (and likewise
+    #    {l} and {L}).  Or, e.g., $hr->{lang}->{Vala}->{pkg} (and likewise
+    #    {vapidir}).
     ...
 } #want()
 

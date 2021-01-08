@@ -48,7 +48,7 @@ See L<App::hopen::Conventions/INTERNALS>.
 
 sub _run {
     my $self = shift;
-
+    # TODO pass through the other inputs, e.g., for H::want->H::files chains.
     $self->make(@{$self->files});
 } #run()
 
