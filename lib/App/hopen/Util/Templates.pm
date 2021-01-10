@@ -1,4 +1,5 @@
 # App::hopen::Util::Templates - load and render templates from a __DATA__ section
+# TODO use Text::Template instead of Text::MicroTemplate?
 package App::hopen::Util::Templates;
 use Data::Hopen qw(getparameters hlog);
 use strict; use warnings;

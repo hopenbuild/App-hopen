@@ -36,7 +36,26 @@ instances.
 
 # }}}1
 
-=head1 FUNCTIONS
+=head1 FUNCTIONS USABLE WHILE RUNNING
+
+The following functions are only usable during C<_run()>
+(see L<Data::Hopen::G::Runnable/_run>.
+
+=head2 getphase
+
+Returns the current phase
+TODO die if there is no current phase.
+
+    my $thisphase = $self->getphase;
+
+=cut
+
+sub getphase {
+    my $self = shift;
+    my $thisphase = ($self->scope->find(KEY_PHASE)//'');
+    # TODO validate against the list of phases
+    return $thisphase;
+}
 
 =head2 make
 
@@ -110,9 +129,11 @@ sub input_assets {
     return @$lrSourceFiles;
 } #input_assets()
 
+=head1 FUNCTIONS USABLE ANY TIME
+
 =head2 run
 
-Overrides L<Data::Hopen::G::Runnable/run> to stuff L</made> into the
+Wraps L<Data::Hopen::G::Runnable/run> to stuff L</made> into the
 outputs if it's not already there.  Note that this will B<replace>
 any non-arrayref C<made> output.
 

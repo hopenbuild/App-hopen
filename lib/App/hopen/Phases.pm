@@ -59,8 +59,7 @@ The phases we know about, in order.
 
 # }}}1
 
-# TODO RESUME HERE: refactor this into a general case-insensitive string-set
-# class --- I'm having a hard time finding one for some reason.
+# TODO RESUME HERE: refactor this to use App::hopen::Util::PhaseManager
 
 # Phases are case-insensitive.
 our @PHASES; BEGIN { @PHASES = qw(Check Gen Build); }

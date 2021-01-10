@@ -26,6 +26,8 @@ App::hopen::G::FindDependencyCmd - Cmd that finds a dependency
         name=>'foo node');
 
 where C<WHAT> is, e.g., C<library>, and C<WHICH> is a name or list of names.
+If you also pass C<< required => true >>, the command will abort if the
+dependency is not found.
 
 Used by L<App::hopen::H/want>.
 
@@ -37,7 +39,11 @@ Hash of arrayrefs.  E.g.:
 
     { library => [qw(foo bar)], other_type => ['some name'] }
 
-=head1 FUNCTIONS
+=head2 required
+
+Whether the listed L</deps> are required.
+
+=head1 METHODS
 
 =cut
 
@@ -45,17 +51,64 @@ Hash of arrayrefs.  E.g.:
 
 =head2 _run
 
-TODO
+In the Check phase:
+
+=over
+
+=item 1.
+
+Look down the graph and see what languages we need.  Make the options for those
+languages.
+
+=item 2.
+
+Try to find the dependencies and fill in the options.  Warn if non-required
+packages are not found.
+
+=back
+
+In the Gen phase:
+
+=over
+
+=item 1.
+
+Get the option values and confirm that we can find them.  Die if not, and
+if L</required>.
+
+=item 2.
+
+Pass the values down the chain.
+
+=back
 
 =cut
 
+my %fns = {
+    'check' => \&_check,
+    'gen' => \&_gen,
+};
+
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(; visitor graph *)], @_);
+    # TODO refactor to use PhaseManager
+    my $thisphase = lc($self->getphase);
 
-    ...
+    my $fn = $fns{$thisphase} // sub {};
+    return $fn->($self, %args);
+} #_run()
 
-    return {TODO => 'TODO'};
-} #run()
+# --- Workers for _run() ---
+
+sub _check {
+    my ($self, %args) = @_;
+    return {TODO => TODO};
+} # _check()
+
+sub _gen {
+    my ($self, %args) = @_;
+    return {TODO => TODO};
+} # _gen()
 
 1;
 __END__

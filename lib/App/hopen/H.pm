@@ -20,6 +20,8 @@ use App::hopen::Util::BasedPath;
 use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
 use Data::Hopen::Util::Data qw(forward_opts);
+use Hash::MultiValue;
+use List::Flatten::Recursive;
 use Path::Class;
 use PerlX::Maybe qw(:all);
 
@@ -79,13 +81,30 @@ make_GraphBuilder 'files';
 =head2 want
 
 Declare an optional dependency.  The necessary information to use the
-dependency will be sent down the build graph from this node.
+dependency will be sent down the build graph from this node.  Usage:
+
+    $Build->H::want([-type => 'value',]+ [-name => 'foo'])
+
+E.g.,
+
+    $Build->H::want(-lib => 'va', -name => 'libva checker')
+
+You can also give an arrayref:
+
+    $Build->H::want(-lib => ['va', 'glib-2.0'], -name => 'check two libs')
 
 =cut
 
 sub want {
-    my ($builder, %args) = getparameters('self', ['*'], @_);
-    hlog { __PACKAGE__, 'want:', Dumper(\%args) } 3;
+    my $builder = shift;
+
+    # Regularize the dependency lists
+    my $args = Hash::MultiValue->new(@_);
+    foreach my $k (keys %$args) {
+        $args->set($k, flat($args->get_all($k)));
+    }
+
+    hlog { __PACKAGE__, 'want:', Dumper($args->multi) } 3;
 
     # TODO: create a node and give it a reference to the graph.
     # That node, when run, will:
