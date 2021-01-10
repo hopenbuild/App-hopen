@@ -222,11 +222,16 @@ my %opts = (
         'File::stat' => '0',
         'File::Which' => '1.22',    # for msys2 support
         'Hash::Merge' => '0.299',
+        'Hash::MultiValue' => '0.12',
         #'Hash::Ordered' => '0.011',
         'Import::Into' => '0',
         'Getargs::Mixed' => '1.04', # For -undef_ok option
         'Getopt::Long' => '2.5',    # For long option bugfix
         'Graph' => '0.9704',        # For latest multiedged support
+        'List::Flatten::Recursive' => '0.210100',   # for exporter that works
+            # NOTE: 0.103460 is the latest version on CPAN.  Install from
+            # https://github.com/DarwinAwardWinner/List-Flatten-Recursive/pull/2
+            # or https://github.com/cxw42/List-Flatten-Recursive/releases/download/0.210100/List-Flatten-Recursive-0.210100.tar.gz
         'List::MoreUtils' => '0.428',
 
         # 'Module::Find' => '0.12', # For bugfixes

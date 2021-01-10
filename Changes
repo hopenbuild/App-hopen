@@ -1,5 +1,9 @@
 Revision history for App-hopen
 
+0.000013    2021-??-?? (TRIAL REELASE)
+    - New dependency: List::Flatten::Recursive from Git or from
+      <https://github.com/cxw42/List-Flatten-Recursive/releases/download/0.210100/List-Flatten-Recursive-0.210100.tar.gz>
+
 0.000012    2019-06-06 (TRIAL RELEASE)
     - Added Microsoft cl.exe toolset
 
