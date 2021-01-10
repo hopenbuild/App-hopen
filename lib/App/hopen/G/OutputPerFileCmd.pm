@@ -9,7 +9,7 @@ our $VERSION = '0.000013'; # TRIAL
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny;
 
-use Data::Hopen::Util::Data qw(forward_opts);
+use Data::Hopen::Util::Data qw(fwdopts);
 
 # Docs {{{1
 
@@ -72,7 +72,7 @@ Creates the output list by calling L</_process_input>.
 
 sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
-    my @visitor_if_any = forward_opts(\%args, {'-'=>1}, qw(visitor));
+    my @visitor_if_any = fwdopts(%args, ['visitor']);
 
     return $self->passthrough(-nocontext=>1) unless
         $self->_should_act(@visitor_if_any);

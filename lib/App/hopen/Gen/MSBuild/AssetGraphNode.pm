@@ -38,7 +38,7 @@ Add to the XML hashref being built up in C<__R_MSBuildXML>.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(; visitor)], @_);
+    my ($self, %args) = getparameters('self', [qw(; visitor graph)], @_);
     my $lrXML = $self->scope->find($OUTPUT);
         # TODO deal with multiple inputs being merged in DAG::_run()
 

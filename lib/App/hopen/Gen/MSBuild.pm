@@ -12,7 +12,6 @@ use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::XML::FromPerl qw(xml_from_perl);
 use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
-# use Data::Hopen::Util::Data qw(forward_opts);
 ## use File::Which;
 use Tie::RefHash;
 

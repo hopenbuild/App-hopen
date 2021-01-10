@@ -15,6 +15,7 @@ use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
+use Data::Hopen::Util::Data qw(fwdopts);
 use Data::Hopen::Util::Filename;
 use Path::Class;
 
@@ -57,7 +58,7 @@ Create the compile command line for a given asset.
 =cut
 
 sub _process_input {
-    my ($self, %args) = getparameters('self', [qw(asset visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(asset ; *)], @_);
     my $src = $args{asset};
 
     die "Cannot compile non-file $src" unless $src->isdisk;
@@ -91,7 +92,7 @@ Returns truthy if L</_process_input> should be called.
 =cut
 
 sub _should_act {
-    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
+    my $self = shift;
     return ($self->scope->find(KEY_PHASE)//'') eq 'Gen';
 } #_should_act()
 

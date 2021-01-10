@@ -12,7 +12,7 @@ use Class::Tiny {
 };
 
 use Data::Hopen;
-use Data::Hopen::Util::Data qw(forward_opts);
+use Data::Hopen::Util::Data qw(fwdopts);
 
 # Docs {{{1
 
@@ -53,7 +53,7 @@ asset available through L</asset>.
 # }}}1
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(; visitor)], @_);
+    my ($self, %args) = getparameters('self', [qw(; visitor graph)], @_);
     hlog { __PACKAGE__, $self->name } 2;
 
     my $inputs = $self->input_assets;
@@ -65,7 +65,7 @@ sub _run {
         # Data::Hopen::G::Goal::should_output.  Therefore, we also don't
         # call make($asset).
 
-    return $self->Data::Hopen::G::Goal::_run(forward_opts(\%args, {'-'=>1}, qw(visitor)));
+    return $self->Data::Hopen::G::Goal::_run(fwdopts(%args, [qw(visitor graph)]));
 } #_run()
 
 1;

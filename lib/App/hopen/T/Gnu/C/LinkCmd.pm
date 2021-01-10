@@ -15,6 +15,7 @@ use App::hopen::BuildSystemGlobals;   # For $DestDir.
 use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
+use Data::Hopen::Util::Data qw(fwdopts);
 use Data::Hopen::Util::Filename;
 use Path::Class;
 
