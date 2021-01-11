@@ -159,6 +159,8 @@ The hopen file is executed in scalar context.
 Each hopen file runs in an environment with everything from the following
 packages loaded (via L<App::hopen::HopenFileKit>):
 
+Hash keys starting with C<=> are also reserved.
+
 =over
 
 =item * L<App::hopen::BuildSystemGlobals>

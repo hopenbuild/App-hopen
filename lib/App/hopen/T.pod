@@ -1,0 +1,28 @@
+=head1 NAME
+
+App::hopen::T - hopen toolsets
+
+=head1 SYNOPSIS
+
+A class C<< App::hopen::T::<toolset name> >>, and its subclasses,
+define the work to be done during a build, but not how that work is
+coordinated.  See L<App::hopen::Conventions/COMPONENTS USED BY THE BUILD SYSTEM>
+for more information.
+
+Throughout this document, toolset C<Gnu> and language C<C> are used as
+examples.
+
+=head1 STRUCTURE OF A TOOLSET
+
+Each toolset supports one or more languages.  Each language is
+a class C<< App::hopen::T::<toolset>::<language> >>, e.g.,
+L<App::hopen::T::Gnu::C>.  In a hopen file, C<use language 'Foo'> causes
+C<< App::hopen::T::<current toolset>::<language> >> to be loaded as
+the top-level C<< <language> >> package.  E.g.:
+
+    # assume toolset App::hopen::T::Gnu is in use
+    use language 'C';
+    # now App::hopen::T::Gnu::C is loaded as package 'C'.
+    $Build->C::compile; # actually App::hopen::T::Gnu::C::compile()
+
+=cut

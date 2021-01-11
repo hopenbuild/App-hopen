@@ -6,6 +6,7 @@ FindDependencyCmd
 ^\.[^\\\/]*\.yml
 \bfoo\b.*
 t/.*\.out$
+\btags$
 lua$
 TEMPLATE
 App-hopen-.*

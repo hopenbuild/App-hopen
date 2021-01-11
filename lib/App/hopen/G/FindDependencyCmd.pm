@@ -12,8 +12,9 @@ use Class::Tiny {
     required => false,
 };
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::Asset;
-use Data::Dumper;
+use App::hopen::BuildSystemGlobals qw(*LSP);
 
 # Docs {{{1
 
@@ -114,13 +115,26 @@ sub _check {
     }
 
     hlog { 'Languages in use:', join ', ', keys %langs };
+    my %langopts;
+    foreach my $language (keys %langs) {
+        next unless $LSP{$language};
+        $langopts{$language} = $LSP{$language}->find_deps($self->deps);
+    }
 
-    return undef #{TODO => TODO};
+    return { &KEY_LANGOPTS => \%langopts };
 } # _check()
 
 sub _gen {
     my ($self, %args) = @_;
-    return undef #{TODO => TODO};
+
+    my $langopts = $self->scope->find(KEY_LANGOPTS) // {};
+    foreach my $language (keys %$langopts) {
+        next unless $LSP{$language};
+        $langopts->{$language} =
+            $LSP{$language}->find_deps($self->deps, $langopts->{$language});
+
+    }
+    return { &KEY_LANGOPTS => $langopts };
 } # _gen()
 
 1;

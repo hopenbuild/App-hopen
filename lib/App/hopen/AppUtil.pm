@@ -11,7 +11,8 @@ our $VERSION = '0.000013'; # TRIAL
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS, @_export_constants);
 BEGIN {
     @EXPORT = qw();
-    @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS);
+    @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS
+                            KEY_LANGOPTS);
     @EXPORT_OK = (qw(find_hopen_files find_myhopen), @_export_constants);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -46,12 +47,19 @@ use constant HOPEN_FILE_FLAG => 'IsHopenFile';
 The names of the keys used in scopes for phase, generator class, and
 toolset class, respectively.
 
+=head2 KEY_LANGOPTS
+
+The name of the key under which language-specific information
+(from an L<App::hopen::Lang> subclass) is stored.  This is a hashref
+indexed by language name.
+
 =cut
 
 use constant {
     KEY_PHASE => '=Phase',
     KEY_GENERATOR_CLASS => '=GeneratorClass',
     KEY_TOOLSET_CLASS => '=ToolsetClass',
+    KEY_LANGOPTS => '=Lang',
 };
 
 =head1 FUNCTIONS

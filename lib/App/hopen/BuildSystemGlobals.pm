@@ -8,7 +8,7 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'Exporter';
 our @EXPORT;
-BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir); }
+BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir *LSP); }
         # export with `*` => `local` will work.
 
 =head1 NAME
@@ -50,9 +50,16 @@ A L<Path::Class::Dir> instance representing the project directory.
 
 A L<Path::Class::Dir> instance representing the destination directory.
 
+=head2 %LSP
+
+The currently-loaded L<App::hopen::Lang> instances, indexed by language name.
+Note that a particular language may not have an LSP; this is not an error.
+E.g., a self-contained assembly project probably doesn't need to reference
+external code!
+
 =cut
 
-our ($Generator, $Toolset, $Build, $Phase, $ProjDir, $DestDir);
+our ($Generator, $Toolset, $Build, $Phase, $ProjDir, $DestDir, %LSP);
 
 1;
 __END__

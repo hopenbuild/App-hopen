@@ -101,6 +101,19 @@ C<import()> routine for the fake "language" package
             # to the package being loaded.
 
         $_loaded_languages{$language} = true;
+
+        # Create the LSP.  A language may not have an LSP; this is not
+        # an error.  E.g., a self-contained assembly project probably
+        # doesn't need to reference external code!
+        LSP: {
+            eval "require App::hopen::Lang::$language";
+            (hlog { "Could not load LSP for $language:", $@ }), last LSP if $@;
+
+            my $lsp = eval { "App::hopen::Lang::$language"->new };
+            (hlog { "Could not create LSP for $language:", $@ }), last LSP if $@;
+
+            $LSP{$language} = $lsp if $lsp;
+        }
     } #foreach requested language
 } #_language_import }}}1
 

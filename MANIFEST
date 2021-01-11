@@ -32,8 +32,11 @@ lib/App/hopen/Gen/MSBuild/AssetGraphNode.pm
 lib/App/hopen/Gen/Ninja.pm
 lib/App/hopen/H.pm
 lib/App/hopen/HopenFileKit.pm
+lib/App/hopen/Lang.pm
+lib/App/hopen/Lang/C.pm
 lib/App/hopen/MYhopen.pm
 lib/App/hopen/Phases.pm
+lib/App/hopen/T.pod
 lib/App/hopen/T/Gnu.pm
 lib/App/hopen/T/Gnu/C.pm
 lib/App/hopen/T/Gnu/C/CompileCmd.pm
@@ -46,6 +49,7 @@ lib/App/hopen/T/VSXML.pm
 lib/App/hopen/Util.pm
 lib/App/hopen/Util/BasedPath.pm
 lib/App/hopen/Util/GenWithoutAssetGraph.pm
+lib/App/hopen/Util/PhaseManager.pm
 lib/App/hopen/Util/String.pm
 lib/App/hopen/Util/Templates.pm
 lib/App/hopen/Util/XML/FromPerl.pm
