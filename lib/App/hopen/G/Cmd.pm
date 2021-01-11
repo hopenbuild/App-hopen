@@ -11,6 +11,7 @@ use Class::Tiny {
     made => sub { [] },
 };
 
+use App::hopen::AppUtil qw(:constants);
 use Class::Method::Modifiers qw(around);
 use Data::Hopen qw(getparameters);
 
@@ -130,6 +131,23 @@ sub input_assets {
 } #input_assets()
 
 =head1 FUNCTIONS USABLE ANY TIME
+
+=head2 language
+
+Returns the source language with which this Cmd is associated, or falsy if
+none.  The implementation in C<Cmd> is for use with the layout of
+L<App::hopen::Conventions>: if the class name is of the form
+ C<< App::hopen::T::<toolset>::<language> >>, C<< <language> >> is returned.
+May be overridden by subclasses.
+
+=cut
+
+sub language {
+    my $self = shift;
+    my $class = ref $self;
+    return $1 if $class =~ m{^App::hopen::T::[^:]+::([^:]+)};
+    die "Can't find a language type in class name $class";
+} #language()
 
 =head2 run
 

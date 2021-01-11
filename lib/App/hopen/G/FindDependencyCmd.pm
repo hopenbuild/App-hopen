@@ -13,6 +13,7 @@ use Class::Tiny {
 };
 
 use App::hopen::Asset;
+use Data::Dumper;
 
 # Docs {{{1
 
@@ -84,10 +85,10 @@ Pass the values down the chain.
 
 =cut
 
-my %fns = {
+my %fns = (
     'check' => \&_check,
     'gen' => \&_gen,
-};
+);
 
 sub _run {
     my ($self, %args) = getparameters('self', [qw(; visitor graph *)], @_);
@@ -102,12 +103,24 @@ sub _run {
 
 sub _check {
     my ($self, %args) = @_;
-    return {TODO => TODO};
+
+    my @successors = $args{graph}->_graph->all_successors($self);
+    hlog { 'Successors of', $self->name, Dumper([map { $_->name } @successors]) } 3;
+    my %langs;
+    foreach(@successors) {
+        my $lang = eval { $_->language };
+        next unless $lang;
+        $langs{$lang} = 1;
+    }
+
+    hlog { 'Languages in use:', join ', ', keys %langs };
+
+    return undef #{TODO => TODO};
 } # _check()
 
 sub _gen {
     my ($self, %args) = @_;
-    return {TODO => TODO};
+    return undef #{TODO => TODO};
 } # _gen()
 
 1;

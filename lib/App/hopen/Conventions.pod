@@ -60,10 +60,17 @@ Toolsets are technically independent of which generator is in use.  However, a
 command-line toolset probably won't work with an XML-based generator!  If no
 toolset is specified, the generator picks the default.
 
+Toolsets are grouped under C<App::hopen::T>.
+
 =item An architecture (optional)
 
 An arbitrary string understood by the toolset or generator.  Used, e.g.,
 to select x86 vs. x64.
+
+=item Language-support package ("LSP")
+
+A subclass of L<App::hopen::Lang> that provides support for a particular
+programming language.
 
 =item "Blueprint" files
 

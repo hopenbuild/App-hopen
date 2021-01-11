@@ -68,6 +68,10 @@ sub _run {
     return $self->Data::Hopen::G::Goal::_run(fwdopts(%args, [qw(visitor graph)]));
 } #_run()
 
+sub language {
+    return undef;
+}
+
 1;
 __END__
 # vi: set fdm=marker: #

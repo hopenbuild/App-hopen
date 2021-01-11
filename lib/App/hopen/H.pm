@@ -15,7 +15,7 @@ use vars::i '%EXPORT_TAGS' => (
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::G::FilesCmd;
-#use App::hopen::G::FindDependencyCmd;
+use App::hopen::G::FindDependencyCmd;
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(hlog getparameters);
 use Data::Hopen::G::GraphBuilder;
@@ -105,8 +105,9 @@ sub want {
     }
 
     hlog { __PACKAGE__, 'want:', Dumper($args->multi) } 3;
+    my $cmd = App::hopen::G::FindDependencyCmd->new(); # TODO add args
 
-    # TODO: create a node and give it a reference to the graph.
+    # TODO: create a node
     # That node, when run, will:
     #  - collect the list of all its successors in the graph (not just
     #    direct children)
@@ -117,7 +118,7 @@ sub want {
     #  - Output those as keys under, e.g, $hr->{lang}->{C}->{I} (and likewise
     #    {l} and {L}).  Or, e.g., $hr->{lang}->{Vala}->{pkg} (and likewise
     #    {vapidir}).
-    ...
+    return $cmd;
 } #want()
 
 make_GraphBuilder 'want';

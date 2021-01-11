@@ -73,7 +73,7 @@ sub compile {
     my $idx = 0;
     my @nodes = map { App::hopen::T::Gnu::C::CompileCmd->new(
         compiler => $_CC,
-        provided exists($args{name}), name => ($args{name} . $idx++),
+        provided_deref exists($args{name}), sub { name => $args{name} . $idx++ },
     ) } @{$builder->nodes};
 
     hlog { __PACKAGE__, 'Built compile nodes', Dumper(\@nodes) } 2;
