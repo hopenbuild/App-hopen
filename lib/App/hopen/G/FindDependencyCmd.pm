@@ -114,11 +114,11 @@ sub _check {
         $langs{$lang} = 1;
     }
 
-    hlog { 'Languages in use:', join ', ', keys %langs };
+    hlog { 'Languages in use:', join(', ', keys %langs) };
     my %langopts;
     foreach my $language (keys %langs) {
         next unless $LSP{$language};
-        $langopts{$language} = $LSP{$language}->find_deps($self->deps);
+        $langopts{$language} = $LSP{$language}->find_deps($self->deps, $self->required);
     }
 
     return { &KEY_LANGOPTS => \%langopts };
@@ -131,7 +131,7 @@ sub _gen {
     foreach my $language (keys %$langopts) {
         next unless $LSP{$language};
         $langopts->{$language} =
-            $LSP{$language}->find_deps($self->deps, $langopts->{$language});
+            $LSP{$language}->find_deps($self->deps, $self->required, $langopts->{$language});
 
     }
     return { &KEY_LANGOPTS => $langopts };

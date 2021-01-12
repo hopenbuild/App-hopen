@@ -105,7 +105,9 @@ sub want {
     }
 
     hlog { __PACKAGE__, 'want:', Dumper($args->multi) } 3;
-    my $cmd = App::hopen::G::FindDependencyCmd->new(); # TODO add args
+    my $cmd = App::hopen::G::FindDependencyCmd->new(
+        deps => $args->multi, required => false
+    );
 
     # TODO: create a node
     # That node, when run, will:
