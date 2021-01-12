@@ -16,8 +16,13 @@ is($t->name, 'perl_ident');
 
 # TODO RESUME HERE convince Dumper to output the refs with the name of the
 # variable rather than with the direct value.
-my $h = { foo => $t };
-my $dumper = Data::Dumper->new([$answer, \$answer, $h, \$answer], [$t->name, 'dref', 'hashref', 'directref']);
+my $h = { foo => $t, some_scalar => 1337 };
+my $t2 = App::hopen::Util::Thunk->new(tgt => \($h->{some_scalar}), name => 'another_one');
+
+my $optvalue = 'default';
+my $conf = { scalar_option => $t2, optvalue => \$optvalue };
+my $t3 = App::hopen::Util::Thunk->new(tgt => \($conf->{optvalue}), name => 'optvalue');
+my $dumper = Data::Dumper->new([$conf, $answer, \$answer, $h, \$answer], ['config', $t->name, 'dref', 'hashref', 'directref']);
 $dumper->Indent(1);         # fixed indent size
 $dumper->Quotekeys(0);
 $dumper->Purity(1);
