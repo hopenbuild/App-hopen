@@ -956,6 +956,12 @@ EOT
     # need to edit right at the top of the file, and not also throughout
     # the hashref.
 
+    # TODO RESUME HERE
+    # - Find any thunks in $new_data
+    # - List them as variables first in the Dumper ctor call
+    # - Add code after the dump to replace all those thunks with their
+    #   get() values.
+
     my $VAR = '__R_new_data';
     my $dumper = Data::Dumper->new([$new_data], [$VAR]);
     $dumper->Pad(' ' x 12);     # To line up with the do{}
