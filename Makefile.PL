@@ -209,7 +209,6 @@ my %opts = (
         'constant' => '0',
         'Data::Dumper' => '2.154',      # For Maxrecurse
         'Data::Section::Simple' => '0.07',
-        'Data::Walk' => '2.01',
         'Deep::Hash::Utils' => '0.03',  # For correct metadata
         ## 'experimental' => '0.009',      # For support on perl < 5.15.7
         'Exporter' => '0',

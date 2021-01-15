@@ -15,8 +15,6 @@ use Path::Class ();
 
 use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
-use Data::Walk;
-use List::Util qw(pairs);
 
 our $VERSION = '0.000013'; # TRIAL
 
@@ -160,47 +158,49 @@ their L<App::hopen::Util::Thunk/tgt|tgt>s.  Operates in-place.  Usage:
 
 our $_config;
 
-sub dethunk {
-    my ($config, $data) = @_;
+sub _iskid { ref $_[0] eq 'ARRAY' || ref $_[0] eq 'HASH' }
 
-    local $_config = $config;
-    walk {  wanted=>sub{},  # nothing to do!
-            preprocess=>\&_dethunk_preprocess,
-        }, $data;
+sub dethunk {
+    my $data = shift;
+    die "need a data arrayref or hashref" unless _iskid $data;
+
+    _dethunk_walk($data);
 }
 
-# _dethunk_preprocess: actually de-thunk.
-# As far as I can tell, $Data::Walk::type is always ARRAY or HASH here.
-# Beware Kernighan's Law.
-sub _dethunk_preprocess {
-    my $ty = $Data::Walk::type or die "Unknown type";
-    die "Unknown type $ty" unless $ty eq 'HASH' || $ty eq 'ARRAY';
-
+# Dethunk.  Can't use Data::Walk because of <https://github.com/gflohr/Data-Walk/issues/2>.
+# Precondition: $node is an arrayref or hashref
+sub _dethunk_walk {
+    my $node = shift;
+    my $ty = ref $node;
     my $ishash = $ty eq 'HASH';
-    my $container = $Data::Walk::container or die "No container";
-    my @inputs = $ishash ? pairs(@_) : map { [$_, $_[$_]] } 0..$#_;
-    my @retval;
 
-    say $Data::Walk::type, ': ', Dumper([@_]);
-    say '[container]: ', Dumper([$Data::Walk::container]);
+    my @kids;
 
-    foreach my $pair (@inputs) {
-        my ($idx, $val) = @$pair;
-        unless(ref $val eq 'App::hopen::Util::Thunk') {
-            push @retval, $idx if $ishash;
-            push @retval, $val;
-            next;
+    if($ishash) {
+        foreach my $k (keys %$node) {
+            my $v = $node->{$k};
+            hlog { Value => $v } 5;
+            if(ref $v eq 'App::hopen::Util::Thunk') {
+                hlog { Dethunk => $v->name } 4;
+                $v = $node->{$k} = $v->tgt;
+            }
+            push @kids, $v if _iskid($v)
         }
-        if($ishash) {
-            push @retval, $idx;
-            push @retval, ($container->{$idx} = $val->tgt);
-        } else {
-            push @retval, ($container->[$idx] = $val->tgt);
-        }
-    } #foreach pair
 
-    return @retval;
-} #_dethunk_preprocess
+    } else {    # array
+        foreach my $pair (map { [$_, $node->[$_]] } 0..$#$node) {
+            my ($i, $v) = @$pair;
+            hlog { Value => $v } 5;
+            if(ref $v eq 'App::hopen::Util::Thunk') {
+                hlog { Dethunk => $v->name } 4;
+                $v = $node->[$i] = $v->tgt;
+            }
+            push @kids, $v if _iskid($v)
+        }
+    }
+
+    _dethunk_walk($_) foreach @kids;
+}
 
 my $_uniq_idx = 0;  # for fake filenames
 

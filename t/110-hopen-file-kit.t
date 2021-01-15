@@ -12,14 +12,20 @@ use Test::Deep;
 #use Path::Class;
 
 use App::hopen::HopenFileKit;
+use App::hopen::Util;
 use App::hopen::Util::Thunk;
 
 {
-    my $config = { y => [ 1337 ] };
-    my $data = { answer => 42, option => [ 65536, 128, 64 ],
-        thunk => App::hopen::Util::Thunk->new(tgt=>\($config->{y}), name=>"y")};
-    dethunk($config, $data);
-    is_deeply($data, { answer => 42, option => [ 65536 ],
+    my $config = { y => [ 1337 ], n => [ 'oops' ] };
+    my $data = { answer => 42, option => [ 65536, 128, 64,
+        App::hopen::Util::Thunk->new(tgt=>$config->{n}, name=>"n")],
+        thunk => App::hopen::Util::Thunk->new(tgt=>$config->{y}, name=>"y")};
+
+    diag "Before\n" . nicedump([$config, $data], [qw(Config Data)]);
+    dethunk($data);
+    diag "After\n" . nicedump([$config, $data], [qw(Config Data)]);
+
+    is_deeply($data, { answer => 42, option => [ 65536, 128, 64, ['oops'] ],
         thunk => [ 1337 ] }, 'dethunk replaced a thunk');
 }
 
