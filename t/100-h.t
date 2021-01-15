@@ -1,5 +1,6 @@
 #!perl
 # 100-h: test App::hopen::H
+
 use rlib 'lib';
 use HopenTest 'App::hopen::H';
 use Path::Class;

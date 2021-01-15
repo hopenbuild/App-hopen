@@ -15,21 +15,24 @@ use Path::Class ();
 
 use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
+use Data::Walk;
+use List::Util qw(pairs);
 
 our $VERSION = '0.000013'; # TRIAL
 
-use parent 'Exporter';  # Exporter-exported symbols {{{1
-our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
-BEGIN {
-    @EXPORT = qw($__R_on_result *FILENAME rule);
-                # ^ for Phases::on()
-                #               ^ glob so it can be localized
-    @EXPORT_OK = qw();
-    %EXPORT_TAGS = (
+# Exporter-exported symbols {{{1
+use parent 'Exporter';
+use vars::i {
+    '@EXPORT' => [qw($__R_on_result *FILENAME rule dethunk)],
+                    #  ^ for Phases::on()
+                    #              ^ glob so it can be localized
+    '@EXPORT_OK' => [qw()],
+};
+use vars::i '%EXPORT_TAGS' => (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
-    );
-} # }}}1
+);
+# }}}1
 
 # Docs {{{1
 
@@ -49,7 +52,7 @@ C<< <filename> >> is the name you want to use for the package using
 this module, and will be loaded into constant C<$FILENAME> in that
 package.  If a filename is omitted, a default name will be used.
 
-C<[other args]> are per Exporter, and should be omitted unless you
+C<[other args]> are per L<Exporter>, and should be omitted unless you
 really know what you're doing!
 
 See L</import> for details about C<$IsHopenFile>.  That C<our> statement
@@ -146,7 +149,60 @@ A convenience accessor for L<App::hopen::BuildSystemGlobals/$Build>.
 
 sub rule { $Build }
 
-my $_uniq_idx = 0;
+=head2 dethunk
+
+Walk a hashref and replace all the L<App::hopen::Util::Thunk> instances with
+their L<App::hopen::Util::Thunk/tgt|tgt>s.  Operates in-place.  Usage:
+
+    dethunk(\%config, \%data)
+
+=cut
+
+our $_config;
+
+sub dethunk {
+    my ($config, $data) = @_;
+
+    local $_config = $config;
+    walk {  wanted=>sub{},  # nothing to do!
+            preprocess=>\&_dethunk_preprocess,
+        }, $data;
+}
+
+# _dethunk_preprocess: actually de-thunk.
+# As far as I can tell, $Data::Walk::type is always ARRAY or HASH here.
+# Beware Kernighan's Law.
+sub _dethunk_preprocess {
+    my $ty = $Data::Walk::type or die "Unknown type";
+    die "Unknown type $ty" unless $ty eq 'HASH' || $ty eq 'ARRAY';
+
+    my $ishash = $ty eq 'HASH';
+    my $container = $Data::Walk::container or die "No container";
+    my @inputs = $ishash ? pairs(@_) : map { [$_, $_[$_]] } 0..$#_;
+    my @retval;
+
+    say $Data::Walk::type, ': ', Dumper([@_]);
+    say '[container]: ', Dumper([$Data::Walk::container]);
+
+    foreach my $pair (@inputs) {
+        my ($idx, $val) = @$pair;
+        unless(ref $val eq 'App::hopen::Util::Thunk') {
+            push @retval, $idx if $ishash;
+            push @retval, $val;
+            next;
+        }
+        if($ishash) {
+            push @retval, $idx;
+            push @retval, ($container->{$idx} = $val->tgt);
+        } else {
+            push @retval, ($container->[$idx] = $val->tgt);
+        }
+    } #foreach pair
+
+    return @retval;
+} #_dethunk_preprocess
+
+my $_uniq_idx = 0;  # for fake filenames
 
 sub import {    # {{{1
 
