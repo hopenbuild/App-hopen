@@ -1,18 +1,18 @@
 =head1 NAME
 
-App::hopen::Conventions - conventions for using hopen(1) as a build system
+App::hopen::Manual - manual for the App::hopen build system
 
 =head1 SYNOPSIS
 
-L<Data::Hopen> is a flexible dataflow processor and task runner.  However, its
-main use case is as a build system (e.g., a Makefile generator).  To keep
-the core of hopen as flexible as possible, L<App::hopen> (build system)
-requires its components to follow the conventions described in this document.
+L<App::hopen> is a cross-platform software build generator.  It makes files you
+can pass to Make, Ninja, Visual Studio, or other build tools, to compile and
+link your software.  This manual describes the operation and internals
+of L<App::hopen>.
 
-These conventions are generally implemented/enforced in L<App::hopen>
-and L<App::hopen::AppUtil>.
+L<App::hopen> is built on L<Data::Hopen>, which is a flexible dataflow
+processor and task runner.  L<App::hopen> uses dataflow graphs extensively.
 
-Note: everything in this document is subject to change since C<App::hopen>
+Note: everything in this document is subject to change since L<App::hopen>
 is currently under active development.
 
 =head1 HOPEN'S PHILOSOPHY
@@ -368,7 +368,7 @@ TODO?
         Tool will generate command-line options for gcc-style command lines.
     - Only one Tool may be loaded for each (language, opcode) pair.
         Otherwise the build would be ambiguous.
-    - In Conventions, define the formats for languages and opcodes.
+    - In Manual, define the formats for languages and opcodes.
 
 Maybe TODO:
 

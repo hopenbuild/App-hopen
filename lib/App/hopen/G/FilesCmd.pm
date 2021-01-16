@@ -42,7 +42,7 @@ instances.
 
 Create L<App::hopen::Asset>s for the listed files and add them to the
 generator's asset graph.
-See L<App::hopen::Conventions/INTERNALS>.
+See L<App::hopen::Manual/INTERNALS>.
 
 =cut
 

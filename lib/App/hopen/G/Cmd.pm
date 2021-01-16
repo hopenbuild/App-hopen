@@ -24,7 +24,7 @@ App::hopen::G::Cmd - base class for hopen(1) command-graph nodes
 =head1 SYNOPSIS
 
 This is the base class for graph nodes in the command graph of
-L<App::hopen>.  See L<App::hopen::Conventions>.
+L<App::hopen>.  See L<App::hopen::Manual>.
 
 =head1 ATTRIBUTES
 
@@ -136,7 +136,7 @@ sub input_assets {
 
 Returns the source language with which this Cmd is associated, or falsy if
 none.  The implementation in C<Cmd> is for use with the layout of
-L<App::hopen::Conventions>: if the class name is of the form
+L<App::hopen::Manual>: if the class name is of the form
  C<< App::hopen::T::<toolset>::<language> >>, C<< <language> >> is returned.
 May be overridden by subclasses.
 

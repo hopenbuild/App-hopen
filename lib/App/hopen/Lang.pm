@@ -19,7 +19,7 @@ App::hopen::Lang - base class for a language-support package (LSP)
 A class C<< App::hopen::Lang::<language name> >>, and its subclasses,
 provide information needed for a particular language.  For example,
 LSPs find dependencies.
-See L<App::hopen::Conventions/COMPONENTS USED BY THE BUILD SYSTEM>
+See L<App::hopen::Manual/COMPONENTS USED BY THE BUILD SYSTEM>
 for more information.
 
 Different languages have different LSPs because they have different ways of

@@ -78,7 +78,7 @@ platforms without affecting your project.
 
 =back
 
-See L<App::hopen::Conventions> for details of the input format.
+See L<App::hopen::Manual> for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
@@ -110,7 +110,7 @@ Now C<built/Makefile> has been created.
 And your software is ready to go!  C<make> has been run in C<built/>,
 with output left in C<built/>.
 
-See L<App::hopen::Conventions> for information on writing C<.hopen.pl> files.
+See L<App::hopen::Manual> for information on writing C<.hopen.pl> files.
 
 =head1 SYNOPSIS
 
@@ -120,7 +120,7 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, C<< <project dir>/built >> is used.
 
-See L<App::hopen> and L<App::hopen::Conventions> for more details.
+See L<App::hopen> and L<App::hopen::Manual> for more details.
 
 =head1 OPTIONS
 
@@ -1105,7 +1105,7 @@ Christopher White, C<cxwembedded at gmail.com>
 You can find documentation for this module with the perldoc command.
 
     perldoc App::hopen                      For command-line options
-    perldoc App::hopen::Conventions         For terminology and workflow
+    perldoc App::hopen::Manual         For terminology and workflow
     perldoc Data::Hopen                     For the underlying engine
 
 You can also look for information at:

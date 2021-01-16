@@ -6,7 +6,7 @@ App::hopen::T - hopen toolsets
 
 A class C<< App::hopen::T::<toolset name> >>, and its subclasses,
 define the work to be done during a build, but not how that work is
-coordinated.  See L<App::hopen::Conventions/COMPONENTS USED BY THE BUILD SYSTEM>
+coordinated.  See L<App::hopen::Manual/COMPONENTS USED BY THE BUILD SYSTEM>
 for more information.
 
 Throughout this document, toolset C<Gnu> and language C<C> are used as

@@ -29,7 +29,7 @@ Christopher White, C<cxwembedded at gmail.com>
 You can find documentation for this module with the perldoc command.
 
     perldoc App::hopen                      For command-line options
-    perldoc App::hopen::Conventions         For terminology and workflow
+    perldoc App::hopen::Manual         For terminology and workflow
     perldoc Data::Hopen                     For internals
 
 You can also look for information at:
