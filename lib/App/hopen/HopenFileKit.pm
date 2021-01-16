@@ -13,24 +13,26 @@ use App::hopen::BuildSystemGlobals;
 use App::hopen::Util::BasedPath ();
 use Path::Class ();
 
+# NOTE: we don't use List::Util::pairs*() because those were added in L::U 1.29,
+# and Perl 5.14 (which we support) only has L::U 1.23 in core.
+
 use App::hopen::Phases ();
 use Data::Hopen qw(:default loadfrom);
 
 our $VERSION = '0.000013'; # TRIAL
 
-# Exporter-exported symbols {{{1
+# Exporter-exported symbols
 use parent 'Exporter';
 use vars::i {
-    '@EXPORT' => [qw($__R_on_result *FILENAME rule dethunk)],
+    '@EXPORT' => [qw($__R_on_result *FILENAME rule dethunk extract_thunks)],
                     #  ^ for Phases::on()
-                    #              ^ glob so it can be localized
+                    #               ^ glob so it can be localized
     '@EXPORT_OK' => [qw()],
 };
 use vars::i '%EXPORT_TAGS' => (
         default => [@EXPORT],
         all => [@EXPORT, @EXPORT_OK]
 );
-# }}}1
 
 # Docs {{{1
 
@@ -200,9 +202,85 @@ sub _dethunk_walk {
     }
 
     _dethunk_walk($_) foreach @kids;
+} #_dethunk_walk
+
+=head2 extract_thunks
+
+Pull out any L<App::hopen::Util::Thunk> instances from a hashref or arrayref
+and return a hashref suitable for use as config.  Usage:
+
+    my $hrOut = extract_thunks([\@in | \%in]);
+
+NOTE: May mutate Thunks in the input.  Specifically, it will adjust thunk
+names so they are all unique.  TODO figure out if this is the Right Thing!
+What if multiple nodes need the same config value?
+
+=cut
+
+sub extract_thunks {
+    my $data = shift;
+    die "need a data arrayref or hashref" unless _iskid $data;
+    my $retval = +{};
+
+    _extract_thunks_walk($retval, $data);
+    return $retval;
+} #extract_thunks
+
+# Make a key that doesn't exist in a hashref.
+# Usage: $newname = _make_unique_in($hr, $oldname)
+sub _make_unique_in {
+    state $uniq_idx = 1;
+
+    my ($hash, $k) = @_;
+    return $k unless exists $hash->{$k};
+    ++$uniq_idx while exists $hash->{$k . $uniq_idx};
+    return $k . $uniq_idx;
+} #_make_unique_in
+
+# Process a thunk.  Params: \%retval, $thunk
+sub _etw_process {
+    my ($retval, $v) = @_;
+    my $n = $v->name;
+    hlog { 'Found thunk',  $n } 4;
+    $n = _make_unique_in($retval, $n);
+    $v->name($n);
+    $retval->{$n} = $v->tgt;
 }
 
-my $_uniq_idx = 0;  # for fake filenames
+# Preconditions: $retval is a hashref; $node is an arrayref or hashref
+sub _extract_thunks_walk {
+
+    my ($retval, $node) = @_;
+    my $ty = ref $node;
+    my $ishash = $ty eq 'HASH';
+
+    my @kids;
+
+    if($ishash) {
+        foreach my $k (sort keys %$node) {  # sort for reproducibility
+            my $v = $node->{$k};
+            hlog { Value => $v } 5;
+            if(ref $v eq 'App::hopen::Util::Thunk') {
+                _etw_process($retval, $v);
+                push @kids, $v->tgt if _iskid($v->tgt);
+            }
+            push @kids, $v if _iskid($v);
+        }
+
+    } else {    # array
+        foreach my $pair (map { [$_, $node->[$_]] } 0..$#$node) {
+            my ($i, $v) = @$pair;
+            hlog { Value => $v } 5;
+            if(ref $v eq 'App::hopen::Util::Thunk') {
+                _etw_process($retval, $v);
+                push @kids, $v->tgt if _iskid($v->tgt);
+            }
+            push @kids, $v if _iskid($v);
+        }
+    }
+
+    _extract_thunks_walk($retval, $_) foreach @kids;
+} #_extract_thunks_walk
 
 sub import {    # {{{1
 
@@ -216,11 +294,13 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
 
 =cut
 
+    state $uniq_idx = 0;  # for fake filenames
+
     my $target = caller;
     my $target_friendly_name;
     unless($target_friendly_name = $_[1]) {
         warn "No filename given --- creating one";
-        $target_friendly_name = '__R_hopenfile_' . $_uniq_idx++;
+        $target_friendly_name = '__R_hopenfile_' . $uniq_idx++;
     }
 
     my @args = splice @_, 1, 1;
