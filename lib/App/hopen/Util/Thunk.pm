@@ -43,7 +43,7 @@ sub BUILD {
     die "'tgt' argument is required" unless $self->tgt;
     die "'tgt' argument must be a reference" unless ref $self->tgt;
     die "'name' argument is required" unless $self->name;
-    die "'tgt' argument must not be a reference" if ref $self->name;
+    die "'name' argument must not be a reference" if ref $self->name;
 }
 
 1;

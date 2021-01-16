@@ -44,7 +44,9 @@ sub test_extract_thunks {
         y => ['yep'],
         y1 => ['another one'],
     }, 'extract_thunks');
-    ref_equal_ok($config->{n}, $data->{option}->[3]->tgt);
+    ref_equal_ok($config->{n}, $data->{option}->[3]->tgt, 'unique ref');
+    ref_equal_ok($config->{y}, $data->{thunk}->tgt, 'first non-unique ref');
+    ref_equal_ok($config->{y1}, $data->{thunk2}->tgt, 'second non-unique ref');
 }
 
 test_dethunk;

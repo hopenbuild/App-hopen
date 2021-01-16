@@ -3,7 +3,9 @@
 use rlib 'lib';
 use HopenTest;
 use Data::Dumper;
+use Test::Fatal;
 
+use App::hopen::Util;
 use App::hopen::Util::Thunk;
 
 our $answer = 42;
@@ -16,20 +18,12 @@ is($t->name, 'perl_ident');
     my $data = { x => 42, y => 1337,
         option => App::hopen::Util::Thunk->new(tgt => \$conf->{quux}, name => 'another_one'),
     };
-    dumpit([$conf, $data], ['Config', 'Data']);
+    diag nicedump([$conf, $data], ['Config', 'Data']);
 }
+
+like( exception { App::hopen::Util::Thunk->new }, qr/tgt.+required/, 'tgt required' );
+like( exception { App::hopen::Util::Thunk->new(tgt => 42) }, qr/tgt.+reference/, 'tgt ref' );
+like( exception { App::hopen::Util::Thunk->new(tgt => []) }, qr/name.+required/, 'name required' );
+like( exception { App::hopen::Util::Thunk->new(tgt => [], name => \'') }, qr/name.+reference/, 'name ref' );
 
 done_testing();
-
-sub dumpit {
-    my $dumper = Data::Dumper->new(@_);
-    $dumper->Indent(1);         # fixed indent size
-    $dumper->Quotekeys(0);
-    $dumper->Purity(1);
-    $dumper->Maxrecurse(0);     # no limit
-    $dumper->Sortkeys(true);    # For consistency between runs
-    $dumper->Terse(false);
-
-    diag $dumper->Dump;
-    diag '';
-}
