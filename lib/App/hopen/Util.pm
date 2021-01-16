@@ -12,7 +12,7 @@ App::hopen::Util - general utilities for App::hopen
 use strict; use warnings;
 use parent 'Exporter';
 use vars::i {
-    '@EXPORT' => [qw(isMYH nicedump)],
+    '@EXPORT' => [qw(isaggref isMYH nicedump)],
     '@EXPORT_OK' => [qw(MYH)]
 };
 use vars::i '%EXPORT_TAGS' => {
@@ -33,6 +33,15 @@ The name C<MY.hopen.pl>, centralized here.  Not exported by default.
 use constant MYH => 'MY.hopen.pl';
 
 =head1 FUNCTIONS
+
+=head2 isaggref
+
+Returns true if the argument is a hashref or arrayref, i.e., a reference to
+an aggregate.
+
+=cut
+
+sub isaggref { ref $_[0] eq 'ARRAY' || ref $_[0] eq 'HASH' }
 
 =head2 isMYH
 

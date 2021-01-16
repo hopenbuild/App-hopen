@@ -70,6 +70,7 @@ t/050-util-thunk.t
 t/100-h.t
 t/101-h-no-ismyh.t
 t/110-hopen-file-kit.t
+t/120-myhopen.t
 t/199-util.t
 t/200-apputil-basic.t
 t/210-util-templates.t

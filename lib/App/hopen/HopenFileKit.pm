@@ -8,8 +8,9 @@ use Package::Alias ();
 
 # Imports.  Note: `()` marks packages we export to the caller but
 # don't use ourselves.  These are in the same order as in import().
-require App::hopen::AppUtil;
+use App::hopen::AppUtil;
 use App::hopen::BuildSystemGlobals;
+use App::hopen::Util;
 use App::hopen::Util::BasedPath ();
 use Path::Class ();
 
@@ -160,11 +161,9 @@ their L<App::hopen::Util::Thunk/tgt|tgt>s.  Operates in-place.  Usage:
 
 our $_config;
 
-sub _iskid { ref $_[0] eq 'ARRAY' || ref $_[0] eq 'HASH' }
-
 sub dethunk {
     my $data = shift;
-    die "need a data arrayref or hashref" unless _iskid $data;
+    die "need a data arrayref or hashref" unless isaggref $data;
 
     _dethunk_walk($data);
 }
@@ -186,7 +185,7 @@ sub _dethunk_walk {
                 hlog { Dethunk => $v->name } 4;
                 $v = $node->{$k} = $v->tgt;
             }
-            push @kids, $v if _iskid($v)
+            push @kids, $v if isaggref $v;
         }
 
     } else {    # array
@@ -197,90 +196,12 @@ sub _dethunk_walk {
                 hlog { Dethunk => $v->name } 4;
                 $v = $node->[$i] = $v->tgt;
             }
-            push @kids, $v if _iskid($v)
+            push @kids, $v if isaggref $v;
         }
     }
 
     _dethunk_walk($_) foreach @kids;
 } #_dethunk_walk
-
-=head2 extract_thunks
-
-Pull out any L<App::hopen::Util::Thunk> instances from a hashref or arrayref
-and return a hashref suitable for use as config.  Usage:
-
-    my $hrOut = extract_thunks([\@in | \%in]);
-
-NOTE: May mutate Thunks in the input.  Specifically, it will adjust thunk
-names so they are all unique.  TODO figure out if this is the Right Thing!
-What if multiple nodes need the same config value?
-
-=cut
-
-sub extract_thunks {
-    my $data = shift;
-    die "need a data arrayref or hashref" unless _iskid $data;
-    my $retval = +{};
-
-    _extract_thunks_walk($retval, $data);
-    return $retval;
-} #extract_thunks
-
-# Make a key that doesn't exist in a hashref.
-# Usage: $newname = _make_unique_in($hr, $oldname)
-sub _make_unique_in {
-    state $uniq_idx = 1;
-
-    my ($hash, $k) = @_;
-    return $k unless exists $hash->{$k};
-    ++$uniq_idx while exists $hash->{$k . $uniq_idx};
-    return $k . $uniq_idx;
-} #_make_unique_in
-
-# Process a thunk.  Params: \%retval, $thunk
-sub _etw_process {
-    my ($retval, $v) = @_;
-    my $n = $v->name;
-    hlog { 'Found thunk',  $n } 4;
-    $n = _make_unique_in($retval, $n);
-    $v->name($n);
-    $retval->{$n} = $v->tgt;
-}
-
-# Preconditions: $retval is a hashref; $node is an arrayref or hashref
-sub _extract_thunks_walk {
-
-    my ($retval, $node) = @_;
-    my $ty = ref $node;
-    my $ishash = $ty eq 'HASH';
-
-    my @kids;
-
-    if($ishash) {
-        foreach my $k (sort keys %$node) {  # sort for reproducibility
-            my $v = $node->{$k};
-            hlog { Value => $v } 5;
-            if(ref $v eq 'App::hopen::Util::Thunk') {
-                _etw_process($retval, $v);
-                push @kids, $v->tgt if _iskid($v->tgt);
-            }
-            push @kids, $v if _iskid($v);
-        }
-
-    } else {    # array
-        foreach my $pair (map { [$_, $node->[$_]] } 0..$#$node) {
-            my ($i, $v) = @$pair;
-            hlog { Value => $v } 5;
-            if(ref $v eq 'App::hopen::Util::Thunk') {
-                _etw_process($retval, $v);
-                push @kids, $v->tgt if _iskid($v->tgt);
-            }
-            push @kids, $v if _iskid($v);
-        }
-    }
-
-    _extract_thunks_walk($retval, $_) foreach @kids;
-} #_extract_thunks_walk
 
 sub import {    # {{{1
 

@@ -458,6 +458,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
     # == Set up code pieces related to phase control ==
+    # TODO move these to HopenFileKit
 
     my ($set_phase, $cannot_set_phase, $cannot_set_phase_warn);
     my $setting_phase_allowed = false;
@@ -962,6 +963,7 @@ EOT
     # - Add code after the dump to replace all those thunks with their
     #   get() values.
 
+    # my $config = TODO RESUME HERE
     my $VAR = '__R_new_data';
     my $dumper = Data::Dumper->new([$new_data], [$VAR]);
     $dumper->Pad(' ' x 12);     # To line up with the do{}
