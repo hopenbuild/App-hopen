@@ -61,6 +61,8 @@ Return a clean string rendering (from L<Data::Dumper>) of the input(s).  Usage:
 
     my $string = nicedump(\@vars, \@labels);
 
+TODO change to C<< label => $var[, ...] >>
+
 =cut
 
 sub nicedump {

@@ -7,7 +7,9 @@ use Data::Hopen::Base;
 our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
-use Class::Tiny;
+use Class::Tiny {
+    _stash => +{},
+};
 
 use Data::Hopen::Util::Data qw(fwdopts);
 
@@ -37,13 +39,16 @@ In a Cmd package:
 
 =head2 _process_input
 
+TODO split this into functions named after the phases, default NOP.
+
 Makes output assets for a given input asset.  Must be implemented
 by subclasses.  Called as:
 
     $self->_process_input(-asset=>$asset,
         -visitor=>$visitor);
 
-Should return a list of assets.
+Should return a list of assets.  May also put data in hashref
+C<< $self->_stash >>; that data will also be output from the node.
 
 =cut
 
@@ -86,6 +91,7 @@ sub _run {
     hlog { 'found inputs', Dumper($lrSourceFiles) } 2;
 
     my @outputs;
+    $self->_stash(+{});
     foreach my $src (@$lrSourceFiles) {
         my $obj = $self->_process_input(-asset=>$src, @visitor_if_any);
         $obj->made_from([$src]) unless @{$obj->made_from};
@@ -93,6 +99,7 @@ sub _run {
     }
 
     $self->make(@outputs);
+    return $self->_stash;
 } #_run()
 
 

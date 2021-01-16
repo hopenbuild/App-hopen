@@ -69,7 +69,6 @@ t/040-ah-g-assetop.t
 t/050-util-thunk.t
 t/060-util-phasemanager.t
 t/100-h.t
-t/101-h-no-ismyh.t
 t/110-hopen-file-kit.t
 t/120-myhopen.t
 t/199-util.t

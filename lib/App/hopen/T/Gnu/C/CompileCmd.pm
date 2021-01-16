@@ -15,6 +15,7 @@ use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::BasedPath;
+use App::hopen::Util::Thunk;
 use Data::Hopen qw(getparameters);
 use Data::Hopen::Util::Filename;
 use Path::Class;
@@ -61,6 +62,12 @@ sub _process_input {
     my ($self, %args) = getparameters('self', [qw(asset; *)], @_);
     my $src = $args{asset};
 
+    # TEST
+    my $name = 'compiler @ App::hopen::T::Gnu';
+    $self->_stash->{$name} =
+        App::hopen::Util::Thunk->new(tgt=>[$self->compiler],
+            name => $name);
+
     die "Cannot compile non-file $src" unless $src->isdisk;
 
     my $to = based_path(path => file($_FN->obj($src->target->path)),
@@ -69,6 +76,7 @@ sub _process_input {
     my $obj = App::hopen::Asset->new(
         target => $to, how => $how,
     );
+
 
     return $obj;
 } #_process_input()

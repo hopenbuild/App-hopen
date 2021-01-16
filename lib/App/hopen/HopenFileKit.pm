@@ -153,7 +153,7 @@ sub rule { $Build }
 =head2 dethunk
 
 Walk a hashref and replace all the L<App::hopen::Util::Thunk> instances with
-their L<App::hopen::Util::Thunk/tgt|tgt>s.  Operates in-place.  Usage:
+their L<tgt|App::hopen::Util::Thunk/tgt>s.  Operates in-place.  Usage:
 
     dethunk(\%config, \%data)
 

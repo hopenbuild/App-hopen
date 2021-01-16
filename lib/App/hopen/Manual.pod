@@ -350,7 +350,7 @@ All the variables in the current process's environment
 Configuration entries in a MY.hopen.pl file are represented by
 L<App::hopen::Util::Thunk> instances.  Command nodes that have user-configurable
 parameters must represent those parameters using a C<Thunk> having a
-L<App::hopen::Util::Thunk/name|name> obeying one of the following patterns.
+L<name|App::hopen::Util::Thunk/name> obeying one of the following patterns.
 The maximum length of a name is 40 characters.  (TODO i18n names??)
 
 =over
@@ -377,6 +377,8 @@ warn (and first one wins) if two variables try to define the same name.
 A name that does not match the form above.  It must not contain slashes or
 at signs, for the avoidance of confusion.  If two commands use the same
 local name, the names will be made unique so that they do not collide.
+
+The name C<0> is prohibited.
 
 =back
 
