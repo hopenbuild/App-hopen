@@ -66,7 +66,6 @@ on test => sub {
     requires 'Exporter';
     requires 'Import::Into';
     requires 'Scalar::Util';
-    requires 'Test::Deep', '0.084';
     requires 'Test::Directory', '0.02';
     requires 'Test::Fatal', '0.014';
     requires 'Test::More';

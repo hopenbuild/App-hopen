@@ -2,8 +2,6 @@
 # t/199-util.t - tests of App::hopen::Util
 use rlib 'lib';
 use HopenTest;
-use Test::Deep;
-use Path::Class;
 
 use App::hopen::Util ':all';
 

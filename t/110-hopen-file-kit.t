@@ -8,8 +8,6 @@
 
 use rlib 'lib';
 use HopenTest;
-use Test::Deep;
-#use Path::Class;
 
 use App::hopen::HopenFileKit;
 use App::hopen::Util;

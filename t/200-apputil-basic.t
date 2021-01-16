@@ -2,7 +2,6 @@
 # t/200-apputil-basic.t - basic tests of App::hopen::AppUtil
 use rlib 'lib';
 use HopenTest;
-use Test::Deep;
 use Path::Class;
 
 use App::hopen::AppUtil qw(find_hopen_files);
