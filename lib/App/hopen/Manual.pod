@@ -226,6 +226,7 @@ During this phase, the generator, toolset, or hopen file can collect
 information about the environment.
 
 After this phase, the user can set options by editing MY.hopen.pl.
+See L</CUSTOMIZING A BUILD> for details.
 A better interface for this is TBD.
 
 =head2 Gen
@@ -241,6 +242,17 @@ You can do this by running C<hopen --build>, if you wish.
 
 Hopen itself does not take any action during this phase, so it is different
 from the other phases.
+
+=head1 CUSTOMIZING A BUILD
+
+After the L</Check> phase, you can edit the C<MY.hopen.pl> file to adjust what
+will happen in the L</Gen> phase.  An example C<MY.hopen.pl> file might
+look like:
+
+    TODO
+
+You can edit the values under C<Configuration>, and those values will be
+used during the L</Gen> phase.
 
 =head1 INTERNALS
 
@@ -330,6 +342,41 @@ the hopen file(s) is available to the command graph.
 =item the environment
 
 All the variables in the current process's environment
+
+=back
+
+=head2 Configuration keys
+
+Configuration entries in a MY.hopen.pl file are represented by
+L<App::hopen::Util::Thunk> instances.  Command nodes that have user-configurable
+parameters must represent those parameters using a C<Thunk> having a
+L<App::hopen::Util::Thunk/name|name> obeying one of the following patterns.
+The maximum length of a name is 40 characters.  (TODO i18n names??)
+
+=over
+
+=item A namespaced name
+
+A name of the form C<VAR[/VAR...] @ PACKAGE>.  For example,
+C<compiler @ App::hopen::T::Gnu>, or C<make/flags @ App::hopen::G::Make>.
+The C<VAR> is put first so that it will be easier for the user to read.
+
+C<VAR> may contain any characters except slashes and at signs (C<@>),
+but may not start or end with whitespace.
+C<PACKAGE> must be the Perl package name of the component
+(generator, toolset, or LSP) creating or using the namespaced name.
+There must be exactly one space before and after the at sign.
+
+If multiple commands use a namespaced name, they will all have the
+same value.  TODO fix this in Thunk &c. --- C<< tgt=>undef >> means use the
+default; first one wins; error if nothing defined a required variable;
+warn (and first one wins) if two variables try to define the same name.
+
+=item A local name
+
+A name that does not match the form above.  It must not contain slashes or
+at signs, for the avoidance of confusion.  If two commands use the same
+local name, the names will be made unique so that they do not collide.
 
 =back
 

@@ -39,11 +39,15 @@ files, such as for setting the phase.
 Pull out any L<App::hopen::Util::Thunk> instances from a hashref or arrayref
 and return a hashref suitable for use as config.  Usage:
 
-    my $hrOut = extract_thunks([\@in | \%in]);
+    my $in = <some arrayref or hashref>;
+    my $config = extract_thunks($in);
 
 NOTE: May mutate Thunks in the input.  Specifically, it will adjust thunk
 names so they are all unique.  TODO figure out if this is the Right Thing!
 What if multiple nodes need the same config value?
+
+See L<App::hopen::HopenFileKit/dethunk> for using C<$config> to fill in
+values in the input.
 
 =cut
 
@@ -72,6 +76,7 @@ sub _etw_process {
     my ($retval, $v) = @_;
     my $n = $v->name;
     hlog { 'Found thunk',  $n } 4;
+    # TODO implement namespaced names
     $n = _make_unique_in($retval, $n);
     $v->name($n);
     $retval->{$n} = $v->tgt;

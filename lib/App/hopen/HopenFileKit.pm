@@ -157,6 +157,8 @@ their L<App::hopen::Util::Thunk/tgt|tgt>s.  Operates in-place.  Usage:
 
     dethunk(\%config, \%data)
 
+See L<App::hopen::MYhopen/extract_thunks> for creating C<%config>.
+
 =cut
 
 our $_config;

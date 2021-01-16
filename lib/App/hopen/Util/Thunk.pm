@@ -22,15 +22,21 @@ module is currently unmaintained.
 
 =head1 DESCRIPTION
 
-This module just holds a reference and a name.  The name is the name of a
+This module just holds a reference (L</tgt>) and a L</name>.  The name is the name of a
 configuration key and the reference points to the value.
 
+This module does not enforce uniqueness or any other properties of the name.
+However, L<App::hopen::HopenFileKit/dethunk> and
+L<App::hopen::MYhopen/extract_thunks> do enforce conditions on the names; see
+L<App::hopen::Manual/Configuration keys>.
 
 =head1 ATTRIBUTES
 
 =head2 tgt
 
 (Required) A reference this thunk refers to.
+
+TODO permit undef to refer to no value in particular.
 
 =head2 name
 

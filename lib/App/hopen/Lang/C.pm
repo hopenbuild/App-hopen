@@ -60,7 +60,6 @@ sub find_deps {
                 }
                 hlog { "pkg-config $lib returned >>$stdout<<" };
 
-$DB::single=1;
                 while(my ($which, $what) = ($stdout =~ m{\G.*?-([IlL])(\S+)}gmsc)) {
                     state %map = (I=>'ipath', l => 'lname', L => 'lpath');
                     my $k = $map{$which} or die "programmer error";
