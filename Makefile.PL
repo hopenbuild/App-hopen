@@ -123,7 +123,7 @@ cover: all
 
 # HTML documentation using Pod::ProjectDocs
 html: all
-\tpod2projdocs -l lib -o html -title "App::hopen" -desc "The hopen build system"
+\tpod2projdocs -l lib -l `perldoc -lm Data::Hopen | sed 's,.Data.Hopen.pm\$\$,,'` -o html -title "The hopen build system"
 EOT
 
     } #postamble()
