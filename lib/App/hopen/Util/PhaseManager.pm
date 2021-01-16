@@ -36,6 +36,14 @@ Part of L<App::hopen>.
 
 Phase strings cannot be empty (C<''>), and cannot be falsy (C<'0'>).
 
+=head2 first
+
+Return the name of the first phase.  Usage: C<< $manager->first >>.
+
+=head2 last
+
+Return the name of the last phase.  Usage: C<< $manager->last >>.
+
 =head2 check
 
 Regularize a phase name.
@@ -44,54 +52,71 @@ Regularize a phase name.
     $manager->check('FIRst')    # -> first
     $manager->check('oops')     # -> falsy
 
+Returns falsy if the given phase isn't recognized.
+
 =head2 next
 
     $manager->next('first')     # -> second
     $manager->next('last')      # -> ''
+
+Returns C<''> if there is no next phase.
+Dies if the given phase isn't recognized.
 
 =head2 is_last
 
     $manager->is_last('first')  # -> falsy
     $manager->is_last('last')   # -> truthy
 
+Dies if the given phase isn't recognized.
+
 =cut
 
 # }}}1
 
-# Regularize a string
-sub _reg {
-    goto &lc;
-}
+# Perl 5.16 has 'fc' feature; older Perls can just use 'lc'.
+# This block by Toby Inkster.
+use if $] >= 5.016, feature => 'fc';
+BEGIN { $] < 5.016 and eval 'sub fc ($) { lc $_[0] }' };
 
 sub new {
     my ($class, @phases) = @_;
+    die "Need phase names" unless @phases;
     die "All phase names must be truthy" if grep { !$_ } @phases;
-        # TODO use any{}?
-    my %phaseHash = map {_reg($phases[$_]) => _reg($phases[$_ + 1] || '')}
+        # Not using List::Util::any so we can work with L::U in core w/5.14
+    my %phaseHash = map {fc($phases[$_]) => fc($phases[$_ + 1] || '')}
         0 .. $#phases;
+
+    # falsy key is available, since that can't be a phase name
+    $phaseHash{0} = [fc $phases[0], fc $phases[$#phases]];
 
     return bless \%phaseHash, $class;
 }
 
+sub first { shift->{0}->[0] }
+
+sub last { shift->{0}->[1] }
+
 sub check {
     my ($self, $phase) = @_;
-    $phase = _reg $phase;
+    $phase = fc $phase;
     return exists $self->{$phase} ? $phase : '';
 }
+
 sub next {
     my ($self, $phase) = @_;
+    $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{_reg $phase};
-    return $self->{_reg $phase};
+    die "Unknown phase '$phase'" if !exists $self->{$phase};
+    return $self->{$phase};
 }
 
 sub is_last {
     my ($self, $phase) = @_;
+    $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{_reg $phase};
-    return !!($self->{_reg $phase});
+    die "Unknown phase '$phase'" if !exists $self->{$phase};
+    return !($self->{$phase});
 }
-
 
 1;
 __END__
@@ -100,18 +125,31 @@ __END__
 
 =head1 AUTHOR
 
+=over
+
+=item *
+
 GrandFather, L<https://www.perlmonks.org/?node_id=461912>.
 
+=item *
+
+Some code by Toby Inkster, L<https://toby.ink/>.
+
+=item *
+
 Some code by Christopher White, C<cxwembedded@gmail.com>.
+
+=back
 
 Originally from L<https://www.perlmonks.org/?node_id=11125768>.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2020 GrandFather and contributors.  All rights reserved.
+Copyright (c) 2020 GrandFather, Toby Inkster, and Christopher White.
+All rights reserved.
 
-This is free software; you can redistribute it and/or modify it under the same
-terms as the Perl 5 programming language system itself.
+This module is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 

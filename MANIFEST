@@ -19,7 +19,6 @@ lib/App/hopen.pm
 lib/App/hopen/AppUtil.pm
 lib/App/hopen/Asset.pm
 lib/App/hopen/BuildSystemGlobals.pm
-lib/App/hopen/Conventions.pod
 lib/App/hopen/G/AssetOp.pm
 lib/App/hopen/G/Cmd.pm
 lib/App/hopen/G/FilesCmd.pm
@@ -34,6 +33,7 @@ lib/App/hopen/H.pm
 lib/App/hopen/HopenFileKit.pm
 lib/App/hopen/Lang.pm
 lib/App/hopen/Lang/C.pm
+lib/App/hopen/Manual.pod
 lib/App/hopen/MYhopen.pm
 lib/App/hopen/Phases.pm
 lib/App/hopen/T.pod
@@ -67,6 +67,7 @@ t/001-hopentest.pm
 t/030-util-basedpath.t
 t/040-ah-g-assetop.t
 t/050-util-thunk.t
+t/060-util-phasemanager.t
 t/100-h.t
 t/101-h-no-ismyh.t
 t/110-hopen-file-kit.t
