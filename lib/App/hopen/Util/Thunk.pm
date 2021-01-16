@@ -34,20 +34,21 @@ L<App::hopen::Manual/Configuration keys>.
 
 =head2 tgt
 
-(Required) A reference this thunk refers to.
-
-TODO permit undef to refer to no value in particular.
+(Required) A reference this thunk refers to, or C<undef>.  If C<undef>,
+this thunk represents a value to be filled in.
 
 =head2 name
 
-(Required) A name for this thunk.
+(Required) A name for this thunk.  Must be truthy (i.e., C<0> is not a
+valid name).
 
 =cut
 
 sub BUILD {
-    my $self = shift;
-    die "'tgt' argument is required" unless $self->tgt;
-    die "'tgt' argument must be a reference" unless ref $self->tgt;
+    my ($self, $args) = @_;
+    die "'tgt' argument is required" unless exists $args->{tgt};
+    die "'tgt' argument must be a reference or undef"
+        unless !defined($self->tgt) || ref $self->tgt;
     die "'name' argument is required" unless $self->name;
     die "'name' argument must not be a reference" if ref $self->name;
 }
