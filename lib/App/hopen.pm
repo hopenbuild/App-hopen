@@ -9,6 +9,7 @@ use Data::Hopen::Base 0.000020;
 use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;
 use App::hopen::G::Goal ();
+use App::hopen::MYhopen;
 use App::hopen::Phases qw(:default phase_idx next_phase last_phase is_last_phase);
 use App::hopen::Util qw(isMYH MYH);
 use App::hopen::Util::String qw(line_mark_string);
@@ -24,6 +25,8 @@ use Hash::Merge;
 use Path::Class;
 use Scalar::Util qw(looks_like_number);
 
+# }}}1
+
 use Class::Tiny {
     argv => sub { [] },
     cmdopts => sub { +{} },
@@ -33,7 +36,6 @@ use Class::Tiny {
 
 BEGIN { $Data::Dumper::Indent = 1; }    # DEBUG
 
-# }}}1
 # Documentation {{{1
 # README is this file's POD
 
@@ -416,7 +418,6 @@ values from L</argv>, keyed by the keys in L</%CMDLINE_OPTS>.
 
 # }}}1
 # === Main worker code ================================================== {{{1
-
 
 sub _execute_hopen_file {       # Load and run a single hopen file {{{2
 
@@ -963,9 +964,9 @@ EOT
     # - Add code after the dump to replace all those thunks with their
     #   get() values.
 
-    # my $config = TODO RESUME HERE
+    my $config = extract_thunks($new_data);
     my $VAR = '__R_new_data';
-    my $dumper = Data::Dumper->new([$new_data], [$VAR]);
+    my $dumper = Data::Dumper->new([$config, $new_data], ['Configuration', $VAR]);
     $dumper->Pad(' ' x 12);     # To line up with the do{}
     $dumper->Indent(1);         # fixed indent size
     $dumper->Quotekeys(0);
@@ -984,8 +985,9 @@ EOT
 
         set_phase '$new_phase';
         do {
-            my \$$VAR;
+            my (\$Configuration, \$$VAR);
 @{[$dumper->Dump]}
+            dethunk(\$$VAR);
             \$$VAR
         }
     );
