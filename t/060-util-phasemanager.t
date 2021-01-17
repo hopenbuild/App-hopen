@@ -48,6 +48,15 @@ sub test_check {
     is($dut->check($_), $_, "check: $_") foreach qw(bar bat);
 }
 
+sub test_is {
+    my $dut = $DUT->new(qw(foo bar bat));
+    ok($dut->is($_, 'foo'), "is: $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
+    ok($dut->is($_, uc $_), "is: $_") foreach qw(bar bat);
+    ok(!$dut->is('nonexistent', 'foo'), 'nonexistent != foo');
+    ok(!$dut->is('foo', 'nonexistent'), 'foo != nonexistent');
+    ok(!$dut->is('oops', 'nonexistent'), 'oops != nonexistent');
+}
+
 sub test_next {
     my $dut = $DUT->new(qw(foo bar bat));
     like( exception { $dut->next('nonexistent') }, qr/Unknown phase/, 'next: unknown phase' );
@@ -55,7 +64,6 @@ sub test_next {
     is($dut->next('bar'), 'bat', 'next: bar');
     is($dut->next('bat'), '', 'next: bat');
 }
-
 
 sub test_is_last {
     my $dut = $DUT->new(qw(foo bar bat));
@@ -66,6 +74,7 @@ sub test_is_last {
 
 test_new_first_last;
 test_check;
+test_is;
 test_next;
 test_is_last;
 

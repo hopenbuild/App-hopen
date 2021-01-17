@@ -54,6 +54,17 @@ Regularize a phase name.
 
 Returns falsy if the given phase isn't recognized.
 
+=head2 is
+
+Check whether a given string indicates a given phase.
+
+    $manager->is('first', 'first')          # true
+    $manager->is('FirST', 'first')          # true
+    $manager->is('second', 'first')         # false
+    $manager->is('nonexistent', 'first')    # false
+
+Returns falsy if the given phase isn't recognized.
+
 =head2 next
 
     $manager->next('first')     # -> second
@@ -100,6 +111,15 @@ sub check {
     my ($self, $phase) = @_;
     $phase = fc $phase;
     return exists $self->{$phase} ? $phase : '';
+}
+
+sub is {
+    my ($self, $got, $expected) = @_;
+
+    my $g = $self->check($got);
+    my $e = $self->check($expected);
+    return false unless $g && $e;
+    return $g eq $e;
 }
 
 sub next {
