@@ -18,7 +18,7 @@ sub test_new_first_last {
 
     $dut = $DUT->new(qw(a));
     isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(a a)], a => ''}, 'single phase');
+    is_deeply($dut, {0 => [qw(a)], a => ''}, 'single phase');
     is($dut->first, 'a', 'first: single phase');
     is($dut->last, 'a', 'last: single phase');
 
@@ -30,22 +30,27 @@ sub test_new_first_last {
 
     $dut = $DUT->new(qw(a b c));
     isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(a c)], a => 'b', b => 'c', c => ''}, 'three phases');
+    is_deeply($dut, {0 => [qw(a b c)], a => 'b', b => 'c', c => ''}, 'three phases');
     is($dut->first, 'a', 'first: three phases');
     is($dut->last, 'c', 'last: three phases');
 
     $dut = $DUT->new(qw(Foo baR BAT));
     isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(foo bat)], foo => 'bar', bar => 'bat', bat => ''}, 'three phases, with fc');
+    is_deeply($dut, {0 => [qw(foo bar bat)], foo => 'bar', bar => 'bat', bat => ''}, 'three phases, with fc');
     is($dut->first, 'foo', 'first: three phases, fc');
     is($dut->last, 'bat', 'last: three phases, fc');
 }
 
-sub test_check {
+sub test_check_enforce {
     my $dut = $DUT->new(qw(foo bar bat));
     ok(!$dut->check('nonexistent'), 'check: nonexistent');
+    like( exception { $dut->enforce('nonexistent') }, qr/Unknown.+nonexistent/,
+        'enforce nonexistent');
+
     is($dut->check($_), 'foo', "check: $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
+    is($dut->enforce($_), 'foo', "enforce $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
     is($dut->check($_), $_, "check: $_") foreach qw(bar bat);
+    is($dut->enforce($_), $_, "enforce $_") foreach qw(bar bat);
 }
 
 sub test_is {
@@ -72,10 +77,18 @@ sub test_is_last {
     ok($dut->is_last($_), "is_last: $_") foreach qw(bat BAT);
 }
 
+sub test_all {
+    my $dut = $DUT->new(qw(foo bar bat));
+    is_deeply([$dut->all], [qw(foo bar bat)], 'all');
+    $dut = $DUT->new(qw(foo BAR bat));
+    is_deeply([$dut->all], [qw(foo bar bat)], 'all with fc');
+}
+
 test_new_first_last;
-test_check;
+test_check_enforce;
 test_is;
 test_next;
 test_is_last;
+test_all;
 
 done_testing();

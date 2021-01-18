@@ -54,6 +54,13 @@ Regularize a phase name.
 
 Returns falsy if the given phase isn't recognized.
 
+=head2 enforce
+
+Exactly like L</check>, but dies if the given phase isn't recognized.
+
+    $manager->enforce('FIRst')    # -> first
+    $manager->enforce('oops')     # -> dies
+
 =head2 is
 
 Check whether a given string indicates a given phase.
@@ -80,6 +87,10 @@ Dies if the given phase isn't recognized.
 
 Dies if the given phase isn't recognized.
 
+=head2 all
+
+Returns the list of all the phases, in order.
+
 =cut
 
 # }}}1
@@ -98,19 +109,28 @@ sub new {
         0 .. $#phases;
 
     # falsy key is available, since that can't be a phase name
-    $phaseHash{0} = [fc $phases[0], fc $phases[$#phases]];
+    $phaseHash{0} = [map { fc $_ } @phases];
 
     return bless \%phaseHash, $class;
 }
 
 sub first { shift->{0}->[0] }
 
-sub last { shift->{0}->[1] }
+sub last {
+    my $phases = shift->{0};
+    return $phases->[$#$phases];
+}
 
 sub check {
     my ($self, $phase) = @_;
     $phase = fc $phase;
     return exists $self->{$phase} ? $phase : '';
+}
+
+sub enforce {
+    my $p = $_[0]->check($_[1]);
+    die "Unknown phase $_[1]" unless $p;
+    return $p;
 }
 
 sub is {
@@ -137,6 +157,8 @@ sub is_last {
     die "Unknown phase '$phase'" if !exists $self->{$phase};
     return !($self->{$phase});
 }
+
+sub all { @{$_[0]->{0} } }
 
 1;
 __END__
