@@ -35,7 +35,6 @@ lib/App/hopen/Lang.pm
 lib/App/hopen/Lang/C.pm
 lib/App/hopen/Manual.pod
 lib/App/hopen/MYhopen.pm
-lib/App/hopen/Phases.pm
 lib/App/hopen/T.pod
 lib/App/hopen/T/Gnu.pm
 lib/App/hopen/T/Gnu/C.pm

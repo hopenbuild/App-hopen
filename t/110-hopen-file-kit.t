@@ -30,6 +30,12 @@ sub test_dethunk {
         thunk => [ 1337 ] }, 'dethunk replaced a thunk');
 }
 
+sub test_invalid_load {
+    eval "package NONEXISTENT; use App::hopen::HopenFileKit";
+    like($@, qr/Not loaded as a hopen file/, 'Rejects load from package without sentinel var');
+}
+
 test_dethunk;
+test_invalid_load;
 
 done_testing();

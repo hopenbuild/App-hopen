@@ -7,9 +7,9 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::Gen';   # and Class::Tiny below
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;
-use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::Templates;
 use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
@@ -97,15 +97,14 @@ Write out the Makefile.  Usage:
 
     $Generator->_finalize(-phase => $phase, -graph => $graph, -data => $data);
 
-C<$graph> is the build graph.  Only does anything during the Gen phase
-(L<App::Hopen::Phases/is_gen_phase>).
+C<$graph> is the build graph.  Only does anything during the Gen phase.
 
 =cut
 
 sub _finalize {
     my ($self, %args) = getparameters('self', [qw(phase graph; data)], @_);
     hlog { Finalizing => ref($self) , '- phase', $args{phase} };
-    return unless is_gen_phase $args{phase};
+    return unless PHASES->is($args{phase}, 'gen');
 
     $self->_populate_attributes;
 

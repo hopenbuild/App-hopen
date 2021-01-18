@@ -10,7 +10,6 @@ use App::hopen::AppUtil ':all';
 use App::hopen::BuildSystemGlobals;
 use App::hopen::G::Goal ();
 use App::hopen::MYhopen;
-use App::hopen::Phases qw(:default phase_idx next_phase last_phase is_last_phase);
 use App::hopen::Util qw(isMYH MYH);
 use App::hopen::Util::String qw(line_mark_string);
 use Data::Hopen qw(:default loadfrom *VERBOSE *QUIET);
@@ -120,7 +119,7 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, C<< <project dir>/built >> is used.
 
-See L<App::hopen> and L<App::hopen::Manual> for more details.
+See L<App::hopen::Manual> for more details.
 
 =head1 OPTIONS
 
@@ -454,7 +453,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $self = shift or croak "Need an instance";
     my $fn = shift or croak 'Need a file to run';
     my %opts = @_;
-    $Phase = $opts{phase} if $opts{phase};
+    $Phase = PHASES->check($opts{phase}) if $opts{phase};
+    croak "I don't know phase $opts{phase}" unless $Phase;
 
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
@@ -472,10 +472,11 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         sub can_set_phase { true }
         sub set_phase {
             my $new_phase = shift or croak 'Need a phase';
-            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
+            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
+            $new_phase = PHASES->check($new_phase);
             croak "Phase $new_phase is not one of the ones I know about (" .
-                join(', ', @PHASES) . ')'
-                    unless defined phase_idx($new_phase);
+                join(', ', PHASES->all) . ')'
+                    unless $new_phase;
             $App::hopen::BuildSystemGlobals::Phase = $new_phase;
             _mark_phase_as_set;
     ) .
@@ -485,7 +486,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         sub can_set_phase { false }
         sub set_phase {
             my $new_phase = shift // '';
-            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
+            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
             croak "I'm sorry, but this file (``$FILENAME'') is not allowed to set the phase"
         }
     );
@@ -494,7 +495,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         sub can_set_phase { false }
         sub set_phase {
             my $new_phase = shift // '';
-            return if $App::hopen::BuildSystemGlobals::Phase eq $new_phase;
+            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
     ) .
     ($opts{quiet} ? '' :
         q(
@@ -512,9 +513,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
 
     my ($friendly_name, $pkg_stem, $file_text, $phase_text);
 
-    $phase_text = q(
-        use App::hopen::Phases ':all';
-    );
+    $phase_text = '';
 
     # -- Load the file
 
@@ -569,9 +568,12 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     package $pkg_name;
     our \$@{[App::hopen::AppUtil::HOPEN_FILE_FLAG]};    # A::h::HopenFileKit/import()
     use App::hopen::HopenFileKit "\Q$friendly_name\E";
+EOT
         # \\Q and \\E since, on Windows, \$friendly_name is likely to
         # include backslashes.
         # TODO test if this gets double-backslashed.
+
+    $src .= line_mark_string <<EOT ;
 
     # Other lib dirs
     $lib_dirs
@@ -596,7 +598,7 @@ EOT
     }
 
     # Run the code given in the hopen file.  Wrap it in a named BLOCK so that
-    # Phases::on() will work, but don't rely on the return value of that
+    # HopenFileKit::on() will work, but don't rely on the return value of that
     # BLOCK (per perlsyn).
 
     $src .= line_mark_string <<EOT;
@@ -614,7 +616,7 @@ EOT
     # If the file_text did not expressly return(), control will reach the
     # following block, where we get the correct return value.  If the file_text
     # ran to completion, we have a defined __R_retval.  If the file text exited
-    # via Phases::on(), we have a defined __R_on_result.  If either of those
+    # via HopenFileKit::on(), we have a defined __R_on_result.  If either of those
     # is defined, make sure it's not a DAG or GraphBuilder.  Those should not
     # be put into the return data.
     #
@@ -710,7 +712,10 @@ be run if it is empty.
 
     my $self = shift or croak "Need an instance";
     my %opts = @_;
-    $Phase = $opts{phase} if $opts{phase};
+    if($opts{phase}) {
+        my $p = PHASES->check($opts{phase});
+        $Phase = $p if $p;
+    }
     my $lrHopenFiles = $opts{files};
     croak 'Need files=>[...]' unless ref $lrHopenFiles eq 'ARRAY';
     hlog { Phase => $Phase, Running => ('[' . join(', ', @$lrHopenFiles) . ']') };
@@ -793,17 +798,17 @@ The return value of _inner is unspecified and ignored.
     # = Initialize phase ====================================================
 
     if($self->cmdopts->{BUILD} && $self->cmdopts->{PHASE} &&
-            !is_last_phase($self->cmdopts->{PHASE})) {
+            !PHASES->is($self->cmdopts->{PHASE}, 'build')) {
         die '--phase ' . $self->cmdopts->{PHASE} . ' and --build are mutually exclusive';
     }
 
-    $self->cmdopts->{PHASE} = last_phase if $self->cmdopts->{BUILD};
+    $self->cmdopts->{PHASE} = PHASES->enforce('build') if $self->cmdopts->{BUILD};
 
     # Start with the default phase unless one was specified.
-    $Phase = $self->cmdopts->{PHASE} // $PHASES[0];
+    $Phase = $self->cmdopts->{PHASE} // PHASES->first;
     die "Phase $Phase is not one of the ones I know about (" .
-        join(', ', @PHASES) . ')'
-            unless defined phase_idx($Phase);
+        join(', ', PHASES->all) . ')'
+            unless PHASES->check($Phase);
 
     # = Initialize filesystem-related build-system globals ==================
 
@@ -886,7 +891,7 @@ EOT
 
     say "From ``$proj_dir'' into ``$dest_dir''" unless $QUIET;
 
-    # Load MY.hopen.pl first so the results of the Probe phase are
+    # Load MY.hopen.pl first so the results of the Check phase are
     # available to the generator and toolset.
     if($myhopen) {
         $self->_execute_hopen_file($myhopen,
@@ -925,7 +930,7 @@ EOT
     }
 
     # Handle Build phase, now that myh is loaded ----------------
-    if(is_last_phase) {
+    if(PHASES->is($Phase, 'build')) {
         $Generator->run_build();
         return;
     }
@@ -950,8 +955,8 @@ EOT
     # = Save state in MY.hopen.pl for the next run ==========================
 
     # If we get here, _run_phase succeeded.  Therefore, we can move
-    # on to the next phase.
-    my $new_phase = next_phase($Phase) // $Phase;
+    # on to the next phase.  Stay in the last phase if there is no next phase.
+    my $new_phase = PHASES->next($Phase) || $Phase;
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only
@@ -980,6 +985,7 @@ EOT
     eval { $dumper->{xpad} = ' ' x 4 };
 
     my $new_text = dedent [], qq(
+        # ==================================================================
         # @{[MYH]} generated at @{[scalar gmtime]} GMT
         # From ``@{[$proj_dir->absolute]}'' into ``@{[$dest_dir->absolute]}''
 

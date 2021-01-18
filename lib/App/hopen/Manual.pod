@@ -154,27 +154,26 @@ Elements of the hashref starting with C<__R> are reserved.  Please don't read
 or write those elements if you want hopen to work! :)  Similarly, all variables
 starting with C<__R> are reserved.
 
+Hash keys starting with C<=> are also reserved.
+
 The hopen file is executed in scalar context.
 
 Each hopen file runs in an environment with everything from the following
 packages loaded (via L<App::hopen::HopenFileKit>):
 
-Hash keys starting with C<=> are also reserved.
-
 =over
 
-=item * L<App::hopen::BuildSystemGlobals>
+=item L<App::hopen::BuildSystemGlobals>
 
-=item * L<App::hopen::Phases>
+=item L<App::hopen::HopenFileKit>
 
-With both C<:all> and C<:hopenfile> specified, so you get, e.g.,
-L<App::hopen::Phases/on>.
+Gives you, e.g., L<App::hopen::HopenFileKit/on>.
 
-=item * L<App::hopen::Util::BasedPath>
+=item L<App::hopen::Util::BasedPath>
 
-=item * L<Data::Hopen>
+=item L<Data::Hopen>
 
-=item * L<Data::Hopen::Base>
+=item L<Data::Hopen::Base>
 
 This also gives you L<Carp>, L<Data::Dumper>, L<strict>, and L<warnings>,
 and requires Perl 5.14+.

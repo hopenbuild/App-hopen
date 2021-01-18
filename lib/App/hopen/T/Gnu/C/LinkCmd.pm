@@ -12,7 +12,6 @@ use Class::Tiny qw(dest linker);
 use App::hopen::AppUtil qw(:constants);
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
-use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
 use Data::Hopen::Util::Data qw(fwdopts);
@@ -66,7 +65,7 @@ sub _run {
 
     # Currently we only do things at gen time.
     return $self->passthrough(-nocontext=>1)
-        unless is_gen_phase($self->scope->find(KEY_PHASE));
+        unless PHASES->is($self->scope->find(KEY_PHASE), 'gen');
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;

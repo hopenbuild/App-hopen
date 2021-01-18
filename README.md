@@ -63,7 +63,7 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, `<project dir>/built` is used.
 
-See [App::hopen](https://metacpan.org/pod/App%3A%3Ahopen) and [App::hopen::Manual](https://metacpan.org/pod/App%3A%3Ahopen%3A%3AManual) for more details.
+See [App::hopen::Manual](https://metacpan.org/pod/App%3A%3Ahopen%3A%3AManual) for more details.
 
 # OPTIONS
 

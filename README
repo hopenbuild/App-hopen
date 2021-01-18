@@ -60,7 +60,7 @@ SYNOPSIS
 
     If no destination directory is specified, "<project dir>/built" is used.
 
-    See App::hopen and App::hopen::Manual for more details.
+    See App::hopen::Manual for more details.
 
 OPTIONS
     -a "architecture"

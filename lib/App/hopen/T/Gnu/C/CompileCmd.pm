@@ -13,7 +13,6 @@ use App::hopen::AppUtil qw(:constants);
 use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
-use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::BasedPath;
 use App::hopen::Util::Thunk;
 use Data::Hopen qw(getparameters);
@@ -89,7 +88,7 @@ Returns truthy if L</_process_input> should be called.
 
 sub _should_act {
     my $self = shift;
-    return is_gen_phase($self->scope->find(KEY_PHASE));
+    return PHASES->is($self->scope->find(KEY_PHASE), 'gen');
 } #_should_act()
 
 1;

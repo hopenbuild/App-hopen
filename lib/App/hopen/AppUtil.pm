@@ -12,7 +12,7 @@ our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS, @_export_constants);
 BEGIN {
     @EXPORT = qw();
     @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS
-                            KEY_LANGOPTS);
+                            KEY_LANGOPTS PHASES);
     @EXPORT_OK = (qw(find_hopen_files find_myhopen), @_export_constants);
     %EXPORT_TAGS = (
         default => [@EXPORT],
@@ -26,6 +26,12 @@ use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
     # Thanks to haukex, https://www.perlmonks.org/?node_id=1207115 -
     # 5.14 doesn't support the ':bsd_glob' tag.
 use Path::Class;
+
+# Define the phase sequence
+use App::hopen::Util::PhaseManager;
+use vars::i '$_phases' => App::hopen::Util::PhaseManager->new(
+    qw(Check Gen Build)
+);
 
 =head1 NAME
 
@@ -61,6 +67,15 @@ use constant {
     KEY_TOOLSET_CLASS => '=ToolsetClass',
     KEY_LANGOPTS => '=Lang',
 };
+
+=head2 PHASES
+
+A L<App::hopen::Util::PhaseManager> holding the phase sequence used by
+L<App::hopen>.  See L<App::hopen::Manual/PHASES> for details.
+
+=cut
+
+sub PHASES() { $_phases }
 
 =head1 FUNCTIONS
 

@@ -1,6 +1,8 @@
 Revision history for App-hopen
 
-0.000013    2021-??-?? (TRIAL REELASE)
+0.000013    2021-??-?? (TRIAL RELEASE)
+    - Major internal changes
+    - Phase names are now lowercase
     - New dependency: List::Flatten::Recursive from Git or from
       <https://github.com/cxw42/List-Flatten-Recursive/releases/download/0.210100/List-Flatten-Recursive-0.210100.tar.gz>
 

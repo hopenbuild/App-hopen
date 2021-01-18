@@ -7,8 +7,8 @@ our $VERSION = '0.000013'; # TRIAL
 
 use parent 'App::hopen::Gen';   # And Class::Tiny below
 
+use App::hopen::AppUtil qw(:constants);
 use App::hopen::BuildSystemGlobals;
-use App::hopen::Phases qw(is_gen_phase);
 use App::hopen::Util::XML::FromPerl qw(xml_from_perl);
 use Data::Hopen qw(:default getparameters *QUIET *VERBOSE);
 use Data::Hopen::Scope::Hash;
@@ -52,7 +52,7 @@ C<$dag> is the build graph.
 sub _finalize {
     my ($self, %args) = getparameters('self', [qw(phase graph; data)], @_);
     hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
-    return unless is_gen_phase $args{phase};   # Only do work during Gen
+    return unless PHASES->is($args{phase}, 'gen');
 
     $self->_populate_asset_graph;
 
