@@ -39,7 +39,19 @@ In a Cmd package:
 
 =head2 _process_input
 
-TODO split this into functions named after the phases, default NOP.
+TODO RESUME HERE:
+
+    - split this into functions named after the phases, default NOP.
+    - In the Check phase, commands output { 'config key' => Thunk }*.
+    - In the Gen phase, commands output `made`.
+    - All local inputs, plus command outputs, are passed along as outputs
+        to the next node in the chain.  In this way, configuration keys are
+        made available to downstream nodes.
+    - Add helper functions (here or elsewhere) to retrieve a configuration
+        value's Thunk, setting a default if it doesn't exist.
+    - The data hashref from MY.hopen.pl will have all the config values,
+        possibly including user changes.  Add that as a scope inward of
+        the system environment.
 
 Makes output assets for a given input asset.  Must be implemented
 by subclasses.  Called as:

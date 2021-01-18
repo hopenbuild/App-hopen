@@ -31,6 +31,17 @@ any build system not Turing complete will eventually hit its limits and need
 to be monkey-patched, worked around, or supplemented.  Rather than dealing
 with that, hopen uses all Turing-complete components from the get-go.
 
+=head2 Single pass
+
+Hopen is a single-pass build system.  You do not have to re-run to converge
+on a final set of blueprint files.
+
+=head2 Context-aware
+
+Hopen is context-aware.  You can change the build of a repo without having
+to touch files in that repo.  This is especially useful, e.g., for
+L<Cygwin|https://cygwin.com/> and similar operating environments.
+
 =head1 COMPONENTS USED BY THE BUILD SYSTEM
 
 =over
@@ -178,7 +189,7 @@ Gives you, e.g., L<App::hopen::HopenFileKit/on>.
 This also gives you L<Carp>, L<Data::Dumper>, L<strict>, and L<warnings>,
 and requires Perl 5.14+.
 
-=item * L<Path::Class>
+=item L<Path::Class>
 
 =back
 
@@ -248,14 +259,20 @@ After the L</Check> phase, you can edit the C<MY.hopen.pl> file to adjust what
 will happen in the L</Gen> phase.  An example C<MY.hopen.pl> file might
 look like:
 
-    TODO
+    ...
+    set_phase 'gen';
+    do {
+        my ($Configuration, $__R_new_data);
+        $Configuration = {
+            'compiler @ App::hopen::Gnu::C' => 'gcc',
+        };
+         $__R_new_data = ...
+    ...
 
 You can edit the values under C<Configuration>, and those values will be
-used during the L</Gen> phase.
+used during the L</Gen> phase.  See L</Configuration keys> for name formats.
 
-=head1 INTERNALS
-
-=head2 Overall data flow
+=head1 WHAT HOPEN DOES
 
 During each phase except Build:
 
@@ -267,16 +284,10 @@ The hopen files run, and generate a command graph.  The command graph includes
 nodes that implement L<App::hopen::G::Cmd>.  The idea is that the hopen
 files specify the I<commands> you would run to build your software by hand.
 
-Each command node, when run, outputs a C<made> arrayref of
-L<App::hopen::Asset> instances.  These instances represent files or other
-artifacts created by that command node.
-
 =item 2.
 
 The command graph is run, with a generator made available to it.  Command nodes
-provide asset nodes to the generator and to later command nodes.  The asset
-nodes implement L<App::hopen::G::AssetNode>.  The specific subclass they
-implement is determined by the generator.
+provide asset nodes to the generator and to later command nodes.
 
 While the command graph is running:
 
@@ -289,9 +300,12 @@ Check phase are TBD.
 
 =item *
 
-During the Gen phase, the generator receives information from each
-command node about work to transform that node's C<made> inputs into
-outputs.
+During the Gen phase, each command node, when run, outputs a C<made> arrayref
+of L<App::hopen::Asset> instances.  These instances represent files or other
+artifacts created by that command node.
+
+The generator receives information from each command node about work to
+transform that node's C<made> inputs into outputs.
 
 =back
 
@@ -381,6 +395,9 @@ The name C<0> is prohibited.
 
 =back
 
+Command nodes output configuration entries as hash elements keyed by the
+configuration key (whence the name!).
+
 =head1 SCRAPS
 
 Ignore these --- I may come back to them in the future.
@@ -456,10 +473,5 @@ However, the Probe phase does not have to be re-run.
 
 =head3 PHILOSOPHY
 
-Hopen is a single-pass build system.  You do not have to re-run to converge
-on a final set of blueprint files.
-
-Hopen is context-aware.  You can change the build of a repo without having
-to touch files in that repo.
 
 =cut
