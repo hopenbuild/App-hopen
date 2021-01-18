@@ -78,8 +78,11 @@ sub get_perl_filename {
 
         my $make_readme_md = File::Spec->catfile(qw(support readme.pl));
         my $make_cpanfile = File::Spec->catfile(qw(support cpanfile.pl));
+
+        # author test: kwalitee.t dies if META.yml is missing, and manifest.t
+        # dies if it is present.  Oh well!
         return <<EOT;
-authortest:
+authortest: all
 \tRELEASE_TESTING=1 prove -lvj4 xt
 
 testhere:   # Run the tests from lib rather than blib
