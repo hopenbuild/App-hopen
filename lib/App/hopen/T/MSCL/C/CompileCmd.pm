@@ -51,13 +51,13 @@ The compiler to use.  TODO is this a full path or just a name?
 
 # }}}1
 
-=head2 _process_input
+=head2 Gen
 
 Create the compile command line for a given asset.
 
 =cut
 
-sub _process_input {
+sub Gen {
     my ($self, %args) = getparameters('self', [qw(asset ; *)], @_);
     my $src = $args{asset};
 
@@ -83,18 +83,7 @@ sub _process_input {
     );
 
     return [$obj, $how];
-} #_process_input()
-
-=head2 _should_act
-
-Returns truthy if L</_process_input> should be called.
-
-=cut
-
-sub _should_act {
-    my $self = shift;
-    return ($self->scope->find(KEY_PHASE)//'') eq 'Gen';
-} #_should_act()
+} #Gen()
 
 1;
 __END__

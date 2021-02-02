@@ -52,10 +52,7 @@ TODO die if there is no current phase.
 =cut
 
 sub getphase {
-    my $self = shift;
-    my $thisphase = ($self->scope->find(KEY_PHASE)//'');
-    # TODO validate against the list of phases
-    return $thisphase;
+    return PHASES->enforce(shift->scope->find(KEY_PHASE)//'');
 }
 
 =head2 make
