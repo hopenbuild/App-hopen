@@ -105,26 +105,30 @@ sub new {
     die "Need phase names" unless @phases;
     die "All phase names must be truthy" if grep { !$_ } @phases;
         # Not using List::Util::any so we can work with L::U in core w/5.14
-    my %phaseHash = map {fc($phases[$_]) => fc($phases[$_ + 1] || '')}
+
+    my %phaseHash = map {fc($phases[$_]) => ($phases[$_ + 1] || '')}
         0 .. $#phases;
 
-    # falsy key is available, since that can't be a phase name
-    $phaseHash{0} = [map { fc $_ } @phases];
-
-    return bless \%phaseHash, $class;
+    my $self = {
+        seq => \%phaseHash,     # one to the next
+        pos => {map {; fc $phases[$_] => $_ } 0..$#phases},
+        orig => [@phases],                  # exactly from the user
+    };
+    return bless $self, $class;
 }
 
-sub first { shift->{0}->[0] }
+sub first { shift->{orig}->[0] }
 
 sub last {
-    my $phases = shift->{0};
+    my $phases = shift->{orig};
     return $phases->[$#$phases];
 }
 
 sub check {
     my ($self, $phase) = @_;
     $phase = fc $phase;
-    return exists $self->{$phase} ? $phase : '';
+    return exists $self->{pos}->{$phase} ?
+        $self->orig->[$self->{pos}->{$phase}] : '';
 }
 
 sub enforce {
@@ -146,19 +150,19 @@ sub next {
     my ($self, $phase) = @_;
     $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{$phase};
-    return $self->{$phase};
+    die "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
+    return $self->{seq}->{$phase};
 }
 
 sub is_last {
     my ($self, $phase) = @_;
     $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{$phase};
-    return !($self->{$phase});
+    die "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
+    return !($self->{seq}->{$phase});
 }
 
-sub all { @{$_[0]->{0} } }
+sub all { @{$_[0]->{orig} } }
 
 1;
 __END__
