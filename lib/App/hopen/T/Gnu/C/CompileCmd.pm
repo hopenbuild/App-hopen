@@ -51,6 +51,21 @@ The compiler to use.  TODO is this a full path or just a name?
 
 # }}}1
 
+=head2 Check
+
+Create a config entry for the compiler
+
+=cut
+
+sub Check {
+    my $self = shift;
+
+    my $name = 'compiler @ App::hopen::T::Gnu';
+    $self->_stash->{$name} =
+        App::hopen::Util::Thunk->new(tgt=>[$self->compiler],
+            name => $name);
+} #Check()
+
 =head2 Gen
 
 Create the compile command line for a given asset.
@@ -60,12 +75,6 @@ Create the compile command line for a given asset.
 sub Gen {
     my ($self, %args) = getparameters('self', [qw(asset; *)], @_);
     my $src = $args{asset};
-
-    # TEST
-    my $name = 'compiler @ App::hopen::T::Gnu';
-    $self->_stash->{$name} =
-        App::hopen::Util::Thunk->new(tgt=>[$self->compiler],
-            name => $name);
 
     die "Cannot compile non-file $src" unless $src->isdisk;
 

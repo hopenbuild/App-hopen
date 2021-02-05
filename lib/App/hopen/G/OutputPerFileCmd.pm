@@ -85,23 +85,33 @@ sub _run {
 
     return $self->passthrough(-nocontext=>1) unless $routine;
 
-    # Pull the inputs
-    my $lrSourceFiles = $self->input_assets;
-    unless(@$lrSourceFiles) {
-        warn $self->name . ': no inputs --- skipping';
-        return;
-    }
-    hlog { 'found inputs', Dumper($lrSourceFiles) } 2;
+    hlog { Node => $self->name, running => $self->getphase } 3;
 
-    my @outputs;
-    $self->_stash(+{});
-    foreach my $src (@$lrSourceFiles) {
-        my $obj = $self->$routine(-asset=>$src, @visitor_if_any);
-        $obj->made_from([$src]) unless @{$obj->made_from};
-        push @outputs, $obj;
+    if($self->getphase eq 'Gen') {
+
+        # Pull the inputs
+        my $lrSourceFiles = $self->input_assets;
+        unless(@$lrSourceFiles) {
+            warn $self->name . ': no inputs --- skipping';
+            return;
+        }
+        hlog { 'found inputs', Dumper($lrSourceFiles) } 2;
+
+        my @outputs;
+        $self->_stash(+{});
+        foreach my $src (@$lrSourceFiles) {
+            my $obj = $self->$routine(-asset=>$src, @visitor_if_any);
+            $obj->made_from([$src]) unless @{$obj->made_from};
+            push @outputs, $obj;
+        }
+
+        $self->make(@outputs);
+
+    } else {    # not Gen
+        $self->_stash(+{});
+        $self->$routine(@visitor_if_any);
     }
 
-    $self->make(@outputs);
     return $self->_stash;
 } #_run()
 
