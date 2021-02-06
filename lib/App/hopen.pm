@@ -984,6 +984,9 @@ EOT
     # feature of Data::Dumper, whence the eval{}.
     eval { $dumper->{xpad} = ' ' x 4 };
 
+    my $dumped = $dumper->Dump;
+    $dumped =~ s/^(\h*)(\$__R_new_data\h*=)/\n$1### Do not change below this line ###########################################\n\n$1$2/m;
+
     my $new_text = dedent [], qq(
         # ==================================================================
         # @{[MYH]} generated at @{[scalar gmtime]} GMT
@@ -992,7 +995,7 @@ EOT
         set_phase '$new_phase';
         do {
             my (\$Configuration, \$$VAR);
-@{[$dumper->Dump]}
+$dumped
             dethunk(\$$VAR);
             \$$VAR
         }
