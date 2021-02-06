@@ -499,7 +499,9 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     ) .
     ($opts{quiet} ? '' :
         q(
-            warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, since phase $App::hopen::BuildSystemGlobals::Phase was given on the command line\n";
+            warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, " .
+                "since phase $App::hopen::BuildSystemGlobals::Phase was " .
+                "given on the command line\n";
         )
     ) . "}\n";
 
@@ -812,8 +814,8 @@ The return value of _inner is unspecified and ignored.
 
     # = Initialize filesystem-related build-system globals ==================
 
-    # Get the project dir
-    my $proj_dir = $self->cmdopts->{PROJ_DIR} ? dir($self->cmdopts->{PROJ_DIR}) : dir;    #default=cwd
+    # Get the project dir (default = cwd)
+    my $proj_dir = $self->cmdopts->{PROJ_DIR} ? dir($self->cmdopts->{PROJ_DIR}) : dir;
     $ProjDir = $proj_dir;
 
     # Get the destination dir
@@ -969,6 +971,8 @@ EOT
     # - Add code after the dump to replace all those thunks with their
     #   get() values.
 
+    # TODO figure out how to carry the config forward from run to run.
+
     my $config = extract_thunks($new_data);
     my $VAR = '__R_new_data';
     my $dumper = Data::Dumper->new([$config, $new_data], ['Configuration', $VAR]);
@@ -985,7 +989,8 @@ EOT
     eval { $dumper->{xpad} = ' ' x 4 };
 
     my $dumped = $dumper->Dump;
-    $dumped =~ s/^(\h*)(\$__R_new_data\h*=)/\n$1### Do not change below this line ###########################################\n\n$1$2/m;
+    my $separ = '### Do not change below this line ' . ('#' x 45);
+    $dumped =~ s{^(\h*)(\$__R_new_data\h*=)}{\n$1$separ\n\n$1$2}m;
 
     my $new_text = dedent [], qq(
         # ==================================================================
