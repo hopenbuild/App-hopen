@@ -10,7 +10,6 @@ use parent 'App::hopen::G::AssetOp';
 use Class::Tiny;
 
 use App::hopen::BuildSystemGlobals;     # for $DestDir
-use Quote::Code;
 use String::Print;
 
 # Docs {{{1
@@ -49,9 +48,9 @@ sub _run {
 
     # Debugging output
     hlog {;
-        qc'Project piece from node {$self->name}',
-        qc'{$self->asset->how//"<nothing to be done>"}',
-        map { qc'Depends on {$_->target}' } @inputs,
+        "Project piece from node @{[$self->name]}",
+        $self->asset->how//"<nothing to be done>",
+        map { "Depends on @{[$_->target]}" } @inputs,
     };
 
     if(defined $self->asset->how && !$self->asset->how) {     # goal = MSBuild <Target>

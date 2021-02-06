@@ -2,7 +2,6 @@
 package App::hopen::G::Cmd;
 use strict; use warnings;
 use Data::Hopen::Base;
-use Quote::Code;
 
 our $VERSION = '0.000013'; # TRIAL
 

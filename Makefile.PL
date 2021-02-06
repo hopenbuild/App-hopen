@@ -1,4 +1,5 @@
 #!perl
+#<<< No perltidy
 # Makefile.PL for App::hopen
 use 5.014;
 use strict; use warnings;
@@ -127,8 +128,19 @@ cover: all
 # HTML documentation using Pod::ProjectDocs
 html: all
 \tpod2projdocs -l lib -l `perldoc -lm Data::Hopen | sed 's,.Data.Hopen.pm\$\$,,'` -o html -title "The hopen build system"
-EOT
 
+# Pretty-printing and tags
+prettyprint:
+\t-perltidy -pro=.perltidyrc -b `grep -E '\\.(pm|pl|t)\$\$' MANIFEST`
+
+tags:
+\t-ctags -R
+
+p:
+\t+\$(MAKE) prettyprint
+\t+\$(MAKE) tags
+
+EOT
     } #postamble()
 } #package MY
 
@@ -140,7 +152,6 @@ my %opts = (
     AUTHOR           => q{Christopher White <cxw@cpan.org>},
     VERSION_FROM     => $VERSION_FROM,
     ABSTRACT_FROM    => $VERSION_FROM,
-    #ABSTRACT         => 'The hopen build system, command-line interface',
     LICENSE          => 'lgpl_2_1',
     PL_FILES         => {},
     MIN_PERL_VERSION => '5.014',
@@ -264,7 +275,7 @@ my %opts = (
         # 'Probe::Perl' => '0', # For perl interpreter file location or other info.
                                 # Alternative: Padre::Perl
 
-        'Quote::Code' => '1.01',
+        #'Quote::Code' => '1.01',   # very cool, but non-PP, and perltidy barfs on it
         #'Role::Tiny' => '1.000000',
 
         'Scalar::Util' => '0',

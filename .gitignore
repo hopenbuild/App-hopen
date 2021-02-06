@@ -69,6 +69,8 @@ foo
 foo.*
 TODO
 TODO*
+*.orig
+*.ERR
 
 # Things we generate
 built/
