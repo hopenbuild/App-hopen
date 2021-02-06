@@ -1,10 +1,11 @@
 # App::hopen::T::MSCL - Microsoft cl.exe toolset
 package App::hopen::T::MSCL;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 =head1 NAME
 

@@ -1,12 +1,13 @@
 # App::hopen::T::Gnu::C - support GNU toolset, C language
 package App::hopen::T::Gnu::C;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
-use App::hopen::BuildSystemGlobals;   # For $DestDir.
+use App::hopen::BuildSystemGlobals;    # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 
@@ -22,8 +23,8 @@ use File::Which ();
 use Path::Class;
 use PerlX::Maybe qw(:all);
 
-my $FN = Data::Hopen::Util::Filename->new;     # for brevity
-our $_CC;   # Cached compiler name
+my $FN = Data::Hopen::Util::Filename->new;    # for brevity
+our $_CC;                                     # Cached compiler name
 
 # Docs {{{1
 
@@ -65,21 +66,24 @@ compilation options or object-file names).  Usage:
 
 =cut
 
-sub _find_compiler; # forward
+sub _find_compiler;    # forward
 
 sub compile {
     my ($builder, %args) = getparameters('self', [qw(; name)], @_);
     _find_compiler unless $_CC;
-    my $idx = 0;
-    my @nodes = map { App::hopen::T::Gnu::C::CompileCmd->new(
-        compiler => $_CC,
-        provided_deref exists($args{name}), sub { name => $args{name} . $idx++ },
-    ) } @{$builder->nodes};
+    my $idx   = 0;
+    my @nodes = map {
+        App::hopen::T::Gnu::C::CompileCmd->new(
+            compiler => $_CC,
+            provided_deref exists($args{name}),
+            sub { name => $args{name} . $idx++ },
+        )
+    } @{ $builder->nodes };
 
     hlog { __PACKAGE__, 'Built compile nodes', Dumper(\@nodes) } 2;
 
     return { parallel => \@nodes };
-} #compile()
+} ## end sub compile
 
 make_GraphBuilder 'compile';
 
@@ -104,13 +108,13 @@ sub link {
 
     my $node = App::hopen::T::Gnu::C::LinkCmd->new(
         linker => $_CC,
-        dest => $dest,
+        dest   => $dest,
         forward_opts(\%args, 'name')
     );
     hlog { __PACKAGE__, 'Built link node', Dumper($node) } 2;
 
     return { complete => [$node] };
-} #link()
+} ## end sub link
 
 make_GraphBuilder 'link';
 
@@ -129,19 +133,20 @@ the graph, before anything else runs.  TODO figure this out.
 =cut
 
 sub _find_compiler {
-    foreach my $candidate ($Config{cc}, qw[cc gcc clang]) {      # TODO also c89 or xlc?
+    foreach my $candidate ($Config{cc}, qw[cc gcc clang])
+    {    # TODO also c89 or xlc?
         my $path = File::Which::which($candidate);
         next unless defined $path;
 
         hlog { __PACKAGE__, 'using C compiler', $path };    # Got it
         $_CC = $path;
         last;
-    }
+    } ## end foreach my $candidate ($Config...)
 
     croak "Could not find a C compiler" unless $_CC;
-} #_find_compiler()
+} ## end sub _find_compiler
 
-BEGIN { _find_compiler if eval '$App::hopen::RUNNING'; }
+BEGIN { _find_compiler if eval '$App::hopen::RUNNING' }
 
 1;
 __END__

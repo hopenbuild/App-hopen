@@ -1,21 +1,22 @@
 # App::hopen::MYhopen - module for managing MY.hopen.pl files
 package App::hopen::MYhopen;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use App::hopen::Util;
 
 use parent 'Exporter';
 use vars::i {
-    '@EXPORT' => [qw(extract_thunks)],
+    '@EXPORT'    => [qw(extract_thunks)],
     '@EXPORT_OK' => [qw()],
 };
 use vars::i '%EXPORT_TAGS' => (
-        default => [@EXPORT],
-        all => [@EXPORT, @EXPORT_OK]
+    default => [@EXPORT],
+    all     => [ @EXPORT, @EXPORT_OK ]
 );
 
 # Docs {{{1
@@ -58,7 +59,7 @@ sub extract_thunks {
 
     _extract_thunks_walk($retval, $data);
     return $retval;
-} #extract_thunks
+} ## end sub extract_thunks
 
 # Make a key that doesn't exist in a hashref.
 # Usage: $newname = _make_unique_in($hr, $oldname)
@@ -67,32 +68,33 @@ sub _make_unique_in {
 
     my ($hash, $k) = @_;
     return $k unless exists $hash->{$k};
-    ++$uniq_idx while exists $hash->{$k . $uniq_idx};
+    ++$uniq_idx while exists $hash->{ $k . $uniq_idx };
     return $k . $uniq_idx;
-} #_make_unique_in
+} ## end sub _make_unique_in
 
 # Process a thunk.  Params: \%retval, $thunk
 sub _etw_process {
     my ($retval, $v) = @_;
     my $n = $v->name;
-    hlog { 'Found thunk',  $n } 4;
+    hlog { 'Found thunk', $n } 4;
+
     # TODO implement namespaced names
     $n = _make_unique_in($retval, $n);
     $v->name($n);
     $retval->{$n} = $v->tgt;
-}
+} ## end sub _etw_process
 
 # Preconditions: $retval is a hashref; $node is an arrayref or hashref
 sub _extract_thunks_walk {
 
     my ($retval, $node) = @_;
-    my $ty = ref $node;
+    my $ty     = ref $node;
     my $ishash = $ty eq 'HASH';
 
     my @kids;
 
     if($ishash) {
-        foreach my $k (sort keys %$node) {  # sort for reproducibility
+        foreach my $k (sort keys %$node) {    # sort for reproducibility
             my $v = $node->{$k};
             hlog { Value => $v } 5;
             if(ref $v eq 'App::hopen::Util::Thunk') {
@@ -100,10 +102,10 @@ sub _extract_thunks_walk {
                 push @kids, $v->tgt if isaggref($v->tgt);
             }
             push @kids, $v if isaggref($v);
-        }
+        } ## end foreach my $k (sort keys %$node)
 
     } else {    # array
-        foreach my $pair (map { [$_, $node->[$_]] } 0..$#$node) {
+        foreach my $pair (map { [ $_, $node->[$_] ] } 0 .. $#$node) {
             my ($i, $v) = @$pair;
             hlog { Value => $v } 5;
             if(ref $v eq 'App::hopen::Util::Thunk') {
@@ -111,11 +113,11 @@ sub _extract_thunks_walk {
                 push @kids, $v->tgt if isaggref($v->tgt);
             }
             push @kids, $v if isaggref($v);
-        }
-    }
+        } ## end foreach my $pair (map { [ $_...]})
+    } ## end else [ if($ishash) ]
 
     _extract_thunks_walk($retval, $_) foreach @kids;
-} #_extract_thunks_walk
+} ## end sub _extract_thunks_walk
 
 1;
 __END__

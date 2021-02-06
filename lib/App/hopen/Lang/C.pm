@@ -1,10 +1,11 @@
 # App::hopen::Lang::C - LSP for C
 package App::hopen::Lang::C;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::Lang';
 use Class::Tiny;
@@ -38,17 +39,19 @@ Usage:
 =cut
 
 sub find_deps {
-    my ($self, %args) = getparameters('self', [qw(deps required ; choices)], @_);
+    my ($self, %args) =
+      getparameters('self', [qw(deps required ; choices)], @_);
+
     # TODO RESUME HERE ---
     # 1. Create the infrastructure for choices and add that infrastructure
     #    to MY.hopen.pl.
     # 2. Run pkg-config here for libraries and parse the results
 
-    my $retval = { ipath => [], lpath => [], lname => [] };   # TODO
+    my $retval = { ipath => [], lpath => [], lname => [] };    # TODO
 
-    foreach my $ty (keys %{$args{deps}}) {
+    foreach my $ty (keys %{ $args{deps} }) {
         if($ty eq '-lib') {
-            foreach my $lib (@{$args{deps}->{$ty}}) {
+            foreach my $lib (@{ $args{deps}->{$ty} }) {
                 my ($stdout, $stderr, $result) = capture {
                     system {'pkg-config'} qw(pkg-config --cflags --libs), $lib
                 };
@@ -57,24 +60,29 @@ sub find_deps {
                     die $msg if $args{required};
                     warn $msg;
                     next;
-                }
+                } ## end if($result != 0)
                 hlog { "pkg-config $lib returned >>$stdout<<" };
 
-                while(my ($which, $what) = ($stdout =~ m{\G.*?-([IlL])(\S+)}gmsc)) {
-                    state %map = (I=>'ipath', l => 'lname', L => 'lpath');
+                while(my ($which, $what) =
+                    ($stdout =~ m{\G.*?-([IlL])(\S+)}gmsc))
+                {
+                    state %map = (I => 'ipath', l => 'lname', L => 'lpath');
                     my $k = $map{$which} or die "programmer error";
-                    push @{$retval->{$k}}, $what;
-                }
-            };
+                    push @{ $retval->{$k} }, $what;
+                } ## end while(my ($which, $what) ...)
+            } ## end foreach my $lib (@{ $args{deps...}})
         } else {
             die "Unknown dependency type $ty for " . __PACKAGE__;
         }
-    }
-    hlog { __PACKAGE__, 'dependencies for', Dumper($self->{deps}),
-        'are', Dumper($retval) } 2;
+    } ## end foreach my $ty (keys %{ $args...})
+    hlog {
+        __PACKAGE__,           'dependencies for',
+        Dumper($self->{deps}), 'are',
+        Dumper($retval)
+    } 2;
 
     return $retval;
-} #find_deps()
+} ## end sub find_deps
 
 1;
 __END__

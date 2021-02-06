@@ -4,5 +4,5 @@
 
 use language 'C';
 
-rule->H::want(-lib => 'libva')->
-H::files('hello.c')->C::compile->C::link('hello')->default_goal;
+rule->H::want(-lib => 'libva')->H::files('hello.c')
+  ->C::compile->C::link('hello')->default_goal;

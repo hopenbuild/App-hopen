@@ -1,19 +1,19 @@
 # App::hopen::Util::BasedPath - A path relative to a specified base
 package App::hopen::Util::BasedPath;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use Exporter qw(import);
-our @EXPORT; BEGIN { @EXPORT = qw(based_path); }
+our @EXPORT;
+BEGIN { @EXPORT = qw(based_path) }
 
-use Class::Tiny qw(path base),
-{
-    orig_cwd => undef,
-};
-    # TODO add custom accessors for `path` and `base` to enforce the
-    # type of object instances.
+use Class::Tiny qw(path base), { orig_cwd => undef, };
+
+# TODO add custom accessors for `path` and `base` to enforce the
+# type of object instances.
 
 # What we use
 use Cwd;
@@ -77,7 +77,7 @@ sub is_file {
                         # infinite loop when _stringify() calls this.
     croak 'Need an instance' unless ref $self;
     return $self->path->DOES('Path::Class::File');
-} #is_file()
+} ## end sub is_file
 
 =head2 orig
 
@@ -90,12 +90,9 @@ sub orig {
     my ($self) = @_;
     croak 'Need an instance' unless ref $self;
 
-    my $classname = $self->is_file ?  'Path::Class::File' : 'Path::Class::Dir';
-    return $classname->new(
-            $self->base->components,
-            $self->path->components
-        );
-} #orig()
+    my $classname = $self->is_file ? 'Path::Class::File' : 'Path::Class::Dir';
+    return $classname->new($self->base->components, $self->path->components);
+} ## end sub orig
 
 =head2 path_wrt
 
@@ -110,9 +107,9 @@ directory to the original location.  (C<wrt> = With Respect To)  Example:
 =cut
 
 sub path_wrt {
-    my ($self, %args) = parameters('self',['whence'], @_);
+    my ($self, %args) = parameters('self', ['whence'], @_);
     return $self->orig->relative($args{whence});
-} #path_wrt()
+}
 
 =head2 path_on
 
@@ -137,15 +134,13 @@ This is in some ways the opposite of C<Path::Class::File::relative()>:
 sub path_on {
     my ($self, $new_base) = @_;
     croak 'Need an instance' unless ref $self;
-    croak 'Need a new base path' unless ref($new_base) &&
-                                        $new_base->DOES('Path::Class::Dir');
+    croak 'Need a new base path'
+      unless ref($new_base)
+      && $new_base->DOES('Path::Class::Dir');
 
-    my $classname = $self->is_file ?  'Path::Class::File' : 'Path::Class::Dir';
-    return $classname->new(
-            $new_base->components,
-            $self->path->components
-        );
-} #path_on()
+    my $classname = $self->is_file ? 'Path::Class::File' : 'Path::Class::Dir';
+    return $classname->new($new_base->components, $self->path->components);
+} ## end sub path_on
 
 =head2 _stringify
 
@@ -156,15 +151,17 @@ for machine consumption.
 
 sub _stringify {
     my ($self, $other, $swap) = @_;
-    return ('``' . ($self->base) . "'' hosting " .
-            ($self->is_file ? 'file ``': 'dir ``') .
-            ($self->path) . "''"
-    );
-} #_stringify()
+    return ('``'
+          . ($self->base)
+          . "'' hosting "
+          . ($self->is_file ? 'file ``' : 'dir ``')
+          . ($self->path)
+          . "''");
+} ## end sub _stringify
 
 use overload
-    '""' => '_stringify',
-    fallback => 1;
+  '""'     => '_stringify',
+  fallback => 1;
 
 =head2 BUILD
 
@@ -177,23 +174,26 @@ sub BUILD {
     die 'Need an instance' unless ref $self;
 
     # --- path ---
-    croak "path must be a Path::Class::*" unless $self->path &&
-        ($self->path->DOES('Path::Class::Dir') ||
-        $self->path->DOES('Path::Class::File'));
+    croak "path must be a Path::Class::*"
+      unless $self->path
+      && ( $self->path->DOES('Path::Class::Dir')
+        || $self->path->DOES('Path::Class::File'));
     croak "path must be relative" unless $self->path->is_relative;
 
     # --- base ---
     # Accept strings as base for convenience
-    $self->base( dir($self->base) ) if !ref($self->base) && $self->base ne '';
+    $self->base(dir($self->base)) if !ref($self->base) && $self->base ne '';
 
-    croak "base must be a Path::Class::Dir" unless $self->base &&
-        $self->base->DOES('Path::Class::Dir');
+    croak "base must be a Path::Class::Dir"
+      unless $self->base
+      && $self->base->DOES('Path::Class::Dir');
+
     # TODO? make base absolute??
 
     # --- orig_cwd ---
     $self->orig_cwd(dir()->absolute);
 
-} #BUILD()
+} ## end sub BUILD
 
 =head1 STATIC FUNCTIONS
 
@@ -205,7 +205,7 @@ A synonym for C<< App::hopen::Util::BasedPath->new() >>.  Exported by default.
 
 sub based_path {
     return __PACKAGE__->new(@_);
-} #based_path()
+}
 
 1;
 __END__

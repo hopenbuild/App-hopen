@@ -1,15 +1,20 @@
 # App::hopen::BuildSystemGlobals - global data for build-system use cases.
 package App::hopen::BuildSystemGlobals;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'Exporter';
 our @EXPORT;
-BEGIN { @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir *LSP); }
-        # export with `*` => `local` will work.
+
+BEGIN {
+    @EXPORT = qw(*Generator *Toolset *Build *Phase *ProjDir *DestDir *LSP);
+}
+
+# export with `*` => `local` will work.
 
 =head1 NAME
 

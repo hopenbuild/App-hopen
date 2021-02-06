@@ -9,13 +9,19 @@ use Path::Class;
 use App::hopen::Util::Templates qw(magick);
 
 is(ref magick('answer'), 'CODE', 'Existent template returns coderef');
-like(exception { magick('NONEXISTENT') }, qr/No template NONEXISTENT/,
-    'Nonexistent template throws');
-like(exception { magick('invalid') }, qr/Could not create template invalid/,
-    'Invalid template throws');
-is(magick('answer')->(), "42\n", 'No-param template');
-is(magick('param')->(arg => 1337), "1337\n", 'One-param template, hash');
-is(magick('param')->({arg => 1337}), "1337\n", 'One-param template, hashref');
+like(
+    exception { magick('NONEXISTENT') },
+    qr/No template NONEXISTENT/,
+    'Nonexistent template throws'
+);
+like(
+    exception { magick('invalid') },
+    qr/Could not create template invalid/,
+    'Invalid template throws'
+);
+is(magick('answer')->(),               "42\n",   'No-param template');
+is(magick('param')->(arg => 1337),     "1337\n", 'One-param template, hash');
+is(magick('param')->({ arg => 1337 }), "1337\n", 'One-param template, hashref');
 
 done_testing();
 

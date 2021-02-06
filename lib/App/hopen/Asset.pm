@@ -1,13 +1,15 @@
 # App::hopen::Asset - record representing a file to be produced
 package App::hopen::Asset;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
 use Path::Class;
 use Scalar::Util qw(weaken);
+
 # and we use Class::Tiny below.  This class has no parent.
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 # Docs {{{1
 
@@ -84,28 +86,30 @@ generated automatically.
 # The accessor for the target attribute.
 sub target {
     my $self = shift;
-    if (@_) {
+    if(@_) {
         my $candidate = shift;
         croak "targets must not be falsy" unless $candidate;
-        if(eval { $candidate->DOES('Path::Class::File') ||
-            $candidate->DOES('Path::Class::Dir') ||
-            $candidate->DOES('App::hopen::Util::BasedPath' ) }
-        ) {
+        if(
+            eval {
+                     $candidate->DOES('Path::Class::File')
+                  || $candidate->DOES('Path::Class::Dir')
+                  || $candidate->DOES('App::hopen::Util::BasedPath');
+            }
+          )
+        {
             return $self->{target} = $candidate;
         } else {
             return $self->{target} = "$candidate";
         }
-    } elsif ( exists $self->{target} ) {
+    } elsif(exists $self->{target}) {
         return $self->{target};
     } else {    # No default.
         croak "I don't have a target to give you";
     }
-} #target()
+} ## end sub target
 
 # Set up the rest of the class
-use Class::Tiny qw(target how name), {
-   made_from => sub { [] },
-};
+use Class::Tiny qw(target how name), { made_from => sub { [] }, };
 
 =head2 isdisk
 
@@ -116,11 +120,10 @@ directory or file.
 
 sub isdisk {
     my $self = shift or croak 'Need an instance';
-    return ($self->target->DOES('Path::Class::File') ||
-            $self->target->DOES('Path::Class::Dir') ||
-            $self->target->DOES('App::hopen::Util::BasedPath')
-    );
-} #isdisk()
+    return ( $self->target->DOES('Path::Class::File')
+          || $self->target->DOES('Path::Class::Dir')
+          || $self->target->DOES('App::hopen::Util::BasedPath'));
+} ## end sub isdisk
 
 =head2 BUILD
 
@@ -133,10 +136,11 @@ my $_id_counter;
 sub BUILD {
     my ($self) = @_;
     $self->name('__R_Asset_' . $_id_counter++) unless $self->name;
+
     # Check the custom constraints by re-setting the values
     $self->target($self->target);
     $self->made_from($self->made_from);
-} #BUILD()
+} ## end sub BUILD
 
 =head1 STATIC FUNCTIONS
 
@@ -147,10 +151,10 @@ don't assume it will never change ;) .
 
 =cut
 
-sub assetwise($$) {
-    $_[0]->isdisk <=> $_[1]->isdisk ||
-        $_[0]->target cmp $_[1]->target ||
-            $_[0]->name cmp $_[1]->name
+sub assetwise ($$) {
+    $_[0]->isdisk <=> $_[1]->isdisk
+      || $_[0]->target cmp $_[1]->target
+      || $_[0]->name cmp $_[1]->name;
 }
 
 1;

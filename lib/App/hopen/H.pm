@@ -1,17 +1,18 @@
 # App::hopen::H - basic functions for use in hopen files
 package App::hopen::H;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'Exporter';
-use vars::i '@EXPORT' => [];
-use vars::i '@EXPORT_OK' => qw(files want);     # TODO move these to @EXPORT?
+use vars::i '@EXPORT'      => [];
+use vars::i '@EXPORT_OK'   => qw(files want);    # TODO move these to @EXPORT?
 use vars::i '%EXPORT_TAGS' => (
-        default => [@EXPORT],
-        all => [@EXPORT, @EXPORT_OK]
-    );
+    default => [@EXPORT],
+    all     => [ @EXPORT, @EXPORT_OK ]
+);
 
 use App::hopen::BuildSystemGlobals;
 use App::hopen::G::FilesCmd;
@@ -66,18 +67,22 @@ sub files {
     my $lrFiles = $args{'*'} // [];
     hlog { __PACKAGE__, 'files:', Dumper($lrFiles) } 3;
 
-    my @files = map { based_path(path => file($_), base => $ProjDir) } @$lrFiles;
+    my @files =
+      map { based_path(path => file($_), base => $ProjDir) } @$lrFiles;
     hlog { __PACKAGE__, 'file objects:', @files } 3;
 
     # A separate Cmd node for each file
-    my $idx = 0;
-    my @files_op = map { App::hopen::G::FilesCmd->new(
-        files => [ $_ ],
-        provided_deref exists($args{name}), sub { name => ($args{name} . $idx++) },
-    ) } @files;
+    my $idx      = 0;
+    my @files_op = map {
+        App::hopen::G::FilesCmd->new(
+            files => [$_],
+            provided_deref exists($args{name}),
+            sub { name => ($args{name} . $idx++) },
+        )
+    } @files;
 
     return { complete => \@files_op };
-} #files()
+} ## end sub files
 
 make_GraphBuilder 'files';
 
@@ -109,7 +114,8 @@ sub want {
 
     hlog { __PACKAGE__, 'want:', Dumper($args->multi) } 3;
     my $cmd = App::hopen::G::FindDependencyCmd->new(
-        deps => $args->multi, required => false
+        deps     => $args->multi,
+        required => false
     );
 
     # TODO: create a node
@@ -124,7 +130,7 @@ sub want {
     #    {l} and {L}).  Or, e.g., $hr->{lang}->{Vala}->{pkg} (and likewise
     #    {vapidir}).
     return $cmd;
-} #want()
+} ## end sub want
 
 make_GraphBuilder 'want';
 

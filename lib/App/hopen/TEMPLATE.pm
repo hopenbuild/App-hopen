@@ -45,7 +45,7 @@ TODO
 sub todo {
     my $self = shift or croak 'Need an instance';
     ...
-} #todo()
+}
 
 # TODO if using a custom import()
 #sub import {    # {{{1

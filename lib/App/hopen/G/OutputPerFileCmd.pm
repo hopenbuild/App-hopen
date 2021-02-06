@@ -1,15 +1,14 @@
 # App::hopen::G::OutputPerFileCmd - hopen Cmd that makes outputs from input separately
 package App::hopen::G::OutputPerFileCmd;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::Cmd';
-use Class::Tiny {
-    _stash => +{},
-};
+use Class::Tiny { _stash => +{}, };
 
 use Data::Hopen::Util::Data qw(fwdopts);
 
@@ -83,7 +82,7 @@ sub _run {
 
     my $routine = $self->can($self->getphase);
 
-    return $self->passthrough(-nocontext=>1) unless $routine;
+    return $self->passthrough(-nocontext => 1) unless $routine;
 
     hlog { Node => $self->name, running => $self->getphase } 3;
 
@@ -100,8 +99,8 @@ sub _run {
         my @outputs;
         $self->_stash(+{});
         foreach my $src (@$lrSourceFiles) {
-            my $obj = $self->$routine(-asset=>$src, @visitor_if_any);
-            $obj->made_from([$src]) unless @{$obj->made_from};
+            my $obj = $self->$routine(-asset => $src, @visitor_if_any);
+            $obj->made_from([$src]) unless @{ $obj->made_from };
             push @outputs, $obj;
         }
 
@@ -113,8 +112,7 @@ sub _run {
     }
 
     return $self->_stash;
-} #_run()
-
+} ## end sub _run
 
 1;
 __END__

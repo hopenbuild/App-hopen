@@ -1,5 +1,5 @@
 package App::hopen::Util;
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 # Docs {{{1
 
@@ -9,15 +9,16 @@ App::hopen::Util - general utilities for App::hopen
 
 =cut
 
-use strict; use warnings;
+use strict;
+use warnings;
 use parent 'Exporter';
 use vars::i {
-    '@EXPORT' => [qw(isaggref isMYH nicedump)],
+    '@EXPORT'    => [qw(isaggref isMYH nicedump)],
     '@EXPORT_OK' => [qw(MYH)]
 };
 use vars::i '%EXPORT_TAGS' => {
     default => [@EXPORT],
-    all => [@EXPORT, @EXPORT_OK],
+    all     => [ @EXPORT, @EXPORT_OK ],
 };
 
 use Data::Dumper;
@@ -52,8 +53,8 @@ See also L</MYH>.
 
 sub isMYH {
     my $name = @_ ? $_[0] : $_;
-    return ($name =~ /\b\Q@{[MYH]}\E$/)
-} #isMYH()
+    return ($name =~ /\b\Q@{[MYH]}\E$/);
+}
 
 =head2 nicedump
 
@@ -67,12 +68,12 @@ TODO change to C<< label => $var[, ...] >>
 
 sub nicedump {
     my $dumper = Data::Dumper->new(@_);
-    $dumper->Indent(1);         # fixed indent size
+    $dumper->Indent(1);    # fixed indent size
     $dumper->Quotekeys(0);
     $dumper->Purity(1);
-    $dumper->Maxrecurse(0);     # no limit
-    $dumper->Sortkeys(1);       # For consistency between runs
+    $dumper->Maxrecurse(0);    # no limit
+    $dumper->Sortkeys(1);      # For consistency between runs
     return $dumper->Dump;
-}
+} ## end sub nicedump
 
 1;

@@ -1,13 +1,14 @@
 # App::hopen::Util::String - string utilities for hopen
 package App::hopen::Util::String;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'Exporter';
-use vars::i '@EXPORT_OK' => qw(eval_here line_mark_string);
+use vars::i '@EXPORT_OK'   => qw(eval_here line_mark_string);
 use vars::i '%EXPORT_TAGS' => (all => [@EXPORT_OK]);
 
 # Docs {{{1
@@ -62,7 +63,7 @@ sub line_mark_string {
         croak "Invalid invocation";
     }
 
-    croak "Need text" unless defined $contents;
+    croak "Need text"                       unless defined $contents;
     die "Couldn't get location information" unless $filename && $line;
 
     $filename =~ s/"/-/g;
@@ -72,7 +73,7 @@ sub line_mark_string {
 #line $line "$filename"
 $contents
 EOT
-} #line_mark_string()
+} ## end sub line_mark_string
 
 =head2 eval_here
 
@@ -106,7 +107,7 @@ sub eval_here {
 #line $line "$filename"
 $code_to_run
 EOT
-} #eval_here()
+} ## end sub eval_here
 
 1;
 __END__

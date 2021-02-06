@@ -28,7 +28,6 @@ requires 'Package::Alias', '0.12';
 requires 'Path::Class', '0.37';
 requires 'PerlX::Maybe', '1.200';
 requires 'Pod::Usage';
-requires 'Quote::Code', '1.01';
 requires 'Scalar::Util';
 requires 'Set::Scalar', '1.27';
 requires 'String::Print', '0.92';

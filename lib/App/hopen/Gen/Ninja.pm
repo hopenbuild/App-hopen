@@ -1,9 +1,10 @@
 # App::hopen::Gen::Ninja - generator for a generic make(1).
 package App::hopen::Gen::Ninja;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::Util::GenWithoutAssetGraph';    # and Class::Tiny below
 
@@ -12,6 +13,7 @@ use Data::Hopen;
 use File::Which;
 
 use Class::Tiny {
+
     # Rule names, indexed by recipe
     _rules => sub { +{} },
 };
@@ -57,23 +59,25 @@ sub _do_asset {
     state $ruleidx = 0;
     my ($self, $fh, $asset, $lrPrereqTags) = @_;
     my @prereq_tags = @$lrPrereqTags;
-    my $recipe = $asset->how;
-    my $output = $self->_tags->{$asset};
+    my $recipe      = $asset->how;
+    my $output      = $self->_tags->{$asset};
 
     return unless @prereq_tags || $recipe;
 
     if(defined $recipe) {
+
         # TODO refactor this processing into a utility module/function
-        warn "I don't yet support #first very well (in ``$recipe'')" if $recipe =~ /#first/;
-        $recipe =~ s<#first\b><\$in>g;  # first input   # TODO FIXME
+        warn "I don't yet support #first very well (in ``$recipe'')"
+          if $recipe =~ /#first/;
+        $recipe =~ s<#first\b><\$in>g;    # first input   # TODO FIXME
             # TODO: any recipe using #first gets a `first = x` var shadow
             # in its build block
 
         $recipe =~ s<#all\b><\$in>g;    # all inputs
         $recipe =~ s<#out\b><\$out>g;
-    }
+    } ## end if(defined $recipe)
 
-    if($asset->isdisk) {    # File target
+    if($asset->isdisk) {                # File target
 
         my $rulename = $self->_rules->{$recipe};
         unless($rulename) {
@@ -84,21 +88,21 @@ rule $rulename
 
 EOT
             $self->_rules->{$recipe} = $rulename;
-        }
+        } ## end unless($rulename)
 
         print $fh <<"EOT";
 build $output: $rulename @{[join(" ", @prereq_tags)]}
 
 EOT
-    } else {            # Goal target
+    } else {    # Goal target
 
         print $fh <<"EOT";
 build $output: phony @{[join(" ", @prereq_tags)]}
 
 EOT
-    }
+    } ## end else [ if($asset->isdisk) ]
 
-} # sub _do_asset()
+}    # sub _do_asset()
 
 =head2 _default_toolset
 
@@ -123,7 +127,7 @@ sub _run_build {
     } else {
         warn "Could not find the 'ninja' program";
     }
-} #_run_build()
+} ## end sub _run_build
 
 1;
 __DATA__

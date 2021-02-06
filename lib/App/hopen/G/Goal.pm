@@ -38,10 +38,10 @@ Returns an asset that represents this goal.
 sub asset {
     my $self = shift;
     croak "Cannot retrieve asset from a Goal that has not yet been run"
-        unless $self->_asset;
+      unless $self->_asset;
 
     return $self->_asset;
-}
+} ## end sub asset
 
 =head2 _run
 
@@ -57,16 +57,20 @@ sub _run {
     hlog { __PACKAGE__, $self->name } 2;
 
     my $inputs = $self->input_assets;
-    my $asset = App::hopen::Asset->new(target => $self->name,
-                                        made_from => $inputs);
+    my $asset  = App::hopen::Asset->new(
+        target    => $self->name,
+        made_from => $inputs
+    );
     hlog { __PACKAGE__, 'Goal asset', Dumper $asset } 3;
     $self->_asset($asset);
-        # Not an output, since output is controlled by
-        # Data::Hopen::G::Goal::should_output.  Therefore, we also don't
-        # call make($asset).
 
-    return $self->Data::Hopen::G::Goal::_run(fwdopts(%args, [qw(visitor graph)]));
-} #_run()
+    # Not an output, since output is controlled by
+    # Data::Hopen::G::Goal::should_output.  Therefore, we also don't
+    # call make($asset).
+
+    return $self->Data::Hopen::G::Goal::_run(
+        fwdopts(%args, [qw(visitor graph)]));
+} ## end sub _run
 
 sub language {
     return undef;

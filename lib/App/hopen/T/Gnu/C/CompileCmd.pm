@@ -1,17 +1,18 @@
 # App::hopen::T::Gnu::C::CompileCmd - compile C source using the GNU toolset
 package App::hopen::T::Gnu::C::CompileCmd;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::OutputPerFileCmd';
 use Class::Tiny qw(compiler);
 
 use App::hopen::AppUtil qw(:constants);
 use App::hopen::Asset;
-use App::hopen::BuildSystemGlobals;   # For $DestDir.
+use App::hopen::BuildSystemGlobals;    # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 use App::hopen::Util::Thunk;
@@ -19,7 +20,7 @@ use Data::Hopen qw(getparameters);
 use Data::Hopen::Util::Filename;
 use Path::Class;
 
-my $_FN = Data::Hopen::Util::Filename->new;     # for brevity
+my $_FN = Data::Hopen::Util::Filename->new;    # for brevity
 
 # Docs {{{1
 
@@ -61,10 +62,11 @@ sub Check {
     my $self = shift;
 
     my $name = 'compiler @ App::hopen::T::Gnu';
-    $self->_stash->{$name} =
-        App::hopen::Util::Thunk->new(tgt=>[$self->compiler],
-            name => $name);
-} #Check()
+    $self->_stash->{$name} = App::hopen::Util::Thunk->new(
+        tgt  => [ $self->compiler ],
+        name => $name
+    );
+} ## end sub Check
 
 =head2 Gen
 
@@ -78,16 +80,18 @@ sub Gen {
 
     die "Cannot compile non-file $src" unless $src->isdisk;
 
-    my $to = based_path(path => file($_FN->obj($src->target->path)),
-                        base => $DestDir);
+    my $to = based_path(
+        path => file($_FN->obj($src->target->path)),
+        base => $DestDir
+    );
     my $how = $self->compiler . " -c #first -o #out";
     my $obj = App::hopen::Asset->new(
-        target => $to, how => $how,
+        target => $to,
+        how    => $how,
     );
 
-
     return $obj;
-} #Gen()
+} ## end sub Gen
 
 1;
 __END__

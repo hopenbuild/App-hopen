@@ -1,14 +1,13 @@
 # App::hopen::G::Cmd - base class for hopen(1) command-graph nodes
 package App::hopen::G::Cmd;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'Data::Hopen::G::Op';
-use Class::Tiny {
-    made => sub { [] },
-};
+use Class::Tiny { made => sub { [] }, };
 
 use App::hopen::AppUtil qw(:constants);
 use Class::Method::Modifiers qw(around);
@@ -51,7 +50,7 @@ TODO die if there is no current phase.
 =cut
 
 sub getphase {
-    return PHASES->enforce(shift->scope->find(KEY_PHASE)//'');
+    return PHASES->enforce(shift->scope->find(KEY_PHASE) // '');
 }
 
 =head2 make
@@ -80,9 +79,9 @@ A valid C<target|App::hopen::Asset/target> for an L<App::hopen::Asset>.
 
 sub make {
     my $self = shift or croak 'Need an instance';
-    push @{$self->made}, $self->_assets_for(@_);
+    push @{ $self->made }, $self->_assets_for(@_);
     return undef;
-} #make()
+}
 
 # Recursively collect assets to be made
 sub _assets_for {
@@ -94,12 +93,12 @@ sub _assets_for {
         } elsif(eval { $arg->DOES('App::hopen::Asset') }) {
             push @retval, $arg;
         } else {
-            my $asset = App::hopen::Asset->new(target=>$arg);
+            my $asset = App::hopen::Asset->new(target => $arg);
             push @retval, $asset;
         }
-    } #foreach arg
+    } ## end for my $arg (@_)
     return @retval;
-} # _assets_for()
+}    # _assets_for()
 
 =head2 input_assets
 
@@ -114,17 +113,18 @@ sub input_assets {
     my $lrSourceFiles;
 
     my $hrSourceFiles =
-        $self->scope->find(-name => 'made', -set => '*', -levels => 'local') // {};
+      $self->scope->find(-name => 'made', -set => '*', -levels => 'local')
+      // {};
 
     if(keys %$hrSourceFiles) {
-        $lrSourceFiles = $hrSourceFiles->{(keys %$hrSourceFiles)[0]};
+        $lrSourceFiles = $hrSourceFiles->{ (keys %$hrSourceFiles)[0] };
     } else {
         $lrSourceFiles = [];
     }
 
     return $lrSourceFiles unless wantarray;
     return @$lrSourceFiles;
-} #input_assets()
+} ## end sub input_assets
 
 =head1 FUNCTIONS USABLE ANY TIME
 
@@ -139,11 +139,11 @@ May be overridden by subclasses.
 =cut
 
 sub language {
-    my $self = shift;
+    my $self  = shift;
     my $class = ref $self;
     return $1 if $class =~ m{^App::hopen::T::[^:]+::([^:]+)};
     die "Can't find a language type in class name $class";
-} #language()
+} ## end sub language
 
 =head2 run
 
@@ -154,14 +154,15 @@ any non-arrayref C<made> output.
 =cut
 
 around 'run' => sub {
-    my $orig = shift;
-    my $self = shift or croak 'Need an instance';
+    my $orig   = shift;
+    my $self   = shift or croak 'Need an instance';
     my $retval = $self->$orig(@_);
 
     $retval->{made} = $self->made unless ref $retval->{made} eq 'ARRAY';
-        # TODO clone?  Shallow copy?
+
+    # TODO clone?  Shallow copy?
     return $retval;
-}; #run()
+};
 
 1;
 __END__

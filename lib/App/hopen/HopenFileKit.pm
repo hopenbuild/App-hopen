@@ -1,6 +1,7 @@
 # App::hopen::HopenFileKit - set up a hopen file
 package App::hopen::HopenFileKit;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
 use Import::Into;
@@ -12,7 +13,7 @@ use App::hopen::AppUtil qw(:default :constants);
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Util;
 use App::hopen::Util::BasedPath ();
-use App::hopen::Util::Thunk ();
+use App::hopen::Util::Thunk     ();
 use Getargs::Mixed;
 use Path::Class ();
 
@@ -21,19 +22,20 @@ use Path::Class ();
 
 use Data::Hopen qw(:default loadfrom);
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 # Exporter-exported symbols
 use parent 'Exporter';
 use vars::i {
     '@EXPORT' => [qw($__R_on_result *FILENAME on rule dethunk extract_thunks)],
-                    #  ^ for on()
-                    #               ^ glob so it can be localized
+
+    #  ^ for on()
+    #               ^ glob so it can be localized
     '@EXPORT_OK' => [qw()],
 };
 use vars::i '%EXPORT_TAGS' => (
-        default => [@EXPORT],
-        all => [@EXPORT, @EXPORT_OK]
+    default => [@EXPORT],
+    all     => [ @EXPORT, @EXPORT_OK ]
 );
 
 # Docs {{{1
@@ -70,7 +72,7 @@ the hopen file's source is evaled.
 # Which languages we've loaded
 my %_loaded_languages;
 
-sub  _language_import { # {{{1
+sub _language_import {    # {{{1
 
 =head2 _language_import
 
@@ -79,50 +81,56 @@ C<import()> routine for the fake "language" package
 =cut
 
     my $target = caller;
+
     #say "language invoked from $target";
-    shift;  # Drop our package name
+    shift;    # Drop our package name
     croak "I need at least one language name" unless @_;
 
-    die "TODO permit aliases" if ref $_[0]; # TODO take { alias => name }
+    die "TODO permit aliases" if ref $_[0];    # TODO take { alias => name }
 
     foreach my $language (@_) {
         next if $_loaded_languages{$language};
-            # Only load any given language once.  This avoids cowardly warnings
-            # from Package::Alias, but still causes warnings if a language
-            # overrides an unrelated package.  (For example, saying
-            # `use language "Graph"` would be a Bad Idea :) .)
+
+        # Only load any given language once.  This avoids cowardly warnings
+        # from Package::Alias, but still causes warnings if a language
+        # overrides an unrelated package.  (For example, saying
+        # `use language "Graph"` would be a Bad Idea :) .)
 
         # Find the package for the given language
         my ($src_package, $dest_package);
         $src_package = loadfrom($language, "${Toolset}::", '')
-            or croak "Can't find a package for language ``$language'' " .
-                        "in toolset ``$Toolset''";
+          or croak "Can't find a package for language ``$language'' "
+          . "in toolset ``$Toolset''";
 
         # Import the given language into the root namespace.
         # Use only the last ::-separated component if :: are present.
         $dest_package = ($src_package =~ m/::([^:]+)$/) ? $1 : $src_package;
         Package::Alias->import::into($target, $dest_package => $src_package);
-            # TODO add to Package::Alias the ability to pass parameters
-            # to the package being loaded.
+
+        # TODO add to Package::Alias the ability to pass parameters
+        # to the package being loaded.
 
         $_loaded_languages{$language} = true;
 
         # Create the LSP.  A language may not have an LSP; this is not
         # an error.  E.g., a self-contained assembly project probably
         # doesn't need to reference external code!
-        LSP: {
+      LSP: {
             eval "require App::hopen::Lang::$language";
             (hlog { "Could not load LSP for $language:", $@ }), last LSP if $@;
 
             my $lsp = eval { "App::hopen::Lang::$language"->new };
-            (hlog { "Could not create LSP for $language:", $@ }), last LSP if $@;
+            (hlog { "Could not create LSP for $language:", $@ }), last LSP
+              if $@;
 
             $LSP{$language} = $lsp if $lsp;
-        }
-    } #foreach requested language
-} #_language_import }}}1
+        } ## end LSP:
+    } ## end foreach my $language (@_)
+} ## end sub _language_import
 
-sub _create_language { # {{{1
+# }}}1
+
+sub _create_language {    # {{{1
 
 =head2 _create_language
 
@@ -131,7 +139,7 @@ Create a package "language" so that the calling package can invoke it.
 =cut
 
     #say "_create_language";
-    return if %language::;  #idempotent
+    return if %language::;    #idempotent
 
     {
         no strict 'refs';
@@ -139,7 +147,9 @@ Create a package "language" so that the calling package can invoke it.
     }
 
     $INC{'language.pm'} = 1;
-} #_create_language() }}}1
+} ## end sub _create_language
+
+# }}}1
 
 # TODO add a function to import hopen files?
 
@@ -189,9 +199,9 @@ sub on {
     if(ref $val eq 'CODE') {
         $result = &$val;
     } elsif(ref $val eq 'HASH') {
-        $result = $val;     # TODO? clone?
+        $result = $val;    # TODO? clone?
     } else {
-        $result = {$Phase => $val};
+        $result = { $Phase => $val };
     }
 
     # Stash the value for the caller.
@@ -206,7 +216,7 @@ sub on {
         no warnings 'exiting';
         last __R_DO;
     };
-} #on()
+} ## end sub on
 
 =head2 rule
 
@@ -239,13 +249,13 @@ sub dethunk {
     die "need a data arrayref or hashref" unless isaggref $data;
 
     _dethunk_walk($data);
-}
+} ## end sub dethunk
 
 # Dethunk.  Can't use Data::Walk because of <https://github.com/gflohr/Data-Walk/issues/2>.
 # Precondition: $node is an arrayref or hashref
 sub _dethunk_walk {
-    my $node = shift;
-    my $ty = ref $node;
+    my $node   = shift;
+    my $ty     = ref $node;
     my $ishash = $ty eq 'HASH';
 
     my @kids;
@@ -259,10 +269,10 @@ sub _dethunk_walk {
                 $v = $node->{$k} = $v->tgt;
             }
             push @kids, $v if isaggref $v;
-        }
+        } ## end foreach my $k (keys %$node)
 
     } else {    # array
-        foreach my $pair (map { [$_, $node->[$_]] } 0..$#$node) {
+        foreach my $pair (map { [ $_, $node->[$_] ] } 0 .. $#$node) {
             my ($i, $v) = @$pair;
             hlog { Value => $v } 5;
             if(ref $v eq 'App::hopen::Util::Thunk') {
@@ -270,12 +280,11 @@ sub _dethunk_walk {
                 $v = $node->[$i] = $v->tgt;
             }
             push @kids, $v if isaggref $v;
-        }
-    }
+        } ## end foreach my $pair (map { [ $_...]})
+    } ## end else [ if($ishash) ]
 
     _dethunk_walk($_) foreach @kids;
-} #_dethunk_walk
-
+} ## end sub _dethunk_walk
 
 sub import {    # {{{1
 
@@ -289,7 +298,7 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
 
 =cut
 
-    state $uniq_idx = 0;  # for fake filenames
+    state $uniq_idx = 0;    # for fake filenames
 
     my $target = caller;
     my $target_friendly_name;
@@ -299,13 +308,15 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     }
 
     my @args = splice @_, 1, 1;
-        # 0=__PACKAGE__, 1=filename
-        # Remove the filename; leave the rest of the args for Exporter's use
+
+    # 0=__PACKAGE__, 1=filename
+    # Remove the filename; leave the rest of the args for Exporter's use
 
     {
         no strict 'refs';
-        die "Not loaded as a hopen file --- run hopen(1) instead of running this file directly.\n"
-            unless exists ${"$target\::"}{&App::hopen::AppUtil::HOPEN_FILE_FLAG};
+        die
+"Not loaded as a hopen file --- run hopen(1) instead of running this file directly.\n"
+          unless exists ${"$target\::"}{&App::hopen::AppUtil::HOPEN_FILE_FLAG};
     }
 
     # Export our stuff
@@ -313,10 +324,10 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
 
     # Re-export packages
     $_->import::into($target) foreach qw(
-        Data::Hopen::Base
-        App::hopen::BuildSystemGlobals
-        App::hopen::Util::BasedPath
-        Path::Class
+      Data::Hopen::Base
+      App::hopen::BuildSystemGlobals
+      App::hopen::Util::BasedPath
+      Path::Class
     );
 
     App::hopen::AppUtil->import::into($target, qw(:default :constants));
@@ -326,22 +337,26 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     {
         no strict 'refs';
         *{ $target . '::FILENAME' } = eval("\\\"\Q$target_friendly_name\E\"");
-            # Need `eval` to make it read-only - even \"$target..." isn't RO.
-            # \Q and \E since, on Windows, $friendly_name is likely to
-            # include backslashes.
-            # TODO check if this gets double-backslashed.
+
+        # Need `eval` to make it read-only - even \"$target..." isn't RO.
+        # \Q and \E since, on Windows, $friendly_name is likely to
+        # include backslashes.
+        # TODO check if this gets double-backslashed.
     }
 
     # Create packages at the top level
     _create_language();
     Package::Alias->import::into($target, 'H' => 'App::hopen::H')
-        unless eval { scalar keys %H:: };
-        # Don't import twice, but without the need to set Package::Alias::BRAVE
-        # TODO permit handling the situation in which an actual package H is
-        # loaded, and the hopenfile needs to use something else.
-        # TODO look inside $target to make sure H is visible within $target,
-        # rather than just checking if H has been loaded anywhere.
-} #import()     # }}}1
+      unless eval { scalar keys %H:: };
+
+    # Don't import twice, but without the need to set Package::Alias::BRAVE
+    # TODO permit handling the situation in which an actual package H is
+    # loaded, and the hopenfile needs to use something else.
+    # TODO look inside $target to make sure H is visible within $target,
+    # rather than just checking if H has been loaded anywhere.
+} ## end sub import
+
+# }}}1
 
 1;
 __END__

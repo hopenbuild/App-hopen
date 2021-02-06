@@ -1,9 +1,10 @@
 # App::hopen::Gen::Make - generator for a generic make(1).
 package App::hopen::Gen::Make;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::Util::GenWithoutAssetGraph';    # and Class::Tiny below
 
@@ -43,19 +44,18 @@ sub _filename { 'Makefile' }
 
 sub _do_preamble {
     my ($self, $fh, $graph) = @_;
-    push @{$self->_phony}, FIRSTGOALNAME;
+    push @{ $self->_phony }, FIRSTGOALNAME;
 
     # Make sure the first goal is 'all' regardless of order.
     say $fh FIRSTGOALNAME, ': ', $graph->default_goal->name, "\n";
-}
-
+} ## end sub _do_preamble
 
 sub _do_postamble {
     my ($self, $fh) = @_;
 
     # Last thing: the .PHONY tag
-    say $fh '.PHONY: ', join ' ', @{$self->_phony};
-}
+    say $fh '.PHONY: ', join ' ', @{ $self->_phony };
+} ## end sub _do_postamble
 
 sub _do_asset_info {
     my ($self, $fh, $asset) = @_;
@@ -66,24 +66,27 @@ sub _do_asset_info {
 sub _do_asset {
     my ($self, $fh, $asset, $lrPrereqTags) = @_;
     my @prereq_tags = @$lrPrereqTags;
-    my $recipe = $asset->how;
+    my $recipe      = $asset->how;
 
     return unless @prereq_tags || $recipe;
 
     if(defined $recipe) {
+
         # TODO RESUME HERE refactor this processing into a template
-        $recipe =~ s<#first\b><$prereq_tags[0] // ''>ge;      # first input
-        $recipe =~ s<#all\b><join(' ', @prereq_tags)>ge;      # all inputs
+        $recipe =~ s<#first\b><$prereq_tags[0] // ''>ge;    # first input
+        $recipe =~ s<#all\b><join(' ', @prereq_tags)>ge;    # all inputs
         my $tag = $self->_tags->{$asset} // '';
         $recipe =~ s<#out\b><$tag>ge;
-    }
+    } ## end if(defined $recipe)
 
     # Emit the entry.
     say $fh template('entry')->(
-            asset => $asset, tags => $self->_tags, prereqs => $lrPrereqTags,
-            recipe => $recipe,
+        asset   => $asset,
+        tags    => $self->_tags,
+        prereqs => $lrPrereqTags,
+        recipe  => $recipe,
     );
-} # sub _do_asset()
+}    # sub _do_asset()
 
 =head2 _default_toolset
 
@@ -101,6 +104,7 @@ Implementation of L<App::hopen::Gen/run_build>.
 =cut
 
 sub _run_build {
+
     # Look for the make(1) executable.  Listing make before gmake since a
     # system with both Cygwin and Strawberry Perl installed has cygwin's
     # make(1) and Strawberry's gmake(1).
@@ -110,9 +114,9 @@ sub _run_build {
         hlog { Running => $path };
         system $path, ();
         return;
-    }
+    } ## end foreach my $candidate (qw[make gmake mingw32-make dmake])
     warn "Could not find a 'make' program to run";
-} #_run_build()
+} ## end sub _run_build
 
 1;
 __DATA__

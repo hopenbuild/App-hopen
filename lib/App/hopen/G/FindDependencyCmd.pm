@@ -98,7 +98,7 @@ sub _run {
 
     my $fn = $fns{$thisphase} // sub {};
     return $fn->($self, %args);
-} #_run()
+}
 
 # --- Workers for _run() ---
 

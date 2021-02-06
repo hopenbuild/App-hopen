@@ -1,10 +1,11 @@
 # App::hopen::T::VSXML - Visual Studio toolset for MSBuild XML
 package App::hopen::T::VSXML;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 =head1 NAME
 

@@ -1,15 +1,14 @@
 # App::hopen::G::FilesCmd - Cmd that outputs a list of files.
 package App::hopen::G::FilesCmd;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::Cmd';
-use Class::Tiny {
-    files => sub { [] },
-};
+use Class::Tiny { files => sub { [] }, };
 
 use App::hopen::Asset;
 
@@ -48,9 +47,10 @@ See L<App::hopen::Manual/INTERNALS>.
 
 sub _run {
     my $self = shift;
+
     # TODO pass through the other inputs, e.g., for H::want->H::files chains.
-    $self->make(@{$self->files});
-} #run()
+    $self->make(@{ $self->files });
+} ## end sub _run
 
 1;
 __END__

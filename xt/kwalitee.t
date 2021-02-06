@@ -1,9 +1,11 @@
 use Test::More;
-use strict; use warnings;
+use strict;
 use warnings;
+use warnings;
+
 BEGIN {
     plan skip_all => 'these tests are for release candidate testing'
-        unless $ENV{RELEASE_TESTING};
+      unless $ENV{RELEASE_TESTING};
 }
 
 use Test::Kwalitee 'kwalitee_ok';

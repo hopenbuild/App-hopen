@@ -11,11 +11,12 @@ use Data::Hopen qw(:default :v);
 use Data::Hopen::G::DAG;
 
 package FakeGenerator {
+
     # Since AhG::FilesCmd requires a visitor be present
     use parent 'Data::Hopen::Visitor';
     use Class::Tiny;
     sub visit { }
-}
+} ## end package FakeGenerator
 
 $VERBOSE = @ARGV;
 
@@ -42,7 +43,7 @@ my $dag_out = $dag->run(-context => $context, -visitor => FakeGenerator->new);
 # Check the results
 ok($node->outputs, 'Node has outputs');
 is(ref $node->outputs->{made}, 'ARRAY', 'Node outputs made arrayref');
-cmp_ok(@{$node->outputs->{made}}, '==', 1, 'One input->one output');
+cmp_ok(@{ $node->outputs->{made} }, '==', 1, 'One input->one output');
 my $made = $node->outputs->{made}->[0];
 isa_ok($made, 'App::hopen::Asset');
 is($made->target->orig, dir()->file('foo.c'), 'Filename carries through');

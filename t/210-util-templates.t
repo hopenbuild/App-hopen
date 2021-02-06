@@ -8,13 +8,20 @@ use Path::Class;
 use App::hopen::Util::Templates;
 
 is(ref template('answer'), 'CODE', 'Existent template returns coderef');
-like(exception { template('NONEXISTENT') }, qr/No template NONEXISTENT/,
-    'Nonexistent template throws');
-like(exception { template('invalid') }, qr/Could not create template invalid/,
-    'Invalid template throws');
-is(template('answer')->(), "42\n", 'No-param template');
+like(
+    exception { template('NONEXISTENT') },
+    qr/No template NONEXISTENT/,
+    'Nonexistent template throws'
+);
+like(
+    exception { template('invalid') },
+    qr/Could not create template invalid/,
+    'Invalid template throws'
+);
+is(template('answer')->(),           "42\n",   'No-param template');
 is(template('param')->(arg => 1337), "1337\n", 'One-param template, hash');
-is(template('param')->({arg => 1337}), "1337\n", 'One-param template, hashref');
+is(template('param')->({ arg => 1337 }),
+    "1337\n", 'One-param template, hashref');
 
 done_testing();
 

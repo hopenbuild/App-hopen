@@ -1,15 +1,16 @@
 # App::hopen::Gen::MSBuild::AssetGraphNode - AssetOp for Gen::MSBuild
 package App::hopen::Gen::MSBuild::AssetGraphNode;
 use Data::Hopen qw(hlog getparameters *VERBOSE);
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::AssetOp';
 use Class::Tiny;
 
-use App::hopen::BuildSystemGlobals;     # for $DestDir
+use App::hopen::BuildSystemGlobals;    # for $DestDir
 use String::Print;
 
 # Docs {{{1
@@ -39,41 +40,50 @@ Add to the XML hashref being built up in C<__R_MSBuildXML>.
 sub _run {
     my ($self, %args) = getparameters('self', [qw(; visitor graph)], @_);
     my $lrXML = $self->scope->find($OUTPUT);
-        # TODO deal with multiple inputs being merged in DAG::_run()
+
+    # TODO deal with multiple inputs being merged in DAG::_run()
 
     my @inputs = $self->input_assets;
     my $output = $self->asset->target;
-    $output = $output->path_wrt($DestDir) if eval { $output->DOES('App::hopen::Util::BasedPath') };
-        # TODO refactor this processing into a utility module/function
+    $output = $output->path_wrt($DestDir)
+      if eval { $output->DOES('App::hopen::Util::BasedPath') };
+
+    # TODO refactor this processing into a utility module/function
 
     # Debugging output
-    hlog {;
+    hlog {
+        ;
         "Project piece from node @{[$self->name]}",
-        $self->asset->how//"<nothing to be done>",
-        map { "Depends on @{[$_->target]}" } @inputs,
+          $self->asset->how // "<nothing to be done>",
+          map { "Depends on @{[$_->target]}" } @inputs,
     };
 
-    if(defined $self->asset->how && !$self->asset->how) {     # goal = MSBuild <Target>
+    if(defined $self->asset->how && !$self->asset->how)
+    {    # goal = MSBuild <Target>
         hlog { Goal => $output };
-        $lrXML = [ Target => { Name => $output },
-                    $lrXML ];
+        $lrXML = [
+            Target => { Name => $output },
+            $lrXML
+        ];
 
-    } elsif(defined $self->asset->how) {               # file = MSBuild task
+    } elsif(defined $self->asset->how) {    # file = MSBuild task
         hlog { File => $output };
-        my @paths = map { $_->target->path_wrt($DestDir) } @inputs;
+        my @paths  = map { $_->target->path_wrt($DestDir) } @inputs;
         my $recipe = $self->asset->how;
 
         # TODO refactor this processing into a utility module/function
-        $recipe =~ s<#first\b><$paths[0] // ''>ge;      # first input
-        $recipe =~ s<#all\b><join(' ', @paths)>ge;      # all inputs
+        $recipe =~ s<#first\b><$paths[0] // ''>ge;    # first input
+        $recipe =~ s<#all\b><join(' ', @paths)>ge;    # all inputs
         $recipe =~ s<#out\b><$output // ''>ge;
 
-        $lrXML = [ TODO => { Name => $output },
-                    $lrXML ];
-    }
+        $lrXML = [
+            TODO => { Name => $output },
+            $lrXML
+        ];
+    } ## end elsif(defined $self->asset...)
 
-    return {$OUTPUT=>$lrXML};
-} #_run()
+    return { $OUTPUT => $lrXML };
+} ## end sub _run
 
 1;
 __END__

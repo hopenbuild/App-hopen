@@ -9,53 +9,57 @@ use Test::Directory;
 
 use App::hopen;
 
-my %outputs_by_gen = (      # What file each generator outputs
-    Make => 'Makefile',
-    Ninja => 'build.ninja',
+my %outputs_by_gen = (    # What file each generator outputs
+    Make    => 'Makefile',
+    Ninja   => 'build.ninja',
     MSBuild => 'build.proj',
 );
 
-sub test_with {     # Takes a generator
+sub test_with {    # Takes a generator
     my $gen = shift or croak 'Need a generator';
     diag "Testing with -g $gen";
 
     # Set up the dir and paths
     my $dest = Test::Directory->new;
-    my $src = dir(qw(eg 001-single-file-hello));   # assume running in /, not /t
+    my $src  = dir(qw(eg 001-single-file-hello));  # assume running in /, not /t
 
     # Check phase
     my ($stdout, $stderr, $exitcode) = capture {
-        App::hopen->Main([
-            '--fresh',
-            -g => $gen,
-            '--from', $src,
-            '--to', $dest->path('.'),
-        ]);
+        App::hopen->Main(
+            [
+                '--fresh',
+                -g => $gen,
+                '--from', $src,
+                '--to',   $dest->path('.'),
+            ]
+        );
     };
 
-    like $stdout, qr/\bcheck\b/, 'Ran "check" phase';
-    is $stderr, '', 'No error output' if $gen eq 'Make';
-    cmp_ok $exitcode, '==', 0, 'Run succeeded';
+    like $stdout,     qr/\bcheck\b/, 'Ran "check" phase';
+    is $stderr,       '',            'No error output' if $gen eq 'Make';
+    cmp_ok $exitcode, '==',          0, 'Run succeeded';
     $dest->has('MY.hopen.pl');
 
     # Gen phase
     ($stdout, $stderr, $exitcode) = capture {
-        App::hopen->Main([
-            -g => $gen,
-            '--from', $src,
-            '--to', $dest->path('.'),
-        ]);
+        App::hopen->Main(
+            [
+                -g => $gen,
+                '--from', $src,
+                '--to',   $dest->path('.'),
+            ]
+        );
     };
 
-    like $stdout, qr/\bgen\b/, 'Ran "gen" phase';
-    is $stderr, '', 'No error output' if $gen eq 'Make';
-    cmp_ok $exitcode, '==', 0, 'Run succeeded';
+    like $stdout,     qr/\bgen\b/, 'Ran "gen" phase';
+    is $stderr,       '',          'No error output' if $gen eq 'Make';
+    cmp_ok $exitcode, '==',        0, 'Run succeeded';
     $dest->has('MY.hopen.pl');
     $dest->has($outputs_by_gen{$gen});
-    $dest->hasnt($outputs_by_gen{$_}) foreach
-        grep { $_ ne $gen } keys %outputs_by_gen;
+    $dest->hasnt($outputs_by_gen{$_})
+      foreach grep { $_ ne $gen } keys %outputs_by_gen;
 
-} #test_with
+} ## end sub test_with
 
 test_with 'Make';
 test_with 'Ninja';

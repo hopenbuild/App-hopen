@@ -1,16 +1,17 @@
 # App::hopen::T::Gnu::C::LinkCmd - link object files using the GNU toolset
 package App::hopen::T::Gnu::C::LinkCmd;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);
 
 use App::hopen::AppUtil qw(:constants);
-use App::hopen::BuildSystemGlobals;   # For $DestDir.
+use App::hopen::BuildSystemGlobals;    # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
@@ -64,8 +65,8 @@ sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-nocontext=>1)
-        unless PHASES->is($self->scope->find(KEY_PHASE), 'gen');
+    return $self->passthrough(-nocontext => 1)
+      unless PHASES->is($self->scope->find(KEY_PHASE), 'gen');
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;
@@ -78,13 +79,13 @@ sub _run {
     }
 
     my $exe = App::hopen::Asset->new(
-        target => $self->dest,
-        how => $self->linker . ' -o #out #all',
+        target    => $self->dest,
+        how       => $self->linker . ' -o #out #all',
         made_from => $lrObjFiles,
     );
 
     $self->make($exe);
-} #_run()
+} ## end sub _run
 
 1;
 __END__

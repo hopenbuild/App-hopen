@@ -2,23 +2,25 @@
 # TODO use Text::Template instead of Text::MicroTemplate?
 package App::hopen::Util::Templates;
 use Data::Hopen qw(getparameters hlog);
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
 use App::hopen::Util::String qw(line_mark_string);
 use Data::Section::Simple;
 use Text::MicroTemplate;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use Class::Tiny {
-    source => undef,   # package we get templates from
+    source => undef,          # package we get templates from
 
     # Cache templates from __DATA__ since Data::Section::Simple doesn't
     _templates => undef,
+
     # Cache renderers
-    _renderers => sub { +{} },
-    _renderer_idx => 0,     # for making renderer package names
+    _renderers    => sub { +{} },
+    _renderer_idx => 0,             # for making renderer package names
 };
 
 # Docs {{{1
@@ -89,9 +91,9 @@ the templates in the C<__DATA__> section.
 sub _renderer_pkg {
     my $self = shift;
     my $name = '__R_TemplateRenderer_' . $self->_renderer_idx;
-    $self->_renderer_idx($self->_renderer_idx+1);
+    $self->_renderer_idx($self->_renderer_idx + 1);
     return $name;
-}
+} ## end sub _renderer_pkg
 
 # Create a template.  This is the meat of the template() function.
 sub _get_template {
@@ -107,12 +109,12 @@ sub _get_template {
 
     unless($self->_renderers->{$name}) {
         die "No template $name found in package @{[$self->source]}"
-            unless exists $self->_templates->{$name};
+          unless exists $self->_templates->{$name};
 
         # Thanks to the T::MT docs for this workflow
         my $code = Text::MicroTemplate->new(
-            template => $self->_templates->{$name},
-            escape_func => undef,
+            template     => $self->_templates->{$name},
+            escape_func  => undef,
             package_name => $self->_renderer_pkg,
         )->code;
         my $str = line_mark_string <<"EOT";
@@ -131,9 +133,9 @@ EOT
         $self->_renderers->{$name} = eval $str;
         die "Could not create template $name: $@" if $@;
         hlog { "Template renderer code for $name:\n", $str } 3;
-    }
+    } ## end unless($self->_renderers->...)
     return $self->_renderers->{$name};
-}
+} ## end sub _get_template
 
 =head2 import
 
@@ -143,17 +145,17 @@ of C<template>.
 =cut
 
 sub import {
-    my $class = shift;
+    my $class  = shift;
     my $target = caller;
-    my $self = $class->new(source => $target);
+    my $self   = $class->new(source => $target);
     my $fnname = $_[0] || 'template';
 
     {
         no strict 'refs';
-        *{$target . '::' . $fnname} = sub { $self->_get_template(@_) };
+        *{ $target . '::' . $fnname } = sub { $self->_get_template(@_) };
         hlog { "Added $fnname\() to $target" } 4;
     }
-} #import()
+} ## end sub import
 
 1;
 __END__

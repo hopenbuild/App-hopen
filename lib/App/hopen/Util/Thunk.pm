@@ -1,10 +1,11 @@
 # App::hopen::Util::Thunk - Thunk for use in MY.hopen.pl
 package App::hopen::Util::Thunk;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use Class::Tiny qw(tgt name);
 
@@ -48,10 +49,10 @@ sub BUILD {
     my ($self, $args) = @_;
     die "'tgt' argument is required" unless exists $args->{tgt};
     die "'tgt' argument must be a reference or undef"
-        unless !defined($self->tgt) || ref $self->tgt;
+      unless !defined($self->tgt) || ref $self->tgt;
     die "'name' argument is required" unless $self->name;
     die "'name' argument must not be a reference" if ref $self->name;
-}
+} ## end sub BUILD
 
 1;
 __END__

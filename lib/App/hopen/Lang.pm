@@ -1,10 +1,11 @@
 # App::hopen::Lang - base class for a language-support package (LSP)
 package App::hopen::Lang;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use Class::Tiny;
 
@@ -60,8 +61,8 @@ those are the user's choices.
 
 sub find_deps {
     my ($self, %args) = getparameters('self', [qw(deps ; choices)], @_);
-    ...
-} #find_deps()
+    ...;
+}
 
 1;
 __END__

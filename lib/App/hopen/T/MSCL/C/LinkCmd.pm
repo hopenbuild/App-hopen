@@ -1,16 +1,17 @@
 # App::hopen::T::MSCL::C::LinkCmd - link object files using the GNU toolset
 package App::hopen::T::MSCL::C::LinkCmd;
 use Data::Hopen;
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::G::Cmd';
 use Class::Tiny qw(dest linker);
 
 use App::hopen::AppUtil qw(:constants);
-use App::hopen::BuildSystemGlobals;   # For $DestDir.
+use App::hopen::BuildSystemGlobals;    # For $DestDir.
     # TODO make the dirs available to nodes through the context.
 use App::hopen::Util::BasedPath;
 use Data::Hopen qw(getparameters);
@@ -63,21 +64,23 @@ sub _run {
     my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     # Currently we only do things at gen time.
-    return $self->passthrough(-nocontext=>1) if ($self->scope->find(KEY_PHASE)//'') ne 'Gen';
+    return $self->passthrough(-nocontext => 1)
+      if($self->scope->find(KEY_PHASE) // '') ne 'Gen';
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;
     hlog { 'found object files', Dumper($lrObjFiles) } 2;
 
-    my $exe = App::hopen::Asset->new(
-        target => $self->dest,
-    );
+    my $exe = App::hopen::Asset->new(target => $self->dest,);
+
     # TODO modify per recent changes to visitor
-    $args{visitor}->asset($exe,
+    $args{visitor}->asset(
+        $exe,
         -how => '"' . $self->linker . '" "/Fe#out" #all',
-            # TODO permit escaping #out and #all - see comments in
-            # App::hopen::T::MSCL::C::CompileCmd.
-    );      # TODO refactor out common code with T::Gnu::C::LinkCmd
+
+        # TODO permit escaping #out and #all - see comments in
+        # App::hopen::T::MSCL::C::CompileCmd.
+    );    # TODO refactor out common code with T::Gnu::C::LinkCmd
 
     foreach my $obj (@$lrObjFiles) {
         die "Cannot link non-file $obj" unless $obj->isdisk;
@@ -86,7 +89,7 @@ sub _run {
 
     $self->make($exe);
     return {};
-} #_run()
+} ## end sub _run
 
 1;
 __END__

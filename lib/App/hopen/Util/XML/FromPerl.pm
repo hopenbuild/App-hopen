@@ -1,4 +1,5 @@
 package App::hopen::Util::XML::FromPerl;
+
 # TODO? replace with XML::TreePP or XML::MyXML?
 
 our $VERSION = '0.02';
@@ -20,10 +21,10 @@ use if $] lt '5.014', qw(warnings::register);
 use vars qw(@_warning_category @_warning_categories);
 
 if($] ge '5.014') {
-   @_warning_category = (__PACKAGE__ . '::undefined');
-   @_warning_categories = (__PACKAGE__, @_warning_category);
+    @_warning_category   = (__PACKAGE__ . '::undefined');
+    @_warning_categories = (__PACKAGE__, @_warning_category);
 } else {
-    @_warning_category = ();
+    @_warning_category   = ();
     @_warning_categories = __PACKAGE__;
 }
 
@@ -36,17 +37,17 @@ sub _emit_warning {
 
     # Are all the categories of interest enabled?
     my $should_emit = 1;
-    foreach(@_warning_categories) {
+    foreach (@_warning_categories) {
         if(!warnings::enabled($_)) {
             $should_emit = 0;
             last;
         }
-    }
+    } ## end foreach (@_warning_categories)
 
     warnings::warn(@_warning_category, $message) if $should_emit;
 
     return $retval;
-} #_emit_warning
+} ## end sub _emit_warning
 
 # === Code ==================================================================
 
@@ -66,66 +67,65 @@ sub _fill_node_children {
 
     my ($one, $has_attrs);
     if(ref $data eq 'ARRAY') {
-        $one = $data->[1];
+        $one       = $data->[1];
         $has_attrs = ref $one eq 'HASH';
     }
 
     my $new_node;
-    if (ref $data eq 'ARRAY' && $data->[0] eq '!--') {      # Comment
+    if(ref $data eq 'ARRAY' && $data->[0] eq '!--') {    # Comment
         my $separ = defined $, ? $, : ' ';
 
         # Grab the plain text nodes and paste them together.
-        my $text = join $separ,
-            map { $data->[$_] }
-            grep { defined $data->[$_] and not ref $data->[$_] }
-                (($has_attrs ? 2 : 1) .. $#$data);
+        my $text = join $separ, map { $data->[$_] }
+          grep { defined $data->[$_] and not ref $data->[$_] }
+          (($has_attrs ? 2 : 1) .. $#$data);
 
         $new_node = $doc->createComment($text);
 
-    } elsif (ref $data eq 'ARRAY') {                        # Regular node
+    } elsif(ref $data eq 'ARRAY') {                      # Regular node
         $new_node = $doc->createElement($data->[0]);
 
-        if ($has_attrs) {
+        if($has_attrs) {
             my @keys = keys %$one;
             @keys = sort @keys unless tied %$one;
             for (@keys) {
-                if (defined (my $v = $one->{$_})) {
+                if(defined(my $v = $one->{$_})) {
                     $new_node->setAttribute($_, $v);
                 }
             }
-        }
+        } ## end if($has_attrs)
 
         _fill_node_children($doc, $new_node, $data->[$_])
-            for grep { defined $data->[$_] } (($has_attrs ? 2 : 1) .. $#$data);
+          for grep { defined $data->[$_] } (($has_attrs ? 2 : 1) .. $#$data);
 
-    } else {                                                # Text node
+    } else {    # Text node
         $new_node = $doc->createTextNode("$data");
     }
 
     $parent->appendChild($new_node);
     return undef;
-} #_fill_node_children
+} ## end sub _fill_node_children
 
 # Create a phony element we can use as a temporary parent node
 sub _create_phony {
     my $doc = shift;
     return $doc->createElementNS('https://metacpan.org/pod/XML::FromPerl',
-                                    'phony_root');
-} #_create_phony
+        'phony_root');
+}
 
 sub xml_node_from_perl {
-    my $doc = shift;
+    my $doc  = shift;
     my $data = shift;
     my $parent;
 
     $parent = _create_phony($doc);
     _fill_node_children $doc, $parent, $data;
     return $parent->firstChild;
-} #xml_node_from_perl
+} ## end sub xml_node_from_perl
 
 sub xml_from_perl {
     my $data = shift;
-    my $doc = XML::LibXML::Document->new(@_);
+    my $doc  = XML::LibXML::Document->new(@_);
 
     unless(defined $data) {
         @_ = ("I can't create an XML document from undefined data", $doc);
@@ -138,7 +138,7 @@ sub xml_from_perl {
 
     $doc->setDocumentElement($parent->firstChild);
     return $doc;
-} #xml_from_perl
+} ## end sub xml_from_perl
 
 1;
 __END__

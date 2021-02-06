@@ -1,12 +1,13 @@
 # App::hopen::Gen - base class for hopen generators
 package App::hopen::Gen;
 use Data::Hopen qw(:default *QUIET);
-use strict; use warnings;
+use strict;
+use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000013';    # TRIAL
 
-use parent 'Data::Hopen::Visitor';  # uses Class::Tiny below
+use parent 'Data::Hopen::Visitor';    # uses Class::Tiny below
 
 use App::hopen::Asset;
 use App::hopen::BuildSystemGlobals;
@@ -71,7 +72,9 @@ C<SUPER::visit()>, don't use this.
 # TODO eventually support coercions?  I'm trying to avoid pulling in
 # Type::Tiny, but that would be the thing to do if I need the coercions.
 use vars::i '$IsPathClassDir' => [
-    sub { eval { $_[0]->DOES('Path::Class::Dir') } },
+    sub {
+        eval { $_[0]->DOES('Path::Class::Dir') }
+    },
     sub { "Need a Path::Class::Dir instance" }
 ];
 
@@ -99,15 +102,16 @@ Uses abstract L</_run_build>.
 =cut
 
 sub run_build {
-    my $self = shift or croak 'Need an instance';
+    my $self    = shift or croak 'Need an instance';
     my $abs_dir = $self->dest_dir->absolute;
-        # NOTE: You have to call this *before* pushd() or chdir(), because
-        # it may be a relative path, and absolute() converts with respect
-        # to cwd at the time of the call.
+
+    # NOTE: You have to call this *before* pushd() or chdir(), because
+    # it may be a relative path, and absolute() converts with respect
+    # to cwd at the time of the call.
     my $dir = pushd($abs_dir);
     say "Building in ${abs_dir}..." unless $QUIET;
     $self->_run_build();
-} #run_build()
+} ## end sub run_build
 
 =head1 FUNCTIONS TO BE IMPLEMENTED BY SUBCLASSES
 
@@ -155,7 +159,7 @@ Implementation of L</run_build>.  The default does not die, but does warn().
 
 sub _run_build {
     warn "This generator is not configured to run a build tool.  Sorry!";
-} #_run_build()
+}
 
 =head2 visit
 
@@ -166,17 +170,26 @@ Also delegate to L</_visit_node>.
 =cut
 
 sub visit {
-    my ($self, %args) = getparameters('self', [qw(node type node_inputs preds)], @_);
+    my ($self, %args) =
+      getparameters('self', [qw(node type node_inputs preds)], @_);
 
     # Stash all the assets
-    my @assets = @{$args{node}->outputs->{made} // []};
-    push @assets, $args{node}->asset if $args{type} eq 'goal' && $args{node}->asset;
-    hlog { __PACKAGE__, 'at node', $args{node}->name, 'stashing assets',
-        join ', ', map { $_->target } @assets } 3;
+    my @assets = @{ $args{node}->outputs->{made} // [] };
+    push @assets, $args{node}->asset
+      if $args{type} eq 'goal' && $args{node}->asset;
+    hlog {
+        __PACKAGE__,
+        'at node',
+        $args{node}->name,
+        'stashing assets',
+        join ', ',
+        map { $_->target } @assets
+    } 3;
     $self->_assets->{$_} = 1 foreach @assets;
 
-    return $self->_visit_node($args{node}, $args{type}, $args{node_inputs}, $args{preds})
-} #visit_goal()
+    return $self->_visit_node($args{node}, $args{type}, $args{node_inputs},
+        $args{preds});
+} ## end sub visit
 
 =head2 _visit_node
 

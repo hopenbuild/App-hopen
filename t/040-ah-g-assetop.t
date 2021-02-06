@@ -6,8 +6,8 @@ use Test::Fatal;
 
 use App::hopen::G::AssetOp;
 
-ok exception { App::hopen::G::AssetOp->new(asset=>$_) },
-    "Rejects asset " . ($_ // 'undef')
-    foreach (undef, 'hello', 42);
+ok exception { App::hopen::G::AssetOp->new(asset => $_) },
+  "Rejects asset " . ($_ // 'undef')
+  foreach (undef, 'hello', 42);
 
 done_testing();

@@ -6,9 +6,9 @@ use HopenTest;
 use App::hopen::Util ':all';
 
 ok isMYH('MY.hopen.pl'), 'MY.hopen.pl is MYH';
-ok !isMYH('foo'), 'foo is not MYH';
+ok !isMYH('foo'),        'foo is not MYH';
 
-ok(isMYH, 'MY.hopen.pl is MYH ($_)') for 'MY.hopen.pl';
-ok(!isMYH, 'foo is not MYH ($_)') for 'foo';
+ok(isMYH,  'MY.hopen.pl is MYH ($_)') for 'MY.hopen.pl';
+ok(!isMYH, 'foo is not MYH ($_)')     for 'foo';
 
 done_testing();
