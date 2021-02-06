@@ -69,6 +69,7 @@ on test => sub {
     requires 'Test::Directory', '0.02';
     requires 'Test::Fatal', '0.014';
     requires 'Test::More';
+    requires 'Test::Spec', '0.42';
     requires 'Test::UseAllModules', '0.12';
     requires 'Test::Warn', '0.35';
     requires 'rlib';

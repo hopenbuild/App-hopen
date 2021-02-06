@@ -180,6 +180,7 @@ my %opts = (
         'Test::Directory' => '0.02',    # for subdirs
         'Test::Fatal' => '0.014',
         'Test::More' => '0',
+        'Test::Spec' => '0.42',     # for context()
         # Test::TempDir::Tiny?  If so, remove Test::Directory dependency?
         'Test::UseAllModules' => '0.12',    # for _get_module_list()
         'Test::Warn' => '0.35',     # for metadata
