@@ -12,6 +12,7 @@ use App::hopen::AppUtil qw(:default :constants);
 use App::hopen::BuildSystemGlobals;
 use App::hopen::Util;
 use App::hopen::Util::BasedPath ();
+use App::hopen::Util::Thunk ();
 use Getargs::Mixed;
 use Path::Class ();
 
