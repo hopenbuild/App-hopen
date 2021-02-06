@@ -1,0 +1,28 @@
+# Note: this file expressly specifies some current defaults in case perltidy's
+# defaults ever change.
+
+# Don't keep formatting after __END__ or __DATA__.
+-nlal
+-nlsl
+
+# Basics
+--output-line-ending=unix
+--indent-columns=4
+--continuation-indentation=2
+--closing-side-comments
+--cuddled-else
+--nospace-after-keyword='if else elsif until unless while switch'
+--space-prototype-paren=2
+--paren-tightness=2
+
+# Tweaks--nooutdent-long-lines
+--tight-secret-operators
+--logical-padding
+--no-outdent-long-comments
+--closing-side-comments-balanced
+--static-side-comments
+--no-opening-brace-on-new-line
+--opening-token-right
+--break-at-old-method-breakpoints
+--maximum-consecutive-blank-lines=1
+--one-line-block-semicolons=0   # No semi before closing brace of one-line block
