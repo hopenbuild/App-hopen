@@ -25,8 +25,11 @@ App::hopen::Util::PhaseManager - Manage string sets representing phases
 
 =head1 DESCRIPTION
 
-Stores and supports queries on an ordered list of case-insensitive strings.
+Stores a list of strings and supports case-insenstive queries on those strings.
 Part of L<App::hopen>.
+
+Phase names returned by functions are in the original case provided to L</new>.
+However, you may give a function a name in any case.
 
 =head1 METHODS
 
@@ -91,14 +94,24 @@ Dies if the given phase isn't recognized.
 
 Returns the list of all the phases, in order.
 
+=head1 VARIABLES
+
+=head2 $USE_LC
+
+If set truthy before this module is C<use>d, use L<perlfunc/lc> instead of
+L<perlfunc/fc>, even on Perls that have C<fc>.
+
 =cut
 
 # }}}1
 
+our $USE_LC;
+
 # Perl 5.16 has 'fc' feature; older Perls can just use 'lc'.
-# This block by Toby Inkster.
-use if $] >= 5.016, feature => 'fc';
-BEGIN { $] < 5.016 and eval 'sub fc ($) { lc $_[0] }' };
+# This block by Toby Inkster, modified by Chris White
+use vars::i '$_USE_LC' => ($] lt '5.016') || $USE_LC;
+use if !$_USE_LC, feature => 'fc';
+BEGIN { $_USE_LC and eval 'sub fc (_) { lc $_[0] }' };
 
 sub new {
     my ($class, @phases) = @_;

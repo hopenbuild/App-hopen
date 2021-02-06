@@ -67,6 +67,7 @@ t/030-util-basedpath.t
 t/040-ah-g-assetop.t
 t/050-util-thunk.t
 t/060-util-phasemanager.t
+t/061-util-phasemanager-use-lc.t
 t/100-h.t
 t/110-hopen-file-kit.t
 t/120-myhopen.t
