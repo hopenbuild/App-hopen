@@ -126,9 +126,9 @@ sub last {
 
 sub check {
     my ($self, $phase) = @_;
-    $phase = fc $phase;
+    $phase = fc($phase // '');
     return exists $self->{pos}->{$phase} ?
-        $self->orig->[$self->{pos}->{$phase}] : '';
+        $self->{orig}->[$self->{pos}->{$phase}] : '';
 }
 
 sub enforce {
