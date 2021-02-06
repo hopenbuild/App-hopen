@@ -260,14 +260,17 @@ will happen in the L</Gen> phase.  An example C<MY.hopen.pl> file might
 look like:
 
     ...
-    set_phase 'gen';
+    set_phase 'Gen';
     do {
         my ($Configuration, $__R_new_data);
         $Configuration = {
-            'compiler @ App::hopen::Gnu::C' => 'gcc',
+            'compiler @ App::hopen::T::Gnu' => [ '/usr/bin/x86_64-linux-gnu-gcc' ]
         };
-         $__R_new_data = ...
-    ...
+
+        ### Do not change below this line #############################################
+
+        $__R_new_data = ...
+        ...
 
 You can edit the values under C<Configuration>, and those values will be
 used during the L</Gen> phase.  See L</Configuration keys> for name formats.
@@ -287,22 +290,22 @@ files specify the I<commands> you would run to build your software by hand.
 =item 2.
 
 The command graph is run, with a generator made available to it.  Command nodes
-provide asset nodes to the generator and to later command nodes.
-
-While the command graph is running:
+provide outputs to the generator and to later command nodes.  The nature of
+the outputs depends on the phase:
+and L<App::hopen::Asset> instances during the Gen phase.
 
 =over
 
 =item *
 
-During the Check phase, the outputs are passed along.  Specifics of the
-Check phase are TBD.
+During the Check phase, command nodes output configuration entries, and
+forward any inputs they receive.
 
 =item *
 
-During the Gen phase, each command node, when run, outputs a C<made> arrayref
-of L<App::hopen::Asset> instances.  These instances represent files or other
-artifacts created by that command node.
+During the Gen phase, each command node outputs a (possibly empty) C<made>
+arrayref of L<App::hopen::Asset> instances.  These instances represent files or
+other artifacts created by that command node.
 
 The generator receives information from each command node about work to
 transform that node's C<made> inputs into outputs.
