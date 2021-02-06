@@ -7,60 +7,102 @@ use Test::Fatal;
 
 use App::hopen::Util;
 
-sub test_new_first_last {
-    like( exception { $DUT->new }, qr/Need phase/, 'missing phases' );
-    like( exception { $DUT->new('0') }, qr/phase.+truthy/, '0 single phase' );
-    like( exception { $DUT->new('') }, qr/phase.+truthy/, '"" single phase' );
-    like( exception { $DUT->new(qw(0 x)) }, qr/phase.+truthy/, '0 single phase at front' );
-    like( exception { $DUT->new(qw(x 0)) }, qr/phase.+truthy/, '0 single phase at end' );
+context 'New, first, last: ' => sub {
+    it 'throws when' => sub {
+        ck { like( exception { $DUT->new }, qr/Need phase/ ) } 'phases are missing';
+        ck { like( exception { $DUT->new('0') }, qr/phase.+truthy/ )} 'the only phase is 0' ;
+        ck { like( exception { $DUT->new('') }, qr/phase.+truthy/) } 'the only phase is ""' ;
+        ck { like( exception { $DUT->new(qw(0 x)) }, qr/phase.+truthy/)}  'the first phase is 0' ;
+        ck { like( exception { $DUT->new(qw(x 0)) }, qr/phase.+truthy/)} 'the last phase is 0' ;
+    };
 
+    describe 'a single-phase sequence' => sub {
+        my $dut;
+        before all => sub { $dut = $DUT->new(qw(a)) };
+        ck { isa_ok($dut, $DUT) };
+        ck { is($dut->first, 'a') } 'has the right first element';
+        ck { is($dut->last, 'a') } 'has the right last element';
+        ck { ok(!$dut->next('a')) } 'has no elem after the first';
+    };
+
+    describe 'a two-phase sequence' => sub {
+        my $dut;
+        before all => sub { $dut = $DUT->new(qw(a b)) };
+        ck { isa_ok($dut, $DUT) };
+        ck { is($dut->first, 'a') } 'has the right first element';
+        ck { is($dut->last, 'b') } 'has the right last element';
+        ck { is($dut->next('a'), 'b') } 'has the right next(first)';
+        ck { ok(!$dut->next('b')) } 'has no next(second)';
+    };
+
+    describe 'a three-phase sequence' => sub {
+        my $dut;
+        before all => sub { $dut = $DUT->new(qw(a b c)) };
+        ck { isa_ok($dut, $DUT) };
+        ck { is($dut->first, 'a') } 'has the right first element';
+        ck { is($dut->last, 'c') } 'has the right last element';
+        ck { is($dut->next('a'), 'b') } 'has the right next(first)';
+        ck { is($dut->next('b'), 'c') } 'has the right next(second)';
+        ck { ok(!$dut->next('c')) } 'has no next(third)';
+    };
+
+    describe 'a three-phase sequence with mixed original case' => sub {
+        my $dut;
+        before all => sub { $dut = $DUT->new(qw(Foo baR BAT)) };
+        ck { isa_ok($dut, $DUT) };
+        ck { is($dut->first, 'Foo') } 'has the right first element';
+        ck { is($dut->last, 'BAT') } 'has the right last element';
+        ck { is($dut->next('Foo'), 'baR') } 'has the right next(first)';
+        ck { is($dut->next('baR'), 'BAT') } 'has the right next(second)';
+        ck { ok(!$dut->next('BAT')) } 'has no next(third)';
+    };
+}; # new, first, last
+
+# delayed_is(\$dut, method, arg, expect): ugly hack to be able to use
+# is() calls inside loops.  Returns a sub to pass to is().
+sub delayed_is {
+    my ($dutref, $method, $arg, $expect) = @_;
+    return sub { is($$dutref->$method($arg), $expect) };
+}
+
+# delayed_ok(\$dut, method, methodargs...): to use ok() in loops.
+# is() calls inside loops.  Returns a sub to pass to is().
+sub delayed_ok {
+    my ($dutref, $method) = splice @_, 0, 2;
+    my @rest = @_;
+    return sub { ok($$dutref->$method(@rest)) };
+}
+
+context 'Check, enforce: ' => sub {
     my $dut;
+    sueach { $dut = $DUT->new(qw(foo bar bat)) };
+    ck { ok(!$dut->check('nonexistent')) } 'check: nonexistent phase fails';
+    ck { like( exception { $dut->enforce('nonexistent') }, qr/Unknown.+nonexistent/ ) }
+        'enforce: nonexistent phase fails';
 
-    $dut = $DUT->new(qw(a));
-    isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(a)], a => ''}, 'single phase');
-    is($dut->first, 'a', 'first: single phase');
-    is($dut->last, 'a', 'last: single phase');
+    foreach my $phase (qw(foo FOO Foo fOo foO FOo FoO fOO)) {
+        it "check: $phase" => delayed_is(\$dut, 'check', $phase, 'foo');
+        it "enforce: $phase" => delayed_is(\$dut, 'enforce', $phase, 'foo');
+    }
 
-    $dut = $DUT->new(qw(a b));
-    isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(a b)], a => 'b', b => ''}, 'two phases');
-    is($dut->first, 'a', 'first: two phases');
-    is($dut->last, 'b', 'last: two phases');
+    foreach my $phase (qw(bar bat)) {
+        it "check: $phase" => delayed_is(\$dut, 'check', $phase, $phase);
+        it "enforce: $phase" => delayed_is(\$dut, 'enforce', $phase, $phase);
+    }
+};
 
-    $dut = $DUT->new(qw(a b c));
-    isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(a b c)], a => 'b', b => 'c', c => ''}, 'three phases');
-    is($dut->first, 'a', 'first: three phases');
-    is($dut->last, 'c', 'last: three phases');
+context 'Is: ' => sub {
+    my $dut;
+    sueach { $dut = $DUT->new(qw(foo bar bat)) };
+    it "$_ is foo" => delayed_ok(\$dut, 'is', $_, 'foo')
+        foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
+    it "$_ matches when uppercased" => delayed_ok(\$dut, 'is', $_, uc $_) foreach qw(bar bat);
+    ck { ok(!$dut->is('nonexistent', 'foo')) } 'nonexistent != foo';
+    ck { ok(!$dut->is('foo', 'nonexistent')) } 'foo != nonexistent';
+    ck { ok(!$dut->is('oops', 'nonexistent')) } 'oops != nonexistent';
+};
 
-    $dut = $DUT->new(qw(Foo baR BAT));
-    isa_ok($dut, $DUT);
-    is_deeply($dut, {0 => [qw(foo bar bat)], foo => 'bar', bar => 'bat', bat => ''}, 'three phases, with fc');
-    is($dut->first, 'foo', 'first: three phases, fc');
-    is($dut->last, 'bat', 'last: three phases, fc');
-}
-
-sub test_check_enforce {
-    my $dut = $DUT->new(qw(foo bar bat));
-    ok(!$dut->check('nonexistent'), 'check: nonexistent');
-    like( exception { $dut->enforce('nonexistent') }, qr/Unknown.+nonexistent/,
-        'enforce nonexistent');
-
-    is($dut->check($_), 'foo', "check: $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
-    is($dut->enforce($_), 'foo', "enforce $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
-    is($dut->check($_), $_, "check: $_") foreach qw(bar bat);
-    is($dut->enforce($_), $_, "enforce $_") foreach qw(bar bat);
-}
-
-sub test_is {
-    my $dut = $DUT->new(qw(foo bar bat));
-    ok($dut->is($_, 'foo'), "is: $_") foreach qw(foo FOO Foo fOo foO FOo FoO fOO);
-    ok($dut->is($_, uc $_), "is: $_") foreach qw(bar bat);
-    ok(!$dut->is('nonexistent', 'foo'), 'nonexistent != foo');
-    ok(!$dut->is('foo', 'nonexistent'), 'foo != nonexistent');
-    ok(!$dut->is('oops', 'nonexistent'), 'oops != nonexistent');
-}
+# TODO RESUME HERE
 
 sub test_next {
     my $dut = $DUT->new(qw(foo bar bat));
@@ -84,11 +126,8 @@ sub test_all {
     is_deeply([$dut->all], [qw(foo bar bat)], 'all with fc');
 }
 
-test_new_first_last;
-test_check_enforce;
-test_is;
 test_next;
 test_is_last;
 test_all;
 
-done_testing();
+runtests;
