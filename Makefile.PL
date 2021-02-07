@@ -60,6 +60,14 @@ sub get_perl_filename {
 # Makefile customization (MY) {{{1
 {   package MY;
 
+    # special_targets: add to .PHONY
+    sub special_targets {
+        my $self = shift;
+        my $text = $self->SUPER::special_targets(@_);
+        $text =~ s/^(\.PHONY: )/$1cover html p prettyprint tags /m;
+        return $text;
+    }
+
     # dist_core: make `dist` a :: target rather than a : target,
     # and add distcheck before dist.
     sub dist_core {
@@ -134,7 +142,11 @@ prettyprint:
 \t-perltidy -pro=.perltidyrc -b `grep -E '\\.(pm|pl|t)\$\$' MANIFEST`
 
 tags:
-\t-ctags -R
+\t-if [ -d ../Data-Hopen ]; then \\
+\t\tctags -R --exclude='*.html' --exclude='html' --exclude='blib' . ../Data-Hopen ; \\
+\telse \\
+\t\tctags -R --exclude='*.html' --exclude='html' --exclude='blib' ; \\
+\tfi
 
 p:
 \t+\$(MAKE) prettyprint
