@@ -218,7 +218,7 @@ an alias for this variable.
 
 The current phase (B<read-only>).  Only C<MY.hopen.pl> is allowed to change
 the phase (and not even that if C<--phase> is specified on the hopen
-command line).
+command line).  An instance of an L<App::hopen::Phase> subclass.
 
 =back
 

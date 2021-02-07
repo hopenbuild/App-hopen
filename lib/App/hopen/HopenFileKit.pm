@@ -189,7 +189,7 @@ sub on {
 
     my $run_in_phase = PHASES->check($args{phase});
 
-    return unless $run_in_phase eq $Phase;
+    return unless PHASES->is($Phase->name, $run_in_phase);
 
     my $val = $args{value};
 
@@ -201,7 +201,7 @@ sub on {
     } elsif(ref $val eq 'HASH') {
         $result = $val;    # TODO? clone?
     } else {
-        $result = { $Phase => $val };
+        $result = { $Phase->name => $val };
     }
 
     # Stash the value for the caller.
@@ -211,7 +211,7 @@ sub on {
     }
 
     # Done --- skip the rest of the hopen file if we're in one.
-    hlog { 'Done with script for phase ``' . $Phase . "''" } 3;
+    hlog { 'Done with script for phase ``' . $Phase->name . "''" } 3;
     eval {
         no warnings 'exiting';
         last __R_DO;

@@ -1,3 +1,4 @@
+.perltidyrc
 bin/hopen
 Changes
 cpanfile
@@ -35,6 +36,10 @@ lib/App/hopen/Lang.pm
 lib/App/hopen/Lang/C.pm
 lib/App/hopen/Manual.pod
 lib/App/hopen/MYhopen.pm
+lib/App/hopen/Phase.pm
+lib/App/hopen/Phase/Build.pm
+lib/App/hopen/Phase/Check.pm
+lib/App/hopen/Phase/Gen.pm
 lib/App/hopen/T.pod
 lib/App/hopen/T/Gnu.pm
 lib/App/hopen/T/Gnu/C.pm

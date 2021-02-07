@@ -45,7 +45,7 @@ generated C<Makefile>.
 
 =head2 $Phase
 
-Which phase we're in (string).
+Which phase we're in.  An instance of a L<App::hopen::Phase> subclass.
 
 =head2 $ProjDir
 

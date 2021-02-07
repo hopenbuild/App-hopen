@@ -42,8 +42,7 @@ The following functions are only usable during C<_run()>
 
 =head2 getphase
 
-Returns the current phase
-TODO die if there is no current phase.
+Returns the current phase.  Dies if there is no current phase.
 
     my $thisphase = $self->getphase;
 

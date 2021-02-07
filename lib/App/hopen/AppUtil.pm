@@ -1,13 +1,21 @@
 # App::hopen::AppUtil - utility routines used by App::hopen::App
 package App::hopen::AppUtil;
-use Data::Hopen;
-use App::hopen::Util qw(isMYH MYH);
+
 use strict;
 use warnings;
+use App::hopen::Util qw(isMYH MYH);
+use Cwd qw(getcwd abs_path);
+use Data::Hopen qw(:default loadfrom);
 use Data::Hopen::Base;
-use parent 'Exporter';
+use Path::Class;
+
+# Thanks to haukex, https://www.perlmonks.org/?node_id=1207115 -
+# 5.14 doesn't support the ':bsd_glob' tag.
+use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
 
 our $VERSION = '0.000013';    # TRIAL
+
+use parent 'Exporter';
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS, @_export_constants);
 
@@ -15,20 +23,14 @@ BEGIN {
     @EXPORT            = qw();
     @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS
       KEY_LANGOPTS PHASES);
-    @EXPORT_OK   = (qw(find_hopen_files find_myhopen), @_export_constants);
+    @EXPORT_OK =
+      (qw(find_hopen_files find_myhopen load_phase), @_export_constants);
     %EXPORT_TAGS = (
         default   => [@EXPORT],
         all       => [ @EXPORT, @EXPORT_OK ],
         constants => [@_export_constants],
     );
 } ## end BEGIN
-
-use Cwd qw(getcwd abs_path);
-use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
-
-# Thanks to haukex, https://www.perlmonks.org/?node_id=1207115 -
-# 5.14 doesn't support the ':bsd_glob' tag.
-use Path::Class;
 
 # Define the phase sequence
 use App::hopen::Util::PhaseManager;
@@ -160,6 +162,21 @@ sub find_myhopen {
     my $fn = $dest_dir->file(MYH);
     return $fn if -r $fn;
 } ## end sub find_myhopen
+
+=head2 load_phase
+
+Load the L<App::Hopen::Phase> subclass for the given phase name, or die.
+Returns the phase instance.
+
+=cut
+
+sub load_phase {
+    my $phasename = PHASES->enforce(shift);
+
+    my $phaseclass = loadfrom($phasename, 'App::hopen::Phase::');
+    croak "I don't know how to handle phase $phasename" unless $phaseclass;
+    return $phaseclass->new;
+} ## end sub load_phase
 
 1;
 __END__

@@ -141,8 +141,8 @@ Is provided the L<Data::Hopen::G::DAG> instance as a parameter.  Usage:
     $generator->_finalize(-phase=>$Phase, -graph=>$Build,
                         -data=>$data)
 
-C<$dag> is the command graph, and C<$data> is the output from the
-command graph.
+C<$Phase> is the L<App::hopen::Phase> subclass, C<$dag> is the command graph,
+and C<$data> is the output from the command graph.
 
 C<_finalize> is always called with named parameters.
 

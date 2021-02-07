@@ -462,8 +462,8 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $self = shift or croak "Need an instance";
     my $fn   = shift or croak 'Need a file to run';
     my %opts = @_;
-    $Phase = PHASES->check($opts{phase}) if $opts{phase};
-    croak "I don't know phase $opts{phase}" unless $Phase;
+
+    $Phase = load_phase($opts{phase}) if $opts{phase};
 
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
@@ -481,7 +481,7 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         sub can_set_phase { true }
         sub set_phase {
             my $new_phase = shift or croak 'Need a phase';
-            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
+            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase->name);
             $new_phase = PHASES->check($new_phase);
             croak "Phase $new_phase is not one of the ones I know about (" .
                 join(', ', PHASES->all) . ')'
@@ -503,13 +503,13 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
         sub can_set_phase { false }
         sub set_phase {
             my $new_phase = shift // '';
-            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
+            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase->name);
     ) . (
         $opts{quiet}
         ? ''
         : q(
             warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, " .
-                "since phase $App::hopen::BuildSystemGlobals::Phase was " .
+                "since phase @{[$App::hopen::BuildSystemGlobals::Phase->name]} was " .
                 "given on the command line\n";
         )
     ) . "}\n";
@@ -611,7 +611,7 @@ EOT
     unless($setting_phase_allowed) {
         $src .= line_mark_string <<EOT;
     our \$Phase;
-    local *Phase = \\"$Phase";
+    local *Phase = \\"@{[$Phase->name]}";   # TODO make this the Phase instance
 EOT
     } ## end unless($setting_phase_allowed)
 
@@ -994,48 +994,44 @@ EOT
 
     # = Run the hopen files (except MYH, already run) =======================
 
-    my $new_data;
+    my $build_graph_output;
     if(@$lrHopenFiles) {
-        $new_data = $self->_run_phase(
+        $build_graph_output = $self->_run_phase(
             files => [@$lrHopenFiles],
             forward_opts($self->cmdopts, { lc => 1 }, qw(PHASE QUIET))
         );    # TODO support _run_phase libs option
 
     } else {    # No hopen files (other than MYH) => just use the data from MYH
-        $new_data = $self->hrData;
+        $build_graph_output = $self->hrData;
     }
 
     $Generator->_finalize(
         -phase => $Phase,
         -graph => $Build,
-        -data  => $new_data
+        -data  => $build_graph_output
     );
 
     # TODO RESUME HERE - figure out how the generator works into this.
 
     # = Save state in MY.hopen.pl for the next run ==========================
 
+    my $myh_text = $Phase->make_myh($build_graph_output);
+
     # If we get here, _run_phase succeeded.  Therefore, we can move
     # on to the next phase.  Stay in the last phase if there is no next phase.
-    my $new_phase = PHASES->next($Phase) || $Phase;
+    my $new_phase = PHASES->next($Phase->name) || $Phase->name;
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only
     # need to edit right at the top of the file, and not also throughout
     # the hashref.
 
-    # TODO RESUME HERE
-    # - Find any thunks in $new_data
-    # - List them as variables first in the Dumper ctor call
-    # - Add code after the dump to replace all those thunks with their
-    #   get() values.
-
     # TODO figure out how to carry the config forward from run to run.
 
-    my $config = extract_thunks($new_data);
+    my $config = extract_thunks($build_graph_output);
     my $VAR    = '__R_new_data';
-    my $dumper =
-      Data::Dumper->new([ $config, $new_data ], [ 'Configuration', $VAR ]);
+    my $dumper = Data::Dumper->new([ $config, $build_graph_output ],
+        [ 'Configuration', $VAR ]);
     $dumper->Pad(' ' x 12);       # To line up with the do{}
     $dumper->Indent(1);           # fixed indent size
     $dumper->Quotekeys(0);
