@@ -1,4 +1,4 @@
-# App::hopen::H - basic functions for use in hopen files
+# App::hopen::H - basic functions for use by user code in hopen files
 package App::hopen::H;
 use strict;
 use warnings;
@@ -30,15 +30,12 @@ use PerlX::Maybe qw(:all);
 
 =head1 NAME
 
-App::hopen::H - basic functions for use in hopen files
+App::hopen::H - basic functions for use by user code in hopen files
 
 =head1 SYNOPSIS
 
 This module is loaded as C<H::*> into hopen files by
 L<App::hopen::HopenFileKit>.
-
-It also includes functions used by MY.hopen.pl files to perform compile-time
-processing (e.g., setting the phase).
 
 =head1 FUNCTIONS
 

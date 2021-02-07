@@ -8,7 +8,9 @@ use Data::Hopen::Base;
 our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::Phase';
-use Class::Tiny qw(TODO);
+use Class::Tiny;
+
+use App::hopen::AppUtil qw(PHASES);
 
 # Docs {{{1
 
@@ -24,18 +26,14 @@ TODO
 
 # }}}1
 
-=head1 FUNCTIONS
-
-=head2 todo
-
-=cut
-
 sub name { 'Gen' }
 
 sub make_myh {
     my $self = shift or croak 'Need an instance';
-    ...;
-}
+
+    # TODO carry forward the configuration info
+    return 'undef';
+} ## end sub make_myh
 
 1;
 __END__

@@ -463,56 +463,59 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
     my $fn   = shift or croak 'Need a file to run';
     my %opts = @_;
 
-    $Phase = load_phase($opts{phase}) if $opts{phase};
-
     my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
 
-    # == Set up code pieces related to phase control ==
-    # TODO move these to HopenFileKit
+    # == Make the hopen file into a package we can eval ==
 
-    my ($set_phase, $cannot_set_phase, $cannot_set_phase_warn);
-    my $setting_phase_allowed = false;
+    # -- Load the file
 
-    # Note: all phase-setting functions succeed if there was nothing
-    # for them to do!
+    my ($friendly_name, $pkg_stem, $file_text, $phase_text);
+    my ($setting_phase_allowed, $setting_phase_warns);
 
-    $set_phase = q(
-        sub _mark_phase_as_set;
-        sub can_set_phase { true }
-        sub set_phase {
-            my $new_phase = shift or croak 'Need a phase';
-            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase->name);
-            $new_phase = PHASES->check($new_phase);
-            croak "Phase $new_phase is not one of the ones I know about (" .
-                join(', ', PHASES->all) . ')'
-                    unless $new_phase;
-            $App::hopen::BuildSystemGlobals::Phase = $new_phase;
-            _mark_phase_as_set;
-    ) . ($opts{quiet} ? '' : 'say "Running $new_phase phase";') . "}\n";
+    if(ref $fn eq 'HASH') {    # it's a -e
+        hlog { '_execute_hopen_file processing -e:', $fn->{name} };
+        $file_text             = $fn->{text};
+        $friendly_name         = $fn->{name};
+        $pkg_stem              = 'CmdLineE' . $fn->{num} . '_' . $_hf_pkg_idx++;
+        $setting_phase_allowed = !$opts{phase};
+        $setting_phase_warns   = false;
 
-    $cannot_set_phase = q(
-        sub can_set_phase { false }
-        sub set_phase {
-            my $new_phase = shift // '';
-            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase);
-            croak "I'm sorry, but this file (``$FILENAME'') is not allowed to set the phase"
-        }
-    );
+        # -e's can set phase unless --phase was specified
 
-    $cannot_set_phase_warn = q(
-        sub can_set_phase { false }
-        sub set_phase {
-            my $new_phase = shift // '';
-            return if PHASES->is($new_phase, $App::hopen::BuildSystemGlobals::Phase->name);
-    ) . (
-        $opts{quiet}
-        ? ''
-        : q(
-            warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, " .
-                "since phase @{[$App::hopen::BuildSystemGlobals::Phase->name]} was " .
-                "given on the command line\n";
-        )
-    ) . "}\n";
+    } else {
+        hlog { '_execute_hopen_file processing', $fn };
+        $file_text     = file($fn)->slurp;
+        $pkg_stem      = ($fn =~ s/[^a-zA-Z0-9]/_/gr) . '_' . $_hf_pkg_idx++;
+        $friendly_name = $fn;
+
+        # Only MYH can set phase, and only if --phase was not given.
+        $setting_phase_allowed = (isMYH($fn) and !$opts{phase});
+
+        # For MY.hopen.pl, when --phase is set, set_phase doesn't croak.
+        # If this were not the case, every second or subsequent run
+        # of hopen(1) would croak if --phase were specified!
+        $setting_phase_warns = isMYH($fn);
+
+        # TODO? permit regular hopen files to set the the phase if
+        # neither MYH nor the command line did, and we're at the first
+        # phase.  This is so the hopen file can say `set_phase 'Gen';`
+        # if there's nothing to do during Check.
+
+    } ## end else [ if(ref $fn eq 'HASH') ]
+
+    # as far as I can tell, #line can't handle embedded quotes.
+    $friendly_name =~ s{"}{-}g;
+
+    # -- Set up code pieces
+
+    # How the package will be identified, and how this instance will be
+    # identified within the package
+    my $pkg_name      = "__Rpkg_$pkg_stem";
+    my $sub_name      = "__Rsub_$pkg_stem";
+    my $instance_name = "$pkg_name\::__R_instance";
+
+    # Give the package access to the this instance
+    do { no strict 'refs'; ${$instance_name} = $self };
 
     my $lib_dirs = '';
     if($opts{libs}) {
@@ -520,76 +523,24 @@ turned into a C<use lib> statement (see L<lib>) in the generated source.
           foreach @{ $opts{libs} };
     }
 
-    # == Make the hopen file into a package we can eval ==
-
-    my ($friendly_name, $pkg_stem, $file_text, $phase_text);
-
-    $phase_text = '';
-
-    # -- Load the file
-
-    if(ref $fn eq 'HASH') {    # it's a -e
-        hlog { 'Processing', $fn->{name} };
-        $file_text     = $fn->{text};
-        $friendly_name = $fn->{name};
-        $pkg_stem      = 'CmdLineE' . $fn->{num} . '_' . $_hf_pkg_idx++;
-        $phase_text .= defined($opts{phase}) ? $cannot_set_phase : $set_phase;
-
-        # -e's can set phase unless --phase was specified
-
-    } else {
-        hlog { 'Processing', $fn };
-        $file_text     = file($fn)->slurp;
-        $pkg_stem      = ($fn =~ s/[^a-zA-Z0-9]/_/gr) . '_' . $_hf_pkg_idx++;
-        $friendly_name = $fn;
-
-        if(isMYH($fn) and !defined($opts{phase})) {
-
-            # MY.hopen.pl files can set $Phase unless --phase was given.
-            $phase_text .= $set_phase;
-            $setting_phase_allowed = true;
-
-        } else {
-
-            # For MY.hopen.pl, when --phase is set, set_phase doesn't croak.
-            # If this were not the case, every second or subsequent run
-            # of hopen(1) would croak if --phase were specified!
-            $phase_text .=
-              isMYH($fn) ? $cannot_set_phase_warn : $cannot_set_phase;
-
-            # TODO? permit regular hopen files to set the the phase if
-            # neither MYH nor the command line did, and we're at the first
-            # phase.  This is so the hopen file can say `set_phase 'Gen';`
-            # if there's nothing to do during Check.
-        } ## end else [ if(isMYH($fn) and !defined...)]
-    } ## end else [ if(ref $fn eq 'HASH') ]
-
-    $friendly_name =~ s{"}{-}g;
-
-    # as far as I can tell, #line can't handle embedded quotes.
-
-    my $pkg_name      = "__Rpkg_$pkg_stem";
-    my $sub_name      = "__Rsub_$pkg_stem";
-    my $instance_name = "$pkg_name\::__R_instance";
-
-    # Give the package access to the instance
-    do { no strict 'refs'; ${$instance_name} = $self };
+    my $set_phase_text = set_phase_text(
+        instancename => $instance_name,
+        phase_locked => !$setting_phase_allowed,
+        only_warn    => $setting_phase_warns,
+    );
 
     # -- Build the package
 
-    # TODO move phase-setting to App::hopen::MYhopen
-    # TODO set $App::hopen::MYhopen::IsMYH to indicate whether or not this
-    # file is MY.hopen.pl.
     my $src = line_mark_string <<EOT ;
 {
     package $pkg_name;
+    our \$Phase;
     our \$@{[App::hopen::AppUtil::HOPEN_FILE_FLAG]};    # A::h::HopenFileKit/import()
-    use App::hopen::HopenFileKit "\Q$friendly_name\E";
+    use App::hopen::HopenFileKit { filename => "\Q$friendly_name\E" };
 EOT
 
-    # \\Q and \\E since, on Windows, \$friendly_name is likely to
-    # include backslashes.
-    # TODO test if this gets double-backslashed.
+    # \\Q and \\E above since, on Windows, \$friendly_name is likely to
+    # include backslashes.  TODO test if this gets double-backslashed.
 
     $src .= line_mark_string <<EOT ;
 
@@ -597,23 +548,15 @@ EOT
     $lib_dirs
     # /Other lib dirs
 
-    sub _mark_phase_as_set { \$$instance_name\->did_set_phase(true) }
-
-    # Other phase text
-    $phase_text
-    # /Other phase text
+    # Phase-setting text
+    $set_phase_text
+    # /Phase-setting text
 EOT
 
-    # Now shadow $Phase so the hopen file can't change it without
-    # really trying!  Note that we actually interpolate the current
-    # phase in as a literal so that it's read-only (see perlmod).
-
-    unless($setting_phase_allowed) {
-        $src .= line_mark_string <<EOT;
-    our \$Phase;
-    local *Phase = \\"@{[$Phase->name]}";   # TODO make this the Phase instance
-EOT
-    } ## end unless($setting_phase_allowed)
+    do {    # give the hopen file access to the current phase
+        no strict 'refs';
+        *{"$pkg_name\::Phase"} = $Phase;    #eval "\\'@{[$Phase->name]}'";
+    };
 
     # Run the code given in the hopen file.  Wrap it in a named BLOCK so that
     # HopenFileKit::on() will work, but don't rely on the return value of that
@@ -665,7 +608,7 @@ EOT
         }
 
         return \$__R_retval;
-    } #$sub_name
+    } ## end sub $sub_name
 
     our \$hrNewData = $sub_name(\$$instance_name\->hrData);
 } #package
@@ -733,10 +676,7 @@ be run if it is empty.
 
     my $self = shift or croak "Need an instance";
     my %opts = @_;
-    if($opts{phase}) {
-        my $p = PHASES->check($opts{phase});
-        $Phase = $p if $p;
-    }
+    $Phase = load_phase($opts{phase}) if $opts{Phase};
     my $lrHopenFiles = $opts{files};
     croak 'Need files=>[...]' unless ref $lrHopenFiles eq 'ARRAY';
     hlog {
@@ -774,7 +714,7 @@ be run if it is empty.
     $scope->adopt_hash($self->hrData);
 
     # Load hopen-owned variables
-    $scope->put(KEY_PHASE,           $Phase);
+    $scope->put(KEY_PHASE,           $Phase->name);
     $scope->put(KEY_GENERATOR_CLASS, ref $Generator);
     $scope->put(KEY_TOOLSET_CLASS,   $Toolset);
 
@@ -833,23 +773,13 @@ The return value of _inner is unspecified and ignored.
 
     # = Initialize phase ====================================================
 
-    if(    $self->cmdopts->{BUILD}
-        && $self->cmdopts->{PHASE}
-        && !PHASES->is($self->cmdopts->{PHASE}, 'build'))
-    {
-        die '--phase '
-          . $self->cmdopts->{PHASE}
-          . ' and --build are mutually exclusive';
-    } ## end if($self->cmdopts->{BUILD...})
-
-    $self->cmdopts->{PHASE} = PHASES->enforce('build')
-      if $self->cmdopts->{BUILD};
-
     # Start with the default phase unless one was specified.
-    $Phase = $self->cmdopts->{PHASE} // PHASES->first;
-    die "Phase $Phase is not one of the ones I know about ("
-      . join(', ', PHASES->all) . ')'
-      unless PHASES->check($Phase);
+    my $phasename = $self->cmdopts->{PHASE} // PHASES->first;
+    eval { $Phase = load_phase($phasename) };
+    die "Phase $phasename is not one of the ones I know about ("
+      . join(', ', PHASES->all)
+      . ") ($@)"
+      if $@;
 
     # = Initialize filesystem-related build-system globals ==================
 
@@ -938,7 +868,9 @@ EOT
     say "From ``$proj_dir'' into ``$dest_dir''" unless $QUIET;
 
     # Load MY.hopen.pl first so the results of the Check phase are
-    # available to the generator and toolset.
+    # available to the generator and toolset, and so we
+    # are in the right phase.
+
     if($myhopen) {
         $self->_execute_hopen_file($myhopen,
             forward_opts($self->cmdopts, { lc => 1 }, qw(PHASE QUIET)),
@@ -1028,39 +960,16 @@ EOT
 
     # TODO figure out how to carry the config forward from run to run.
 
-    my $config = extract_thunks($build_graph_output);
-    my $VAR    = '__R_new_data';
-    my $dumper = Data::Dumper->new([ $config, $build_graph_output ],
-        [ 'Configuration', $VAR ]);
-    $dumper->Pad(' ' x 12);       # To line up with the do{}
-    $dumper->Indent(1);           # fixed indent size
-    $dumper->Quotekeys(0);
-    $dumper->Purity(1);
-    $dumper->Maxrecurse(0);       # no limit
-    $dumper->Sortkeys(true);      # For consistency between runs
-    $dumper->Sparseseen(true);    # We don't use Seen()
+    my $VAR = '__R_new_data';
 
-    # Four-space indent instead of two-space.  This is using an undocumented
-    # feature of Data::Dumper, whence the eval{}.
-    eval { $dumper->{xpad} = ' ' x 4 };
-
-    my $dumped = $dumper->Dump;
-    my $separ  = '### Do not change below this line ' . ('#' x 45);
-    $dumped =~ s{^(\h*)(\$__R_new_data\h*=)}{\n$1$separ\n\n$1$2}m;
-
-    my $new_text = dedent [], qq(
+    my $new_text = dedent [], <<EOT;
         # ==================================================================
         # @{[MYH]} generated at @{[scalar gmtime]} GMT
         # From ``@{[$proj_dir->absolute]}'' into ``@{[$dest_dir->absolute]}''
 
         set_phase '$new_phase';
-        do {
-            my (\$Configuration, \$$VAR);
-$dumped
-            dethunk(\$$VAR);
-            \$$VAR
-        }
-    );
+$myh_text
+EOT
 
     # Notes on the above $new_text:
     # - No semi after the Dump line --- Dump adds it automatically.
@@ -1113,9 +1022,35 @@ or dies.
 
     # Check for mutually-inconsistent options
     if($self->cmdopts->{FRESH} && $self->cmdopts->{BUILD}) {
-        print STDERR '--fresh and --build cannot be used together';
+        say STDERR '--fresh and --build cannot be used together';
         return EXIT_PARAM_ERR;
     }
+
+    if(    $self->cmdopts->{FRESH}
+        && $self->cmdopts->{PHASE}
+        && !PHASES->is($self->cmdopts->{PHASE}, PHASES->first))
+    {
+        say STDERR '--phase '
+          . $self->cmdopts->{PHASE}
+          . ' and --fresh are mutually exclusive';
+        return EXIT_PARAM_ERR;
+    } ## end if($self->cmdopts->{FRESH...})
+
+    if(    $self->cmdopts->{BUILD}
+        && $self->cmdopts->{PHASE}
+        && !PHASES->is($self->cmdopts->{PHASE}, 'build'))
+    {
+        say STDERR '--phase '
+          . $self->cmdopts->{PHASE}
+          . ' and --build are mutually exclusive';
+        return EXIT_PARAM_ERR;
+    } ## end if($self->cmdopts->{BUILD...})
+
+    # --build and --fresh force the phase
+    $self->cmdopts->{PHASE} = PHASES->first
+      if $self->cmdopts->{FRESH};
+    $self->cmdopts->{PHASE} = PHASES->enforce('build')
+      if $self->cmdopts->{BUILD};
 
     # Verbosity is the max of -v and --verbose
     $self->cmdopts->{VERBOSE} = $self->cmdopts->{VERBOSE2}
@@ -1124,24 +1059,21 @@ or dies.
     # Option overrides: -q beats -v
     $self->cmdopts->{VERBOSE} = 0 if $self->cmdopts->{QUIET};
     $QUIET = !!($self->cmdopts->{QUIET} // false);
-    delete $self->cmdopts->{QUIET};
 
     # After this, code only refers to $QUIET for consistency.
+    delete $self->cmdopts->{QUIET};
 
     # Implement verbosity
     if(!$QUIET && $self->cmdopts->{VERBOSE}) {
         $VERBOSE += $self->cmdopts->{VERBOSE};
-
-        #hlog { Verbosity => $VERBOSE };
 
         # Under -v, keep stdout and stderr lines in order.
         STDOUT->autoflush(true);
         STDERR->autoflush(true);
     } ## end if(!$QUIET && $self->cmdopts...)
 
-    delete @{ $self->cmdopts }{qw(VERBOSE VERBOSE2)};
-
     # After this, code only refers to $VERBOSE for consistency.
+    delete @{ $self->cmdopts }{qw(VERBOSE VERBOSE2)};
 
     # Don't print the source of an eval'ed hopen file unless -vvv or higher.
     # Need 3 for the "..." that Carp prints when truncating.

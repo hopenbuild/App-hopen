@@ -32,6 +32,13 @@ TODO
 
 sub name { 'Build' }
 
+sub make_myh {
+    my $self = shift or croak 'Need an instance';
+
+    # TODO carry forward the configuration info
+    return 'undef';
+} ## end sub make_myh
+
 1;
 __END__
 # vi: set fdm=marker: #

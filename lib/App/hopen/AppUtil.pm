@@ -1,4 +1,4 @@
-# App::hopen::AppUtil - utility routines used by App::hopen::App
+# App::hopen::AppUtil - utility routines used by App::hopen
 package App::hopen::AppUtil;
 
 use strict;
@@ -23,8 +23,7 @@ BEGIN {
     @EXPORT            = qw();
     @_export_constants = qw(KEY_PHASE KEY_GENERATOR_CLASS KEY_TOOLSET_CLASS
       KEY_LANGOPTS PHASES);
-    @EXPORT_OK =
-      (qw(find_hopen_files find_myhopen load_phase), @_export_constants);
+    @EXPORT_OK   = (qw(find_hopen_files find_myhopen), @_export_constants);
     %EXPORT_TAGS = (
         default   => [@EXPORT],
         all       => [ @EXPORT, @EXPORT_OK ],
@@ -162,21 +161,6 @@ sub find_myhopen {
     my $fn = $dest_dir->file(MYH);
     return $fn if -r $fn;
 } ## end sub find_myhopen
-
-=head2 load_phase
-
-Load the L<App::Hopen::Phase> subclass for the given phase name, or die.
-Returns the phase instance.
-
-=cut
-
-sub load_phase {
-    my $phasename = PHASES->enforce(shift);
-
-    my $phaseclass = loadfrom($phasename, 'App::hopen::Phase::');
-    croak "I don't know how to handle phase $phasename" unless $phaseclass;
-    return $phaseclass->new;
-} ## end sub load_phase
 
 1;
 __END__

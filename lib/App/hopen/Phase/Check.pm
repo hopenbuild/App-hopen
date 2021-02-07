@@ -8,7 +8,11 @@ use Data::Hopen::Base;
 our $VERSION = '0.000013';    # TRIAL
 
 use parent 'App::hopen::Phase';
-use Class::Tiny qw(TODO);
+use Class::Tiny;
+
+use App::hopen::MYhopen;
+use Data::Hopen::Util::Data qw(dedent);
+use Hash::Merge;
 
 # Docs {{{1
 
@@ -30,10 +34,27 @@ TODO
 
 sub name { 'Check' }
 
+# Merge all the goals' outputs into the top level of a hashref.
+sub _flatten_bgo {
+    my $in     = shift;
+    my $retval = {};
+
+    my $merger = Hash::Merge->new('RETAINMENT_PRECEDENT');
+
+    foreach my $k (sort keys %$in) {
+        my $tomerge = $in->{$k};
+        $tomerge = +{ $k => $tomerge } unless ref $tomerge eq 'HASH';
+        $retval  = $merger->merge($retval, $tomerge);
+    }
+
+    return $retval;
+} ## end sub _flatten_bgo
+
 sub make_myh {
     my $self = shift or croak 'Need an instance';
 
-    my $build_graph_output = shift;
+    # --- Process the build-graph output ---
+    my $build_graph_output = _flatten_bgo(shift);
 
     my $config = extract_thunks($build_graph_output);
     my $VAR    = '__R_new_data';
@@ -55,12 +76,14 @@ sub make_myh {
     my $separ  = '### Do not change below this line ' . ('#' x 45);
     $dumped =~ s{^(\h*)(\$__R_new_data\h*=)}{\n$1$separ\n\n$1$2}m;
 
-    return dedent [], qq(
+    return qq(
         do {
             my (\$Configuration, \$$VAR);
 $dumped
-            dethunk(\$$VAR);
+            require App::hopen::MYhopen;
+            App::hopen::MYhopen::dethunk(\$$VAR);
             \$$VAR
+        };
     );
 
     # Notes on the above $new_text:

@@ -1,4 +1,4 @@
-# App::hopen::HopenFileKit - set up a hopen file
+# App::hopen::HopenFileKit - kit to be used by a hopen file
 package App::hopen::HopenFileKit;
 use strict;
 use warnings;
@@ -24,40 +24,33 @@ use Data::Hopen qw(:default loadfrom);
 
 our $VERSION = '0.000013';    # TRIAL
 
-# Exporter-exported symbols
+# Exporter-exported symbols.  No optional exports -- always export everything.
 use parent 'Exporter';
-use vars::i {
-    '@EXPORT' => [qw($__R_on_result *FILENAME on rule dethunk extract_thunks)],
-
-    #  ^ for on()
-    #               ^ glob so it can be localized
-    '@EXPORT_OK' => [qw()],
-};
-use vars::i '%EXPORT_TAGS' => (
-    default => [@EXPORT],
-    all     => [ @EXPORT, @EXPORT_OK ]
-);
+use vars::i '@EXPORT' => [
+    '$__R_on_result',    # for on()
+    '*FILENAME',         # glob so it can be localized
+    qw(on rule dethunk extract_thunks),
+];
 
 # Docs {{{1
 
 =head1 NAME
 
-App::hopen::HopenFileKit - Kit to be used by a hopen file
+App::hopen::HopenFileKit - kit to be used by a hopen file
 
 =head1 SYNOPSIS
 
-This is a special-purpose kit used for interpreting hopen files.
+This is a special-purpose kit used as part of interpreting hopen files.
 See L<App::hopen/_run_phase>.  Usage: in a hopen file:
 
     our $IsHopenFile;   # not on disk --- added before eval()
-    use App::hopen::HopenFileKit "<filename>"[, other args]
+    use App::hopen::HopenFileKit {
+        filename => "<filename>",
+    };
 
 C<< <filename> >> is the name you want to use for the package using
 this module, and will be loaded into constant C<$FILENAME> in that
 package.  If a filename is omitted, a default name will be used.
-
-C<[other args]> are per L<Exporter>, and should be omitted unless you
-really know what you're doing!
 
 See L</import> for details about C<$IsHopenFile>.  That C<our> statement
 should not exist in the hopen file on disk, but should be added before
@@ -159,6 +152,8 @@ These routines are part of the public API of the hopen build system.
 
 =head2 on
 
+TODO find a better way to handle phase-specific actions.
+
 Take a given action only in a specified phase.  Usage examples:
 
     on check => { foo => 42 };  # Just return the given hashref
@@ -224,67 +219,7 @@ A convenience accessor for L<App::hopen::BuildSystemGlobals/$Build>.
 
 =cut
 
-sub rule { $Build }
-
-=head1 ROUTINES FOR USE BY PROCESSORS OF HOPEN FILES
-
-These routines are B<not> part of the public API of the hopen build
-system.  They are used inside L<App::hopen> to help process hopen files.
-
-=head2 dethunk
-
-Walk a hashref and replace all the L<App::hopen::Util::Thunk> instances with
-their L<tgt|App::hopen::Util::Thunk/tgt>s.  Operates in-place.  Usage:
-
-    dethunk(\%config, \%data)
-
-See L<App::hopen::MYhopen/extract_thunks> for creating C<%config>.
-
-=cut
-
-our $_config;
-
-sub dethunk {
-    my $data = shift;
-    die "need a data arrayref or hashref" unless isaggref $data;
-
-    _dethunk_walk($data);
-} ## end sub dethunk
-
-# Dethunk.  Can't use Data::Walk because of <https://github.com/gflohr/Data-Walk/issues/2>.
-# Precondition: $node is an arrayref or hashref
-sub _dethunk_walk {
-    my $node   = shift;
-    my $ty     = ref $node;
-    my $ishash = $ty eq 'HASH';
-
-    my @kids;
-
-    if($ishash) {
-        foreach my $k (keys %$node) {
-            my $v = $node->{$k};
-            hlog { Value => $v } 5;
-            if(ref $v eq 'App::hopen::Util::Thunk') {
-                hlog { Dethunk => $v->name } 4;
-                $v = $node->{$k} = $v->tgt;
-            }
-            push @kids, $v if isaggref $v;
-        } ## end foreach my $k (keys %$node)
-
-    } else {    # array
-        foreach my $pair (map { [ $_, $node->[$_] ] } 0 .. $#$node) {
-            my ($i, $v) = @$pair;
-            hlog { Value => $v } 5;
-            if(ref $v eq 'App::hopen::Util::Thunk') {
-                hlog { Dethunk => $v->name } 4;
-                $v = $node->[$i] = $v->tgt;
-            }
-            push @kids, $v if isaggref $v;
-        } ## end foreach my $pair (map { [ $_...]})
-    } ## end else [ if($ishash) ]
-
-    _dethunk_walk($_) foreach @kids;
-} ## end sub _dethunk_walk
+sub rule () { $Build }
 
 sub import {    # {{{1
 
@@ -301,26 +236,25 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     state $uniq_idx = 0;    # for fake filenames
 
     my $target = caller;
-    my $target_friendly_name;
-    unless($target_friendly_name = $_[1]) {
+
+    # Export symbols.  We always export everything, so don't pass @_ here.
+    __PACKAGE__->export_to_level(1, shift);
+
+    my $opts = $_[0];
+    croak "Option hashref required" unless ref $_[0] eq 'HASH';
+
+    unless($opts->{filename}) {
         warn "No filename given --- creating one";
-        $target_friendly_name = '__R_hopenfile_' . $uniq_idx++;
+        $opts->{filename} = '__R_hopenfile_' . $uniq_idx++;
     }
 
-    my @args = splice @_, 1, 1;
-
-    # 0=__PACKAGE__, 1=filename
-    # Remove the filename; leave the rest of the args for Exporter's use
-
+    # Sanity check --- reject `perl -MApp::hopen::HopenFileKit` and similar
     {
         no strict 'refs';
         die
 "Not loaded as a hopen file --- run hopen(1) instead of running this file directly.\n"
           unless exists ${"$target\::"}{&App::hopen::AppUtil::HOPEN_FILE_FLAG};
     }
-
-    # Export our stuff
-    __PACKAGE__->export_to_level(1, @args);
 
     # Re-export packages
     $_->import::into($target) foreach qw(
@@ -336,7 +270,7 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     # Initialize data in the caller
     {
         no strict 'refs';
-        *{ $target . '::FILENAME' } = eval("\\\"\Q$target_friendly_name\E\"");
+        *{ $target . '::FILENAME' } = eval("\\\"\Q$opts->{filename}\E\"");
 
         # Need `eval` to make it read-only - even \"$target..." isn't RO.
         # \Q and \E since, on Windows, $friendly_name is likely to
@@ -346,14 +280,18 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
 
     # Create packages at the top level
     _create_language();
-    Package::Alias->import::into($target, 'H' => 'App::hopen::H')
-      unless eval { scalar keys %H:: };
+
+    if(eval { scalar keys %H:: }) {    # H already loaded --- pull it in here
+        'H'->import::into($target);
+    } else {    # H not already loaded --- load it and import it here
+        Package::Alias->import::into($target, 'H' => 'App::hopen::H');
+    }
 
     # Don't import twice, but without the need to set Package::Alias::BRAVE
+
     # TODO permit handling the situation in which an actual package H is
     # loaded, and the hopenfile needs to use something else.
-    # TODO look inside $target to make sure H is visible within $target,
-    # rather than just checking if H has been loaded anywhere.
+
 } ## end sub import
 
 # }}}1
