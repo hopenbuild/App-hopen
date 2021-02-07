@@ -45,14 +45,14 @@ Write out the project file (for now, always called C<build.proj>).  Usage:
 
     $Generator->_finalize($phase, $dag);     # $data parameter unused
 
-C<$dag> is the build graph.
+C<$phase> is the L<App::hopen::Phase> subclass.  C<$dag> is the build graph.
 
 =cut
 
 sub _finalize {
     my ($self, %args) = getparameters('self', [qw(phase graph; data)], @_);
-    hlog { Finalizing => __PACKAGE__, '- phase', $args{phase} };
-    return unless PHASES->is($args{phase}, 'gen');
+    hlog { Finalizing => __PACKAGE__, '- phase', $args{phase}->name };
+    return unless $args{phase}->is('gen');
 
     $self->_populate_asset_graph;
 

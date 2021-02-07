@@ -31,7 +31,8 @@ sub name { 'Gen' }
 sub make_myh {
     my $self = shift or croak 'Need an instance';
 
-    # TODO carry forward the configuration info
+    # TODO RESUME HERE carry forward the configuration info (and likewise
+    # in Phase::Build)
     return 'undef';
 } ## end sub make_myh
 

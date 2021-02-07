@@ -35,7 +35,7 @@ sub test_with {    # Takes a generator
         );
     };
 
-    like $stdout,     qr/\bcheck\b/, 'Ran "check" phase';
+    like $stdout,     qr/\bCheck\b/, 'Ran "Check" phase';
     is $stderr,       '',            'No error output' if $gen eq 'Make';
     cmp_ok $exitcode, '==',          0, 'Run succeeded';
     $dest->has('MY.hopen.pl');
@@ -51,7 +51,7 @@ sub test_with {    # Takes a generator
         );
     };
 
-    like $stdout,     qr/\bgen\b/, 'Ran "gen" phase';
+    like $stdout,     qr/\bGen\b/, 'Ran "Gen" phase';
     is $stderr,       '',          'No error output' if $gen eq 'Make';
     cmp_ok $exitcode, '==',        0, 'Run succeeded';
     $dest->has('MY.hopen.pl');

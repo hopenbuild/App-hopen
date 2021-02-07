@@ -243,7 +243,7 @@ sub set_phase_text {
             sub can_set_phase { true }
             sub set_phase {
                 my $new_phase = shift or croak 'Need a phase';
-                return if PHASES->is($new_phase, $Phase->name);
+                return if $Phase->is($new_phase);
                 $new_phase = PHASES->enforce($new_phase);
                 require App::hopen::MYhopen;
                 require App::hopen::BuildSystemGlobals;
@@ -266,7 +266,7 @@ EOT
             sub can_set_phase { false }
             sub set_phase {
                 my $new_phase = shift // '';
-                return if PHASES->is($new_phase, $Phase->name);
+                return if $Phase->is($new_phase);
                 croak "I'm sorry, but this file (``$FILENAME'') is not allowed to set the phase";
             }
 EOT
@@ -277,7 +277,7 @@ EOT
             sub can_set_phase { false }
             sub set_phase {
                 my $new_phase = shift // '';
-                return if PHASES->is($new_phase, $Phase->name);
+                return if $Phase->is($new_phase);
                 unless($QUIET) {
                     warn "``$FILENAME'': Ignoring attempt to set phase $new_phase, " .
                     "since phase @{[$Phase->name]} was given on the command line\n";

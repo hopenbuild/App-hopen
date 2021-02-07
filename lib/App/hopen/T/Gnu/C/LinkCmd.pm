@@ -66,7 +66,7 @@ sub _run {
 
     # Currently we only do things at gen time.
     return $self->passthrough(-nocontext => 1)
-      unless PHASES->is($self->scope->find(KEY_PHASE), 'gen');
+      unless PHASES->is($self->getphase, 'gen');
 
     # Pull the inputs
     my $lrObjFiles = $self->input_assets;

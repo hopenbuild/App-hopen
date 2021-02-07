@@ -919,7 +919,7 @@ EOT
     }
 
     # Handle Build phase, now that myh is loaded ----------------
-    if(PHASES->is($Phase, 'build')) {
+    if($Phase->is('build')) {
         $Generator->run_build();
         return;
     }
@@ -951,7 +951,7 @@ EOT
 
     # If we get here, _run_phase succeeded.  Therefore, we can move
     # on to the next phase.  Stay in the last phase if there is no next phase.
-    my $new_phase = PHASES->next($Phase->name) || $Phase->name;
+    my $new_phase = $Phase->next;
 
     # TODO? give the generators a way to stash information that will be
     # written at the top of MY.hopen.pl.  This way, the user may only

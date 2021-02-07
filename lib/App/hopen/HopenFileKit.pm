@@ -180,11 +180,11 @@ the given phase.
 
 sub on {
     my $caller = caller;
-    my (%args) = parameters([qw(phase value)], @_);
+    my (%args) = parameters([qw(phasename value)], @_);
 
-    my $run_in_phase = PHASES->check($args{phase});
+    my $run_in_phase = PHASES->enforce($args{phasename});
 
-    return unless PHASES->is($Phase->name, $run_in_phase);
+    return unless $Phase->is($run_in_phase);
 
     my $val = $args{value};
 
@@ -196,7 +196,7 @@ sub on {
     } elsif(ref $val eq 'HASH') {
         $result = $val;    # TODO? clone?
     } else {
-        $result = { $Phase->name => $val };
+        $result = { $run_in_phase => $val };
     }
 
     # Stash the value for the caller.
@@ -206,7 +206,7 @@ sub on {
     }
 
     # Done --- skip the rest of the hopen file if we're in one.
-    hlog { 'Done with script for phase ``' . $Phase->name . "''" } 3;
+    hlog { 'Done with script for phase ``' . $run_in_phase . "''" } 3;
     eval {
         no warnings 'exiting';
         last __R_DO;
@@ -240,8 +240,8 @@ benign.  (Maybe someday we can make that usage valid, but not now!)
     # Export symbols.  We always export everything, so don't pass @_ here.
     __PACKAGE__->export_to_level(1, shift);
 
-    my $opts = $_[0];
-    croak "Option hashref required" unless ref $_[0] eq 'HASH';
+    my $opts = @_ ? $_[0] : {};
+    croak "Option hashref required" unless ref $opts eq 'HASH';
 
     unless($opts->{filename}) {
         warn "No filename given --- creating one";
