@@ -150,7 +150,7 @@ sub check {
 
 sub enforce {
     my $p = $_[0]->check($_[1]);
-    die "Unknown phase $_[1]" unless $p;
+    croak "Unknown phase $_[1] (valid phases are @{$_[0]->{orig}})" unless $p;
     return $p;
 }
 
@@ -167,7 +167,7 @@ sub next {
     my ($self, $phase) = @_;
     $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
+    croak "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
     return $self->{seq}->{$phase};
 } ## end sub next
 
@@ -175,7 +175,7 @@ sub is_last {
     my ($self, $phase) = @_;
     $phase = fc $phase;
 
-    die "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
+    croak "Unknown phase '$phase'" if !exists $self->{seq}->{$phase};
     return !($self->{seq}->{$phase});
 } ## end sub is_last
 
