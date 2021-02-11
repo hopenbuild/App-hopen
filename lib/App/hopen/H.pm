@@ -131,6 +131,24 @@ sub want {
 
 make_GraphBuilder 'want';
 
+=head2 using
+
+As L</want>, but conditions the downstream nodes on the dependency.
+E.g.:
+
+    $Build->H::using(-lib => 'va')->H::files('foo.c')->C::compile
+        ->C::link('program')->default_goal;
+
+will compile and link C<foo.c> into C<program> only if C<libva> is available.
+
+=cut
+
+sub using {
+    ...;
+}
+
+make_GraphBuilder 'using';
+
 1;
 __END__
 # vi: set fdm=marker: #
