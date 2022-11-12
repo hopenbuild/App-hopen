@@ -1,7 +1,6 @@
 bin/hopen
 Changes
 cpanfile
-cpanfile.pl
 eg/001-single-file-hello/001.hopen.pl
 eg/001-single-file-hello/hello.c
 eg/001-single-file-hello/README.md
