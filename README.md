@@ -21,7 +21,7 @@ build scripts (specifically, Perl 5.14+)
 - Context-sensitivity.  Your users can tweak their own builds for their own
 platforms without affecting your project.
 
-See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for details of the input format.
+See [App::hopen::Conventions](https://metacpan.org/pod/App%3A%3Ahopen%3A%3AConventions) for details of the input format.
 
 Why Perl?  Because (1) you probably already have it installed, and
 (2) it is the original write-once, run-everywhere language!
@@ -50,7 +50,7 @@ Now `built/Makefile` has been created.
 And your software is ready to go!  `make` has been run in `built/`,
 with output left in `built/`.
 
-See [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for information on writing `.hopen.pl` files.
+See [App::hopen::Conventions](https://metacpan.org/pod/App%3A%3Ahopen%3A%3AConventions) for information on writing `.hopen.pl` files.
 
 # SYNOPSIS
 
@@ -60,7 +60,7 @@ If no project directory is specified, the current directory is used.
 
 If no destination directory is specified, `<project dir>/built` is used.
 
-See [App::hopen](https://metacpan.org/pod/App::hopen) and [App::hopen::Conventions](https://metacpan.org/pod/App::hopen::Conventions) for more details.
+See [App::hopen](https://metacpan.org/pod/App%3A%3Ahopen) and [App::hopen::Conventions](https://metacpan.org/pod/App%3A%3Ahopen%3A%3AConventions) for more details.
 
 # OPTIONS
 

@@ -6,7 +6,7 @@ requires 'Class::Tiny::ConstrainedAccessor', '0.000010';
 requires 'Config';
 requires 'Cwd';
 requires 'Data::Dumper', '2.154';
-requires 'Data::Hopen', '0.000014';
+requires 'Data::Hopen', '0.000019';
 requires 'Deep::Hash::Utils', '0.03';
 requires 'Exporter';
 requires 'File::Glob';

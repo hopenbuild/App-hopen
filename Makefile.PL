@@ -176,7 +176,7 @@ my %opts = (
     },
     PREREQ_PM => {
         # Other hopen packages -------------------
-        'Data::Hopen' => '0.000016',    # for features
+        'Data::Hopen' => '0.000019',    # for removal of -phase argument
 
         # Non-hopen dependencies -----------------
         #'Algorithm::Dependency' => '1.106',
