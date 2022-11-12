@@ -1,5 +1,10 @@
 Revision history for App-hopen
 
+0.000013    2022-11-12 (TRIAL RELEASE)
+    - Add MSBuild generator stub.
+    - Require Data::Hopen v0.0.19.  Fixes #9 (thanks to eserte for reporting!).
+    - Major internal changes.
+
 0.000012    2019-06-06 (TRIAL RELEASE)
     - Added Microsoft cl.exe toolset
 
