@@ -68,3 +68,5 @@ TODO*
 
 # Things we generate
 built/
+html/
+/tags
