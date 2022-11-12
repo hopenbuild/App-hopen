@@ -40,8 +40,7 @@ In a Cmd package:
 Makes output assets for a given input asset.  Must be implemented
 by subclasses.  Called as:
 
-    $self->_process_input(-asset=>$asset, -phase=>$phase,
-        -visitor=>$visitor);
+    $self->_process_input(-asset=>$asset, -visitor=>$visitor);
 
 Returns a list of arrayrefs of C<[$asset, $how]>.  C<$how> defaults to C<undef>.
 
@@ -71,10 +70,10 @@ Creates the output list by calling L</_process_input>.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     return $self->passthrough(-nocontext=>1) unless
-        $self->_should_act(forward_opts(\%args, {'-'=>1}, qw(phase visitor)));
+        $self->_should_act(forward_opts(\%args, {'-'=>1}, qw(visitor)));
 
     # Pull the inputs
     my $lrSourceFiles = $self->input_assets;
@@ -83,7 +82,7 @@ sub _run {
     my @outputs;
     foreach my $src (@$lrSourceFiles) {
         my @outputs_here = $self->_process_input(-asset=>$src,
-            forward_opts(\%args, {'-'=>1}, qw(phase visitor)));
+            forward_opts(\%args, {'-'=>1}, qw(visitor)));
 
         foreach my $lrOutput (@outputs_here) {
             my ($obj, $how) = @$lrOutput;

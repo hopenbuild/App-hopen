@@ -47,7 +47,7 @@ See L<App::hopen::Conventions/INTERNALS>.
 =cut
 
 sub _run {
-    my ($self, %args) = getparameters('self', [qw(phase visitor ; *)], @_);
+    my ($self, %args) = getparameters('self', [qw(visitor ; *)], @_);
 
     my @assets = $self->make(@{$self->files});
     $args{visitor}->asset($_) foreach @assets;

@@ -710,8 +710,7 @@ be run if it is empty.
     $scope->local(true);    # ... but not copied by local-scope calls.
 
     # Run the DAG
-    my $result_data = $Build->run(-context => $scope, -phase => $Phase,
-                                    -visitor => $Generator);
+    my $result_data = $Build->run(-context => $scope, -visitor => $Generator);
     hlog { Data::Dumper->new([$result_data], ['Build graph result data'])->Indent(1)->Dump } 2;
     return $result_data;
 } #_run_phase() }}}2
@@ -892,8 +891,7 @@ EOT
         $new_data = $_hrData;
     }
 
-    $Generator->finalize(-phase => $Phase, -dag => $Build,
-        -data => $new_data);
+    $Generator->finalize(-dag => $Build, -data => $new_data);
         # TODO RESUME HERE - figure out how the generator works into this.
 
     # = Save state in MY.hopen.pl for the next run ==========================

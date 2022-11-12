@@ -38,16 +38,16 @@ This generator makes a Makefile that does its best to run on cmd.exe or sh(1).
 
 Write out the Makefile.  Usage:
 
-    $Generator->finalize($phase, $dag);     # $data parameter unused
+    $Generator->finalize($dag);     # $data parameter unused
 
 C<$dag> is the build graph.
 
 =cut
 
 sub finalize {
-    my ($self, %args) = getparameters('self', [qw(phase dag; data)], @_);
-    hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
-    return unless is_last_phase $args{phase};
+    my ($self, %args) = getparameters('self', [qw(dag; data)], @_);
+    hlog { Finalizing => __PACKAGE__ , '- phase', $Phase };
+    return unless is_last_phase $Phase;
 
     hlog { __PACKAGE__, 'Asset graph', '' . $self->_assets->_graph } 3;
 
@@ -69,9 +69,7 @@ EOT
 
     # Write the Makefile.  TODO flip the order.
 
-    $self->_assets->run(-context => $context,
-        forward_opts(\%args, {'-'=>1}, qw(phase))
-    );
+    $self->_assets->run(-context => $context);
 
     close $fh;
 } #finalize()

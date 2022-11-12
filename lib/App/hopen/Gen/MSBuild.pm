@@ -40,16 +40,16 @@ This generator makes a C<.proj> file that can be run with MSBuild.
 
 Write out the project file (for now, always called C<build.proj>).  Usage:
 
-    $Generator->finalize($phase, $dag);     # $data parameter unused
+    $Generator->finalize($dag);     # $data parameter unused
 
 C<$dag> is the build graph.
 
 =cut
 
 sub finalize {
-    my ($self, %args) = getparameters('self', [qw(phase dag; data)], @_);
-    hlog { Finalizing => __PACKAGE__ , '- phase', $args{phase} };
-    return unless is_last_phase $args{phase};   # Only do work during Gen
+    my ($self, %args) = getparameters('self', [qw(dag; data)], @_);
+    hlog { Finalizing => __PACKAGE__ , '- phase', $Phase };
+    return unless is_last_phase $Phase;   # Only do work during Gen
 
     hlog { __PACKAGE__, 'Asset graph', '' . $self->_assets->_graph } 3;
 
@@ -58,9 +58,7 @@ sub finalize {
         # undef => will be ignored when making the XML
 
     # Generate the XML
-    my $hrOut = $self->_assets->run(-context => $context,
-        forward_opts(\%args, {'-'=>1}, qw(phase))
-    );
+    my $hrOut = $self->_assets->run(-context => $context);
 
     my $lrXML = $hrOut->{$self->asset_default_goal->name}
                         ->{$App::hopen::Gen::MSBuild::AssetGraphNode::OUTPUT};
