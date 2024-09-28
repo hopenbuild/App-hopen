@@ -63,7 +63,7 @@
             "Config" : "0",
             "Cwd" : "0",
             "Data::Dumper" : "2.154",
-            "Data::Hopen" : "0.000019",
+            "Data::Hopen" : "0.000021",
             "Deep::Hash::Utils" : "0.03",
             "Exporter" : "0",
             "File::Glob" : "0",

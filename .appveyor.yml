@@ -15,21 +15,19 @@ image:
 
 build_script:
   # Grab the latest Data::Hopen
-  - cpanm https://github.com/hopenbuild/Data-Hopen/tarball/master
+  - cpanm https://github.com/hopenbuild/Data-Hopen/tarball/main
       # Thanks to https://gist.github.com/keisatou/7499464
 
   # Grab the rest of the dependencies
   - cpanm --installdeps --notest --verbose .
 
   # Build it
-  - perl Makefile.PL
-  - cmd: gmake
-  - sh: make
+  - perl Build.PL
+  - perl Build
 
 test_script:
 #  - echo Use just this line to succeed and save the cache.
-  - cmd: gmake test
-  - sh: make test
+  - perl Build test
 
 # * Thanks to https://stackoverflow.com/a/21041546/2877364
 #   by https://stackoverflow.com/users/2964427/09stephenb and
