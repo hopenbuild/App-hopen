@@ -4,7 +4,7 @@ use Data::Hopen qw(hlog getparameters *VERBOSE);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014'; # TRIAL
 
 use parent 'App::hopen::G::AssetOp';
 use Class::Tiny;

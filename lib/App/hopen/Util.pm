@@ -1,5 +1,5 @@
 package App::hopen::Util;
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014'; # TRIAL
 
 # Docs {{{1
 

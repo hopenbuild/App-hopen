@@ -4,7 +4,7 @@ use strict; use warnings;
 use Data::Hopen::Base;
 use Syntax::Construct qw(/r);
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014'; # TRIAL
 
 use parent 'App::hopen::Gen';
 use Class::Tiny;

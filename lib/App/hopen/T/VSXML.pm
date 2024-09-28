@@ -4,7 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014'; # TRIAL
 
 =head1 NAME
 

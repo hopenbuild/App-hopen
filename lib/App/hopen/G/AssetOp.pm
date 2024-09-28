@@ -5,7 +5,7 @@ use strict; use warnings;
 use Data::Hopen::Base;
 use Quote::Code;
 
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014'; # TRIAL
 
 use parent 'App::hopen::G::Cmd';
     # TODO why is this not directly a child of Data::Hopen::G::Op?

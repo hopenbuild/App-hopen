@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000013'; # TRIAL
+our $VERSION = '0.000014';
 
 # Imports {{{1
 use strict; use warnings;
@@ -739,7 +739,8 @@ The return value of _inner is unspecified and ignored.
     }
 
     if($opts{PRINT_VERSION}) {  # print version, raw and dotted
-        if($App::hopen::VERSION =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
+        my $ver = $VERSION;
+        if($ver =~ m<^([^\.]+)\.(\d{3})(\d{3})>) {
             printf "hopen version %d.%d.%d ($App::hopen::VERSION)\n", $1, $2, $3;
         } else {
             say "hopen $VERSION";
