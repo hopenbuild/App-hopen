@@ -37,36 +37,48 @@
 *.swp
 core
 *.stackdump
+*.bak
 
-# Module::Starter ignores
-Makefile
-Makefile.old
+# Minilla ignores
+/.build/
+/_build/
 /Build
 /Build.bat
-META.*
-MYMETA.*
-.build/
-_build/
-cover_db/
-blib/
-inc/
-.lwpcookies
-.last_cover_stats
+/blib
+/Makefile
+/pm_to_blib
+
+/carton.lock
+/.carton/
+/local/
+
 nytprof.out
-pod2htm*.tmp
-pm_to_blib
-App-hopen-*
-App-hopen-*.tar.gz
+nytprof/
+
+cover_db/
+
 *.bak
+*.old
+*~
+*.swp
+*.o
+*.obj
+
+!LICENSE
+
+/_build_params
+
+MYMETA.*
+
+/App-hopen-*
 
 # Other
 t/TEMPLATE-dot-t
-foo
-foo.*
-TODO
+foo*
 TODO*
 
 # Things we generate
 built/
 html/
 /tags
+/zip

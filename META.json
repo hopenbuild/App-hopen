@@ -1,0 +1,135 @@
+{
+   "abstract" : "Graph-driven cross-platform build system",
+   "author" : [
+      "Christopher White, C<cxwembedded at gmail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Minilla/v3.1.999, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "lgpl_2_1"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "App-hopen",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "inc",
+         "share",
+         "eg",
+         "examples",
+         "author",
+         "builder"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Getopt::Long" : "0",
+            "Path::Class" : "0.37",
+            "Pod::Markdown" : "0",
+            "Pod::Text" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.035"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "App::RewriteVersion" : "0",
+            "CPAN::Meta" : "0",
+            "File::Slurp" : "9999.26",
+            "Module::CPANfile" : "0.9020",
+            "Module::Metadata" : "1.000016",
+            "Test::CPAN::Meta" : "0",
+            "Test::Kwalitee" : "0",
+            "Test::MinimumVersion::Fast" : "0.04",
+            "Test::PAUSE::Permissions" : "0.07",
+            "Test::Pod" : "1.41",
+            "Test::Spellunker" : "v0.2.7"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "Class::Method::Modifiers" : "2.10",
+            "Class::Tiny" : "1.000",
+            "Class::Tiny::ConstrainedAccessor" : "0.000010",
+            "Config" : "0",
+            "Cwd" : "0",
+            "Data::Dumper" : "2.154",
+            "Data::Hopen" : "0.000019",
+            "Deep::Hash::Utils" : "0.03",
+            "Exporter" : "0",
+            "File::Glob" : "0",
+            "File::Path::Tiny" : "0.9",
+            "File::Spec" : "0",
+            "File::Which" : "1.22",
+            "File::pushd" : "1.013",
+            "File::stat" : "0",
+            "Getargs::Mixed" : "1.04",
+            "Getopt::Long" : "2.5",
+            "Graph" : "0.9704",
+            "Hash::Merge" : "0.299",
+            "Import::Into" : "0",
+            "List::MoreUtils" : "0.428",
+            "Package::Alias" : "0.12",
+            "Path::Class" : "0.37",
+            "Pod::Usage" : "0",
+            "Quote::Code" : "1.01",
+            "Scalar::Util" : "0",
+            "Set::Scalar" : "1.27",
+            "String::Print" : "0.92",
+            "Syntax::Construct" : "0.07",
+            "Type::Tiny" : "1.004004",
+            "XML::FromPerl" : "0",
+            "XML::LibXML" : "1.60",
+            "constant" : "0",
+            "feature" : "0",
+            "overload" : "0",
+            "perl" : "5.014",
+            "strict" : "0",
+            "vars::i" : "1.06",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Carp" : "0",
+            "Exporter" : "0",
+            "Import::Into" : "0",
+            "Scalar::Util" : "0",
+            "Test::Deep" : "0.084",
+            "Test::Directory" : "0.02",
+            "Test::Exception" : "0",
+            "Test::More" : "0",
+            "Test::Warn" : "0.35",
+            "rlib" : "0"
+         }
+      }
+   },
+   "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/hopenbuild/App-hopen/issues"
+      },
+      "homepage" : "https://github.com/hopenbuild/App-hopen",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/hopenbuild/App-hopen.git",
+         "web" : "https://github.com/hopenbuild/App-hopen"
+      }
+   },
+   "version" : "0.000013",
+   "x_authority" : "cpan:CXW",
+   "x_contributors" : [
+      "Christopher White <cxw@cpan.org>"
+   ],
+   "x_serialization_backend" : "JSON::PP version 4.02",
+   "x_static_install" : 1
+}

@@ -1,4 +1,4 @@
-# Auto-generated from Makefile.PL by cpanfile-from-Makefile-PL
+# cpanfile for App-hopen
 requires 'Carp';
 requires 'Class::Method::Modifiers', '2.10';
 requires 'Class::Tiny', '1.000';
@@ -41,11 +41,7 @@ requires 'vars::i', '1.06';
 requires 'warnings';
 
 on configure => sub {
-    requires 'Config';
-    requires 'ExtUtils::MakeMaker';
-    requires 'File::Spec';
-    requires 'strict';
-    requires 'warnings';
+    requires 'Module::Build::Tiny';
 };
 
 on build => sub {
@@ -74,5 +70,6 @@ on develop => sub {
     requires 'File::Slurp', '9999.26';
     requires 'Module::CPANfile', '0.9020';
     requires 'Module::Metadata', '1.000016';
+    requires 'Test::CPAN::Meta';
     requires 'Test::Kwalitee';
 };
