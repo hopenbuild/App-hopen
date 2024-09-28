@@ -1,5 +1,9 @@
 Revision history for App-hopen
 
+{{$NEXT}}
+
+    - Manage this dist using Minilla
+
 0.000013    2022-11-12 (TRIAL RELEASE)
     - Add MSBuild generator stub.
     - Require Data::Hopen v0.0.19.  Fixes #9 (thanks to eserte for reporting!).
