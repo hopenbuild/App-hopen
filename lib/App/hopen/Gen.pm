@@ -39,6 +39,11 @@ implement the interface defined here.
 
 =head1 ATTRIBUTES
 
+=head2 architecture
+
+The architecture.  The use of this is defined by the specific
+generator or toolset.
+
 =head2 proj_dir
 
 (Required) A L<Path::Class::Dir> instance specifying the root directory of
