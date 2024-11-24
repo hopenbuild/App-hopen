@@ -1,6 +1,6 @@
 # App::hopen: Implementation of the hopen(1) program
 package App::hopen;
-our $VERSION = '0.000014';
+our $VERSION = '0.000015';
 
 # Imports {{{1
 use strict; use warnings;

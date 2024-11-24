@@ -1,6 +1,6 @@
 package App::hopen::Util::XML::FromPerl;
 
-our $VERSION = '0.000014';
+our $VERSION = '0.000015';
 
 use strict;
 use warnings;

@@ -6,7 +6,7 @@ use strict; use warnings;
 use Data::Hopen::Base;
 use parent 'Exporter';
 
-our $VERSION = '0.000014'; # TRIAL
+our $VERSION = '0.000015'; # TRIAL
 
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {

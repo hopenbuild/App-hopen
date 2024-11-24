@@ -125,7 +125,7 @@
          "web" : "https://github.com/hopenbuild/App-hopen"
       }
    },
-   "version" : "0.000014",
+   "version" : "0.000015",
    "x_authority" : "cpan:CXW",
    "x_contributors" : [
       "Christopher White <cxw@cpan.org>"

@@ -5,7 +5,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000014'; # TRIAL
+our $VERSION = '0.000015'; # TRIAL
 
 # Docs {{{1
 

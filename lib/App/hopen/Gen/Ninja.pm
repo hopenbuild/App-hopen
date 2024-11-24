@@ -5,7 +5,7 @@ use Data::Hopen::Base;
 
 # TODO reduce code duplication between this and Gen::Make
 
-our $VERSION = '0.000014'; # TRIAL
+our $VERSION = '0.000015'; # TRIAL
 
 use parent 'App::hopen::Gen';
 use Class::Tiny;

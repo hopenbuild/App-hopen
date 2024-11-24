@@ -4,7 +4,7 @@ use Data::Hopen;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000014'; # TRIAL
+our $VERSION = '0.000015'; # TRIAL
 
 use App::hopen::BuildSystemGlobals;   # For $DestDir.
     # TODO make the dirs available to nodes through the context.
