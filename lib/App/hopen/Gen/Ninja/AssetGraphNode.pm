@@ -4,7 +4,7 @@ use Data::Hopen qw(getparameters *VERBOSE);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000015'; # TRIAL
+our $VERSION = '0.000015';
 
 use parent 'App::hopen::G::AssetOp';
 use Class::Tiny {

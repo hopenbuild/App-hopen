@@ -3,7 +3,7 @@ package App::hopen::Util::BasedPath;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000015'; # TRIAL
+our $VERSION = '0.000015';
 
 use Exporter qw(import);
 our @EXPORT; BEGIN { @EXPORT = qw(based_path); }

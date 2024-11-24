@@ -3,7 +3,7 @@ package App::hopen::Gen::Make;
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000015'; # TRIAL
+our $VERSION = '0.000015';
 
 use parent 'App::hopen::Gen';
 use Class::Tiny;

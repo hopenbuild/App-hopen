@@ -4,7 +4,7 @@ use Data::Hopen qw(:default *QUIET);
 use strict; use warnings;
 use Data::Hopen::Base;
 
-our $VERSION = '0.000015'; # TRIAL
+our $VERSION = '0.000015';
 
 use parent 'Data::Hopen::Visitor';
 use Class::Tiny qw(proj_dir dest_dir), {
