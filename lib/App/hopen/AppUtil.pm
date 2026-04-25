@@ -19,7 +19,7 @@ BEGIN {
 }
 
 use Cwd qw(getcwd abs_path);
-use File::Glob $] lt '5.016' ? ':glob' : ':bsd_glob';
+use File::Glob $] < 5.016 ? ':glob' : ':bsd_glob';
     # Thanks to haukex, https://www.perlmonks.org/?node_id=1207115 -
     # 5.14 doesn't support the ':bsd_glob' tag.
 use Path::Class;
